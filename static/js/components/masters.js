@@ -2,12 +2,12 @@
  * 大师蒸馏组件
  * 34位古今命理大师 → 选择大师 → AI 风格分析
  */
-function renderMastersComponent(state) {
+function renderMastersComponent(state, filterCategory) {
   const container = document.createElement('div');
   container.className = 'fade-in';
 
   // 34位大师（按流派分组）
-  const masters = [
+  const allMasters = [
     // 八字流派（13位）
     { id: 'yuanli', name: '袁天罡', title: '相术大师', era: '唐', avatar: '⭐', category: '八字' },
     { id: 'lichunfeng', name: '李淳风', title: '天文学家', era: '唐', avatar: '🌠', category: '八字' },
@@ -51,8 +51,9 @@ function renderMastersComponent(state) {
     { id: 'zhangziye', name: '张子业', title: '综合术数专家', era: '当代', avatar: '🔮', category: '综合' },
   ];
 
-  // 流派分组
-  const categoryGroups = [
+  // 按流派过滤
+  var masters = allMasters;
+  var categoryGroups = [
     { key: '八字', label: '八字命理', icon: '📅', count: 13 },
     { key: '紫微', label: '紫微斗数', icon: '🔮', count: 5 },
     { key: '大六壬', label: '大六壬', icon: '🌊', count: 4 },
@@ -64,6 +65,11 @@ function renderMastersComponent(state) {
     { key: '解梦', label: '周公解梦', icon: '🌙', count: 1 },
     { key: '综合', label: '综合术数', icon: '🧩', count: 1 },
   ];
+  if (filterCategory) {
+    masters = allMasters.filter(function(m) { return m.category === filterCategory; });
+    categoryGroups = categoryGroups.filter(function(g) { return g.key === filterCategory; });
+    categoryGroups.forEach(function(g) { g.count = masters.length; });
+  }
 
   const analysisTypes = [
     { id: 'full', label: '全盘分析' },
@@ -79,7 +85,7 @@ function renderMastersComponent(state) {
   container.innerHTML = `
     <div class="section-header">
       <h2 class="page-title">大师蒸馏</h2>
-      <p class="page-subtitle">三十四位古今命理大师，AI 复刻其断命风格与智慧，按流派分类</p>
+      <p class="page-subtitle">${filterCategory ? categoryGroups[0].label + ' · ' + masters.length + '位大师' : '三十四位古今命理大师，AI 复刻其断命风格与智慧，按流派分类'}</p>
     </div>
 
     <!-- 大师列表 — 按流派分组 -->
