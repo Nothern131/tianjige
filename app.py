@@ -54,6 +54,16 @@ async def root():
 async def architecture():
     return FileResponse(str(config.PROJECT_ROOT / "architecture.html"))
 
+# EP1 风水格局
+@app.get("/ep1-fengshui.html")
+async def ep1_fengshui():
+    return FileResponse(str(config.PROJECT_ROOT / "ep1-fengshui.html"))
+
+# EP2 八字排盘
+@app.get("/ep2-bazi.html")
+async def ep2_bazi():
+    return FileResponse(str(config.PROJECT_ROOT / "ep2-bazi.html"))
+
 # 启动入口
 if __name__ == "__main__":
     import uvicorn
