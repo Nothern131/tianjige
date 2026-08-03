@@ -228,7 +228,18 @@ body{min-height:100vh;user-select:none;-webkit-user-select:none}
 .master-footer-note{font-size:0.68rem;color:var(--text3);opacity:0.6}
 @media(max-width:640px){.master-result-header{flex-direction:column;text-align:center;gap:12px}.master-result-name{justify-content:center}.master-result-tags{justify-content:center}.master-section-content{padding-left:0}.master-section-icon{width:28px;height:28px;font-size:0.9rem}}
 
-
+/* ===== Analysis Block ===== */
+.analysis-block h4{font-family:var(--font-serif);font-size:0.95rem;color:var(--gold);margin:20px 0 12px;display:flex;align-items:center;gap:8px;letter-spacing:0.04em}
+.analysis-block h4 .icon{font-size:1rem}
+.analysis-block p{font-size:0.84rem;color:var(--text2);line-height:1.85;margin-bottom:8px;text-indent:2em}
+.analysis-block p:first-of-type{text-indent:0}
+.analysis-block .highlight{color:var(--gold-light);font-weight:600}
+.analysis-block .good{color:var(--green-light)}
+.analysis-block .warn{color:var(--red-light)}
+.sub-analysis{padding:8px 0;margin-bottom:6px;border-bottom:1px solid var(--border)}
+.sub-analysis:last-child{border-bottom:none}
+.sub-analysis p{text-indent:0!important;margin-bottom:4px}
+.analysis-note{font-size:0.78rem!important;color:var(--text3)!important;text-indent:0!important;margin-top:4px;padding-left:12px;border-left:2px solid var(--border-gold)}
 
 </style>
 </head>
@@ -450,55 +461,108 @@ var ZHI_CANGGAN = {
     return '';
   }
 
-  // ===== 大运计算 =====
-  function calcDayun(year, month, day, gender, dayGan) {
-    var isYangGan = GAN_YINYANG[dayGan] === '阳';
+  // ===== 六十甲子 =====
+  var SIXTY_JIAZI = [];
+  var JIAZI_INDEX = {};
+  for (var si = 0; si < 60; si++) {
+    var jz = GAN[si % 10] + ZHI[si % 12];
+    SIXTY_JIAZI.push(jz);
+    JIAZI_INDEX[jz] = si;
+  }
+
+  // 纳音（六十甲子对应）
+  var NAYIN_ARR = ['海中金','海中金','炉中火','炉中火','大林木','大林木','路旁土','路旁土','剑锋金','剑锋金','山头火','山头火','涧下水','涧下水','城头土','城头土','白蜡金','白蜡金','杨柳木','杨柳木','泉中水','泉中水','屋上土','屋上土','霹雳火','霹雳火','松柏木','松柏木','长流水','长流水','沙中金','沙中金','山下火','山下火','平地木','平地木','壁上土','壁上土','金箔金','金箔金','覆灯火','覆灯火','天河水','天河水','大驿土','大驿土','钗钏金','钗钏金','桑柘木','桑柘木','大溪水','大溪水','沙中土','沙中土','天上火','天上火','石榴木','石榴木','大海水','大海水'];
+
+  // 五虎遁（年上起月）：年干 → 寅月月干
+  var WUHUDUN = {甲:'丙',己:'丙',乙:'戊',庚:'戊',丙:'庚',辛:'庚',丁:'壬',壬:'壬',戊:'甲',癸:'甲'};
+
+  // 节气数据（用于计算起运年龄）
+  var JIEQI = [
+    {name:'立春',m:2,d:4},{name:'惊蛰',m:3,d:6},{name:'清明',m:4,d:5},
+    {name:'立夏',m:5,d:6},{name:'芒种',m:6,d:6},{name:'小暑',m:7,d:7},
+    {name:'立秋',m:8,d:8},{name:'白露',m:9,d:8},{name:'寒露',m:10,d:8},
+    {name:'立冬',m:11,d:8},{name:'大雪',m:12,d:7},{name:'小寒',m:1,d:6}
+  ];
+
+  // ===== 大运计算（精确版） =====
+  function calcDayun(year, month, day, gender, yearGan, monthGZ) {
+    // 判断阳年/阴年
+    var yangNianArr = ['甲','丙','戊','庚','壬'];
+    var isYangNian = yangNianArr.indexOf(yearGan) >= 0;
     var isMale = gender === 'male';
-    var shunPai = (isMale && isYangGan) || (!isMale && !isYangGan);
 
-    var monthGan = GAN[(year - 4) % 10]; // 年上起月简化
-    var monthIdx = month - 1;
-    var startGanIdx = GAN.indexOf('甲') + monthIdx * 2; // 简化
-    startGanIdx = ((startGanIdx % 10) + 10) % 10;
-    var startZhiIdx = (monthIdx + 2) % 12; // 寅月为正月
+    // 顺排：阳年男/阴年女；逆排：阴年男/阳年女
+    var shunPai = (isYangNian && isMale) || (!isYangNian && !isMale);
 
-    var dayun = [];
-    var dayunGanIdx = startGanIdx;
-    var dayunZhiIdx = startZhiIdx;
-
-    if (shunPai) {
-      dayunGanIdx = (startGanIdx + 1) % 10;
-      dayunZhiIdx = (startZhiIdx + 1) % 12;
-    } else {
-      dayunGanIdx = (startGanIdx - 1 + 10) % 10;
-      dayunZhiIdx = (startZhiIdx - 1 + 12) % 12;
+    // 确定月柱干支（使用传入的月柱，或五虎遁计算）
+    var monthGanZhi = monthGZ;
+    if (!monthGanZhi) {
+      var monthZhi = ZHI[(month + 1) % 12]; // 寅月=正月
+      var yinGan = WUHUDUN[yearGan] || '甲';
+      var yinGanIdx = GAN.indexOf(yinGan);
+      var monthGanIdx = (yinGanIdx + month - 1) % 10;
+      monthGanZhi = GAN[monthGanIdx] + monthZhi;
     }
 
-    // 起运年龄（简化：约4-6岁）
-    var startAge = Math.round(4 + Math.random() * 2);
+    // 计算起运年龄（出生日到目标节气的天数 ÷ 3）
+    var monthIdx = -1;
+    for (var mi = 0; mi < JIEQI.length; mi++) {
+      if (JIEQI[mi].m === month) { monthIdx = mi; break; }
+    }
+    if (monthIdx === -1) monthIdx = 0;
 
+    var targetJie;
+    if (shunPai) {
+      // 顺排：出生在节后→下一个节；节前→当月节
+      if (day >= JIEQI[monthIdx].d) {
+        targetJie = JIEQI[(monthIdx + 1) % 12];
+      } else {
+        targetJie = JIEQI[monthIdx];
+      }
+    } else {
+      // 逆排：出生在节后→当月节；节前→上一个节
+      if (day >= JIEQI[monthIdx].d) {
+        targetJie = JIEQI[monthIdx];
+      } else {
+        targetJie = JIEQI[(monthIdx - 1 + 12) % 12];
+      }
+    }
+
+    // 计算出生日到目标节气的天数
+    var targetYear = year;
+    if (targetJie.m < month || (targetJie.m === month && targetJie.d < day)) {
+      targetYear = year + 1;
+    }
+    var birthDays = year * 365 + Math.floor(year / 4) + month * 30 + day;
+    var targetDays = targetYear * 365 + Math.floor(targetYear / 4) + targetJie.m * 30 + targetJie.d;
+    var diffDays = Math.abs(targetDays - birthDays);
+    var startAge = Math.round(diffDays / 3);
+    startAge = Math.max(1, Math.min(12, startAge));
+
+    // 从月柱开始，顺排或逆排，每十年一柱
+    var monthIdx60 = JIAZI_INDEX[monthGanZhi];
+    if (monthIdx60 === undefined) monthIdx60 = 0;
+
+    var dayun = [];
     for (var i = 0; i < 8; i++) {
-      var g = GAN[dayunGanIdx];
-      var z = ZHI[dayunZhiIdx];
-      var jz = g + z;
-      var idx = (GAN.indexOf(g) * 12 + ZHI.indexOf(z)) % 60;
-      var nayinArr = ['海中金','海中金','炉中火','炉中火','大林木','大林木','路旁土','路旁土','剑锋金','剑锋金','山头火','山头火','涧下水','涧下水','城头土','城头土','白蜡金','白蜡金','杨柳木','杨柳木','泉中水','泉中水','屋上土','屋上土','霹雳火','霹雳火','松柏木','松柏木','长流水','长流水','沙中金','沙中金','山下火','山下火','平地木','平地木','壁上土','壁上土','金箔金','金箔金','覆灯火','覆灯火','天河水','天河水','大驿土','大驿土','钗钏金','钗钏金','桑柘木','桑柘木','大溪水','大溪水','沙中土','沙中土','天上火','天上火','石榴木','石榴木','大海水','大海水'];
+      var idx60;
+      if (shunPai) {
+        idx60 = (monthIdx60 + 1 + i) % 60;
+      } else {
+        idx60 = (monthIdx60 - 1 - i + 60) % 60;
+      }
+      var dyGz = SIXTY_JIAZI[idx60];
+      var dyGan = dyGz[0], dyZhi = dyGz[1];
+      var dyNayin = NAYIN_ARR[idx60] || '';
+
       dayun.push({
         age: startAge + i * 10,
-        ganzhi: jz,
-        gan: g, zhi: z,
-        nayin: nayinArr[idx] || '',
+        ganzhi: dyGz,
+        gan: dyGan, zhi: dyZhi,
+        nayin: dyNayin,
         startYear: year + startAge + i * 10,
         endYear: year + startAge + (i + 1) * 10 - 1
       });
-
-      if (shunPai) {
-        dayunGanIdx = (dayunGanIdx + 1) % 10;
-        dayunZhiIdx = (dayunZhiIdx + 1) % 12;
-      } else {
-        dayunGanIdx = (dayunGanIdx - 1 + 10) % 10;
-        dayunZhiIdx = (dayunZhiIdx - 1 + 12) % 12;
-      }
     }
     return dayun;
   }
@@ -570,76 +634,173 @@ var ZHI_CANGGAN = {
     html += '<p>' + (gejuDesc[gejuName] || gejuDesc['杂格']) + '</p>';
     html += '</div>';
 
-    // ---- 2. 旺衰分析 ----
+    // ---- 2. 旺衰分析（四维综合：通根·得令·得地·得势） ----
+    var pillarKeys2 = ['年柱','月柱','日柱','时柱'];
+
+    // --- 2.1 通根：日主天干五行在地支藏干中的根气 ---
+    var tonggenScore = 0;
+    var tonggenDetails = [];
+    var cangganWeights = [1.0, 0.7, 0.4]; // 本气、中气、余气权重
+    for (var pi = 0; pi < pillarKeys2.length; pi++) {
+      var zhi = bazi[pillarKeys2[pi]][1];
+      var cgList = ZHI_CANGGAN[zhi] || [];
+      for (var ci = 0; ci < cgList.length; ci++) {
+        if (GAN_WUXING[cgList[ci]] === dayWx) {
+          var cw = cangganWeights[ci] || 0.4;
+          var layerName = ci === 0 ? '本气' : (ci === 1 ? '中气' : '余气');
+          tonggenScore += cw;
+          tonggenDetails.push(pillarKeys2[pi] + '藏' + cgList[ci] + '（' + layerName + '，权重' + cw.toFixed(1) + '）');
+        }
+      }
+    }
+
+    // --- 2.2 得令：月令对日主的生克关系 ---
+    var monthZhiWx = ZHI_WUXING[monthZhi] || '';
+    var delingScore = 0;
+    var delingDesc = '';
     var wxSheng = {木:'水',火:'木',土:'火',金:'土',水:'金'};
     var wxShengBy = {木:'火',火:'土',土:'金',金:'水',水:'木'};
     var wxKe = {木:'金',火:'水',土:'木',金:'火',水:'土'};
     var wxKeBy = {木:'土',火:'金',土:'水',金:'木',水:'火'};
+    if (monthZhiWx === dayWx) {
+      delingScore = 2.0; delingDesc = '月令' + monthZhi + '为<span class="good">比肩</span>，日主得令而旺，自身强健';
+    } else if (wxSheng[dayWx] === monthZhiWx) {
+      delingScore = 1.5; delingDesc = '月令' + monthZhi + '为<span class="good">印星</span>（' + monthZhiWx + '生' + dayWx + '），得月令生扶';
+    } else if (wxShengBy[dayWx] === monthZhiWx) {
+      delingScore = 0.3; delingDesc = '月令' + monthZhi + '为<span class="warn">食伤</span>（' + dayWx + '生' + monthZhiWx + '），月令泄身';
+    } else if (wxKe[dayWx] === monthZhiWx) {
+      delingScore = -0.5; delingDesc = '月令' + monthZhi + '为<span class="warn">官杀</span>（' + monthZhiWx + '克' + dayWx + '），月令克身';
+    } else if (wxKeBy[dayWx] === monthZhiWx) {
+      delingScore = 0.0; delingDesc = '月令' + monthZhi + '为财星（' + dayWx + '克' + monthZhiWx + '），月令耗身';
+    }
 
-    // 计算各十神的力量
-    var shishenPower = {印星:0,比劫:0,食伤:0,财星:0,官杀:0};
-    var pillarKeys2 = ['年柱','月柱','日柱','时柱'];
-    var pillarWeights = [0.7, 1.0, 1.0, 0.8]; // 月令权重最高
+    // --- 2.3 得地：年、日、时支对日主的支持 ---
+    var dediScore = 0;
+    var dediDetails = [];
+    var otherPillars = ['年柱', '日柱', '时柱'];
+    for (var pi = 0; pi < otherPillars.length; pi++) {
+      var zhi2 = bazi[otherPillars[pi]][1];
+      var zwx2 = ZHI_WUXING[zhi2] || '';
+      if (zwx2 === dayWx) {
+        dediScore += 0.8;
+        dediDetails.push(otherPillars[pi] + '支' + zhi2 + '（比肩，+0.8）');
+      } else if (wxSheng[dayWx] === zwx2) {
+        dediScore += 0.6;
+        dediDetails.push(otherPillars[pi] + '支' + zhi2 + '（印星，+0.6）');
+      }
+    }
 
+    // --- 2.4 得势：天干中比劫与印星的数量 ---
+    var deshiScore = 0;
+    var deshiDetails = [];
     for (var pi = 0; pi < pillarKeys2.length; pi++) {
-      var gz = bazi[pillarKeys2[pi]];
-      var gan = gz[0], zhi = gz[1];
-      var ss = shishen[pillarKeys2[pi]];
-      var w = pillarWeights[pi];
-
-      // 天干力量
-      if (ss && ss.天干十神) {
-        var cat = shishenCategory(ss.天干十神);
-        shishenPower[cat] = (shishenPower[cat] || 0) + w;
-      }
-      // 地支藏干力量（取本气）
-      if (ss && ss.地支藏干 && ss.地支藏干.length > 0) {
-        var cat2 = shishenCategory(ss.地支藏干[0].十神);
-        shishenPower[cat2] = (shishenPower[cat2] || 0) + w * 0.6;
+      var gan = bazi[pillarKeys2[pi]][0];
+      if (gan === dayGan) continue; // 跳过日主自身
+      var gwx = GAN_WUXING[gan];
+      if (gwx === dayWx) {
+        deshiScore += 0.7;
+        deshiDetails.push(pillarKeys2[pi] + '干' + gan + '（比劫帮身，+0.7）');
+      } else if (wxSheng[dayWx] === gwx) {
+        deshiScore += 0.5;
+        deshiDetails.push(pillarKeys2[pi] + '干' + gan + '（印星生身，+0.5）');
       }
     }
 
-    function shishenCategory(ss) {
-      if (ss === '正印' || ss === '偏印') return '印星';
-      if (ss === '比肩' || ss === '劫财') return '比劫';
-      if (ss === '食神' || ss === '伤官') return '食伤';
-      if (ss === '正财' || ss === '偏财') return '财星';
-      if (ss === '正官' || ss === '七杀') return '官杀';
-      return '';
-    }
-
-    var supportPower = (shishenPower['印星'] || 0) + (shishenPower['比劫'] || 0);
-    var restrainPower = (shishenPower['食伤'] || 0) + (shishenPower['财星'] || 0) + (shishenPower['官杀'] || 0);
-
-    // 月令加成
-    if (GAN_WUXING[benqi] === dayWx) supportPower += 0.5;
-    else if (wxSheng[dayWx] === GAN_WUXING[benqi]) supportPower += 0.4;
-    else restrainPower += 0.3;
-
-    var shenQiangRuo = supportPower >= restrainPower * 1.2 ? '身旺' : (supportPower >= restrainPower * 0.8 ? '中和' : '身弱');
+    // --- 2.5 综合评分 ---
+    var totalSupport = tonggenScore + delingScore + dediScore + deshiScore;
+    var shenQiangRuo = '';
+    var shenQiangRuoLevel = '';
+    if (totalSupport >= 6.0) { shenQiangRuo = '身极旺'; shenQiangRuoLevel = 'strong'; }
+    else if (totalSupport >= 4.0) { shenQiangRuo = '身旺'; shenQiangRuoLevel = 'strong'; }
+    else if (totalSupport >= 2.5) { shenQiangRuo = '中和偏旺'; shenQiangRuoLevel = 'neutral'; }
+    else if (totalSupport >= 1.5) { shenQiangRuo = '中和'; shenQiangRuoLevel = 'neutral'; }
+    else if (totalSupport >= 0.8) { shenQiangRuo = '中和偏弱'; shenQiangRuoLevel = 'weak'; }
+    else { shenQiangRuo = '身弱'; shenQiangRuoLevel = 'weak'; }
 
     html += '<div class="analysis-block">';
-    html += '<h4><span class="icon">⚖️</span>旺衰分析</h4>';
-    html += '<p>日主' + dayGan + '（' + dayWx + '）得月令' + monthZhi + '之' + benqi + '（' + (GAN_WUXING[benqi]||'') + '）为' + (GAN_WUXING[benqi] === dayWx ? '比肩，自身得令而旺' : (wxSheng[dayWx] === GAN_WUXING[benqi] ? '印星，得月令生扶' : (wxKe[dayWx] === GAN_WUXING[benqi] ? '官杀，月令克身' : (wxKeBy[dayWx] === GAN_WUXING[benqi] ? '财星，月令耗身' : '食伤，月令泄身')))) + '。</p>';
-    html += '<p>印星力量：<span class="highlight">' + (shishenPower['印星'] || 0).toFixed(1) + '</span>，比劫力量：<span class="highlight">' + (shishenPower['比劫'] || 0).toFixed(1) + '</span>（生扶合计：' + supportPower.toFixed(1) + '）</p>';
-    html += '<p>食伤力量：<span class="highlight">' + (shishenPower['食伤'] || 0).toFixed(1) + '</span>，财星力量：<span class="highlight">' + (shishenPower['财星'] || 0).toFixed(1) + '</span>，官杀力量：<span class="highlight">' + (shishenPower['官杀'] || 0).toFixed(1) + '</span>（克泄耗合计：' + restrainPower.toFixed(1) + '）</p>';
-    html += '<p>综合判断：日主<span class="' + (shenQiangRuo === '身旺' ? 'good' : (shenQiangRuo === '身弱' ? 'warn' : '')) + '">' + shenQiangRuo + '</span>。</p>';
+    html += '<h4><span class="icon">⚖️</span>旺衰分析（四维综合法）</h4>';
+
+    // 通根
+    html += '<div class="sub-analysis">';
+    html += '<p><strong>一、通根</strong>（日主' + dayGan + '在地支藏干中的根气）</p>';
+    if (tonggenDetails.length > 0) {
+      html += '<p>' + tonggenDetails.join('、') + '</p>';
+      html += '<p>通根得分：<span class="highlight">' + tonggenScore.toFixed(1) + '</span>。' + (tonggenScore >= 2 ? '日主根深蒂固，底气充足，如大树扎根，不易动摇。' : (tonggenScore >= 1 ? '日主有根，尚算稳固，能承载一定富贵。' : '日主根气不足，根基不稳，需印星比劫帮扶。')) + '</p>';
+    } else {
+      html += '<p>日主<span class="warn">虚浮无根</span>——四柱地支藏干中均无' + dayWx + '。如浮萍漂泊，易受大运流年影响而波动，行运喜见根气。</p>';
+    }
     html += '</div>';
 
-    // ---- 3. 喜用神 ----
-    var xiShen = '', jiShen = '';
-    if (shenQiangRuo === '身旺' || shenQiangRuo === '中和') {
+    // 得令
+    html += '<div class="sub-analysis">';
+    html += '<p><strong>二、得令</strong>（月令对日主的影响）</p>';
+    html += '<p>' + delingDesc + '，得分：<span class="highlight">' + (delingScore >= 0 ? '+' : '') + delingScore.toFixed(1) + '</span>。</p>';
+    html += (delingScore >= 1.5 ? '<p class="analysis-note">月令为提纲，得令者得天时，一生根基稳固，少年运佳。</p>' : (delingScore <= 0 ? '<p class="analysis-note">月令不生扶日主，天时不利，需后天努力补足。少年运较为辛苦。</p>' : ''));
+    html += '</div>';
+
+    // 得地
+    html += '<div class="sub-analysis">';
+    html += '<p><strong>三、得地</strong>（年、日、时支对日主的支持）</p>';
+    if (dediDetails.length > 0) {
+      html += '<p>' + dediDetails.join('、') + '</p>';
+      html += '<p>得地得分：<span class="highlight">' + dediScore.toFixed(1) + '</span>。' + (dediScore >= 1.2 ? '地支多有生扶，得地利之助。' : '略有地利，但支持有限。') + '</p>';
+    } else {
+      html += '<p>年、日、时支皆不生扶日主，<span class="warn">不得地</span>，得分：0。日主孤立，需主动寻求外部支持。</p>';
+    }
+    html += '</div>';
+
+    // 得势
+    html += '<div class="sub-analysis">';
+    html += '<p><strong>四、得势</strong>（天干中比劫与印星的数量）</p>';
+    if (deshiDetails.length > 0) {
+      html += '<p>' + deshiDetails.join('、') + '</p>';
+      html += '<p>得势得分：<span class="highlight">' + deshiScore.toFixed(1) + '</span>。' + (deshiScore >= 1.2 ? '天干帮身有力，得人和之助，朋友多、贵人多。' : '天干略有帮身，可得朋友之助但力量有限。') + '</p>';
+    } else {
+      html += '<p>天干无帮身之星，日主<span class="warn">孤军奋战</span>，不得势，得分：0。凡事需亲力亲为，宜培养团队合作能力。</p>';
+    }
+    html += '</div>';
+
+    // 综合判定
+    html += '<div class="sub-analysis">';
+    html += '<p><strong>五、综合判定</strong></p>';
+    html += '<p>四维总得分 = 通根' + tonggenScore.toFixed(1) + ' + 得令' + delingScore.toFixed(1) + ' + 得地' + dediScore.toFixed(1) + ' + 得势' + deshiScore.toFixed(1) + ' = <span class="highlight">' + totalSupport.toFixed(1) + '</span></p>';
+    var sqrClass = shenQiangRuoLevel === 'strong' ? 'good' : (shenQiangRuoLevel === 'weak' ? 'warn' : '');
+    html += '<p style="font-size:1rem">判定结果：日主<span class="' + sqrClass + '" style="font-size:1.1em;font-weight:700">' + shenQiangRuo + '</span></p>';
+    if (shenQiangRuoLevel === 'strong') {
+      html += '<p class="analysis-note">日主强旺，精力充沛，自我意识强，有主见，能担财官。但需防刚愎自用、固执己见。行运喜克泄耗（官杀、食伤、财星），忌生扶（印星、比劫）。</p>';
+    } else if (shenQiangRuoLevel === 'weak') {
+      html += '<p class="analysis-note">日主偏弱，性情温和，善于合作，但易缺乏主见、被他人左右。需印比帮扶方能担财官。行运喜生扶（印星、比劫），忌克泄耗（官杀、财星、食伤）。</p>';
+    } else {
+      html += '<p class="analysis-note">日主中和，刚柔并济，适应力强，是为佳造。不拘泥于扶抑，重在调候流通。行运可根据大运方向灵活调整策略。</p>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    // ---- 3. 喜用神与忌神 ----
+    var xiShen = '', jiShen = '', xiShenDetail = '', jiShenDetail = '';
+    if (shenQiangRuoLevel === 'strong') {
       xiShen = '官杀（克身）、食伤（泄身）、财星（耗身）';
       jiShen = '印星（生身）、比劫（帮身）';
-    } else {
+      xiShenDetail = '身旺宜泄不宜补。官杀克身带来约束与成就，食伤泄秀发挥才华，财星耗身以富养命。';
+      jiShenDetail = '印星再生则过犹不及，比劫再帮则竞争加剧，反为不美。';
+    } else if (shenQiangRuoLevel === 'weak') {
       xiShen = '印星（生身）、比劫（帮身）';
-      jiShen = '官杀（克身）、财星（耗身）';
+      jiShen = '官杀（克身）、财星（耗身）、食伤（泄身）';
+      xiShenDetail = '身弱宜补不宜泄。印星生身如贵人扶持，比劫帮身如朋友相助，根基稳固方能承载富贵。';
+      jiShenDetail = '官杀克身压力倍增，财星耗身如雪上加霜，食伤泄身更损元气，皆需谨慎对待。';
+    } else {
+      xiShen = '调候为先，兼顾平衡';
+      jiShen = '视大运方向而定';
+      xiShenDetail = '中和之命，调候为要。寒暖燥湿平衡，则五行流通，诸事顺遂。';
+      jiShenDetail = '中和之命较为灵活，忌神需结合大运流年具体判断，不可一概而论。';
     }
 
     html += '<div class="analysis-block">';
     html += '<h4><span class="icon">💎</span>喜用神与忌神</h4>';
     html += '<p><span class="good">喜神（有利）：</span>' + xiShen + '</p>';
+    html += '<p class="analysis-note">' + xiShenDetail + '</p>';
     html += '<p><span class="warn">忌神（不利）：</span>' + jiShen + '</p>';
+    html += '<p class="analysis-note">' + jiShenDetail + '</p>';
 
     // 调候用神
     var tiaohouMap = {
@@ -656,7 +817,7 @@ var ZHI_CANGGAN = {
     };
     var th = tiaohouMap[dayGan] && tiaohouMap[dayGan][monthZhi];
     if (th) {
-      html += '<p>调候用神：<span class="highlight">' + th + '</span>（' + dayGan + '日主生于' + monthZhi + '月，需' + th + '调候）</p>';
+      html += '<p>调候用神：<span class="highlight">' + th + '</span>（' + dayGan + '日主生于' + monthZhi + '月，需' + th + '调候，以调节寒暖燥湿）</p>';
     }
     html += '</div>';
 
@@ -819,7 +980,8 @@ var ZHI_CANGGAN = {
     var month = parseInt(document.getElementById('birthMonth').value) || 1;
     var day = parseInt(document.getElementById('birthDay').value) || 15;
     var gender = document.getElementById('gender').value;
-    var dayun = calcDayun(year, month, day, gender, dayGan);
+    var yearGan = bazi.年柱[0];
+    var dayun = calcDayun(year, month, day, gender, yearGan, bazi.月柱);
     var dayunHtml = '';
     for (var i = 0; i < dayun.length; i++) {
       var du = dayun[i];

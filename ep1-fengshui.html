@@ -382,7 +382,8 @@ body{min-height:100vh;user-select:none;-webkit-user-select:none}
 var FengshuiEngine = (function(){
   'use strict';
   var MOUNTAINS_24 = ['壬','子','癸','丑','艮','寅','甲','卯','乙','辰','巽','巳','丙','午','丁','未','坤','申','庚','酉','辛','戌','乾','亥'];
-  var MOUNTAIN_GUA = {壬:'坎',子:'坎',癸:'坎',丑:'艮',艮:'艮',寅:'艮',甲:'震',卯:'震',乙:'震',辰:'巽',巽:'巽',巳:'巽',丙:'离',午:'离',丁:'离',未:'坤',坤:'坤',申:'坤',庚:'兑',酉:'兑',辛:'兑',戌:'乾',乾:'乾',亥:'乾'};
+  var MOUNTAIN_GUA = {壬:'坎',子:'坎',癸:'坎',丑:'艮',艮:'艮',寅:'艮',甲:'震',卯:'震',乙:'震',辰:'巽',巽:'巽',巳:'巽',丙:'离',午:'离',丁:'离',未:'坤',坤:'坤',申:'坤',庚:'兑',酉:'兑',辛:'兑',戌:'乾',乾:'乾',亥:'亥'};
+  var MOUNTAIN_YINYANG = {壬:'阳',子:'阳',癸:'阴',丑:'阴',艮:'阳',寅:'阳',甲:'阳',卯:'阴',乙:'阴',辰:'阳',巽:'阴',巳:'阴',丙:'阳',午:'阳',丁:'阴',未:'阴',坤:'阳',申:'阳',庚:'阳',酉:'阴',辛:'阴',戌:'阳',乾:'阳',亥:'阴'};
   var MOUNTAIN_NAMES = {壬:'壬(北偏西)',子:'子(正北)',癸:'癸(北偏东)',丑:'丑(东北偏北)',艮:'艮(东北)',寅:'寅(东北偏东)',甲:'甲(东偏北)',卯:'卯(正东)',乙:'乙(东偏南)',辰:'辰(东南偏东)',巽:'巽(东南)',巳:'巳(东南偏南)',丙:'丙(南偏东)',午:'午(正南)',丁:'丁(南偏西)',未:'未(西南偏南)',坤:'坤(西南)',申:'申(西南偏西)',庚:'庚(西偏南)',酉:'酉(正西)',辛:'辛(西偏北)',戌:'戌(西北偏西)',乾:'乾(西北)',亥:'亥(西北偏北)'};
   var GONG_NAMES = ['坎一宫(北)','坤二宫(西南)','震三宫(东)','巽四宫(东南)','中五宫','乾六宫(西北)','兑七宫(西)','艮八宫(东北)','离九宫(南)'];
   var GONG_WUXING = ['水','土','木','木','土','金','金','土','火'];
@@ -391,10 +392,57 @@ var FengshuiEngine = (function(){
   var ALL_PERIODS = [{start:1864,end:1883,num:1},{start:1884,end:1903,num:2},{start:1904,end:1923,num:3},{start:1924,end:1943,num:4},{start:1944,end:1963,num:5},{start:1964,end:1983,num:6},{start:1984,end:2003,num:7},{start:2004,end:2023,num:8},{start:2024,end:2043,num:9}];
   function getPeriod(year){for(var i=ALL_PERIODS.length-1;i>=0;i--){if(year>=ALL_PERIODS[i].start&&year<=ALL_PERIODS[i].end)return ALL_PERIODS[i].num}return 9}
   function getPeriodChart(periodNum){var chart=[0,0,0,0,0,0,0,0,0];chart[4]=periodNum;var flyOrder=[4,5,6,7,8,0,1,2,3];for(var i=0;i<9;i++){var val=periodNum+i;if(val>9)val-=9;chart[flyOrder[i]]=val}return chart}
-  function calcStars(sitting,facing,periodNum){var periodChart=getPeriodChart(periodNum);var sitGongIdx=GONG_GUA.indexOf(MOUNTAIN_GUA[sitting]);var faceGongIdx=GONG_GUA.indexOf(MOUNTAIN_GUA[facing]);var mountainCenter=periodChart[sitGongIdx];var facingCenter=periodChart[faceGongIdx];var mountainStars=[0,0,0,0,0,0,0,0,0];mountainStars[4]=mountainCenter;var flyOrder=[4,5,6,7,8,0,1,2,3];for(var i=0;i<9;i++){var val=mountainCenter+i;if(val>9)val-=9;mountainStars[flyOrder[i]]=val}var facingStars=[0,0,0,0,0,0,0,0,0];facingStars[4]=facingCenter;for(var i=0;i<9;i++){var val=facingCenter+i;if(val>9)val-=9;facingStars[flyOrder[i]]=val}return {mountainStars:mountainStars,facingStars:facingStars,sitGongIdx:sitGongIdx,faceGongIdx:faceGongIdx}}
+  function calcStars(sitting,facing,periodNum){var periodChart=getPeriodChart(periodNum);var sitGongIdx=GONG_GUA.indexOf(MOUNTAIN_GUA[sitting]);var faceGongIdx=GONG_GUA.indexOf(MOUNTAIN_GUA[facing]);var mountainCenter=periodChart[sitGongIdx];var facingCenter=periodChart[faceGongIdx];var sitYY=MOUNTAIN_YINYANG[sitting]||'阳';var faceYY=MOUNTAIN_YINYANG[facing]||'阳';var mtnShun=(sitYY==='阳');var facShun=(faceYY==='阳');var flyOrder=[4,5,6,7,8,0,1,2,3];var revFlyOrder=[4,3,2,1,0,8,7,6,5];var mountainStars=[0,0,0,0,0,0,0,0,0];mountainStars[4]=mountainCenter;var order=mtnShun?flyOrder:revFlyOrder;for(var i=0;i<9;i++){var val=mtnShun?(mountainCenter+i):(mountainCenter-i);while(val>9)val-=9;while(val<1)val+=9;mountainStars[order[i]]=val}var facingStars=[0,0,0,0,0,0,0,0,0];facingStars[4]=facingCenter;order=facShun?flyOrder:revFlyOrder;for(var i=0;i<9;i++){var val=facShun?(facingCenter+i):(facingCenter-i);while(val>9)val-=9;while(val<1)val+=9;facingStars[order[i]]=val}return {mountainStars:mountainStars,facingStars:facingStars,sitGongIdx:sitGongIdx,faceGongIdx:faceGongIdx,mountainShun:mtnShun,facingShun:facShun}}
   function getAnnualStars(year){var baseYear=1900,baseStar=1;var diff=year-baseYear;var centerStar=(baseStar-diff)%9;if(centerStar<=0)centerStar+=9;var stars=[0,0,0,0,0,0,0,0,0];stars[4]=centerStar;var flyOrder=[4,5,6,7,8,0,1,2,3];for(var i=0;i<9;i++){var val=centerStar+i;if(val>9)val-=9;stars[flyOrder[i]]=val}return stars}
-  function evaluatePalace(periodStar,mountainStar,facingStar,annualStar,gongIdx){var score=60,notes=[],warnings=[];if(periodStar===5){score-=15;warnings.push('运星五黄临宫')}if(mountainStar===5){score-=15;warnings.push('山星五黄临宫')}if(facingStar===5){score-=15;warnings.push('向星五黄临宫')}if(annualStar===5){score-=20;warnings.push('年星五黄临宫')}if(periodStar===2){score-=8;warnings.push('运星二黑病符')}if(mountainStar===2){score-=8;warnings.push('山星二黑病符')}if(facingStar===2){score-=8;warnings.push('向星二黑病符')}if(annualStar===2){score-=10;warnings.push('年星二黑病符')}if(periodStar===8){score+=12;notes.push('运星八白旺财')}if(mountainStar===8){score+=12;notes.push('山星八白旺丁')}if(facingStar===8){score+=12;notes.push('向星八白旺财')}if(annualStar===8){score+=10;notes.push('年星八白旺财')}if(periodStar===9){score+=10;notes.push('运星九紫喜庆')}if(mountainStar===9){score+=10;notes.push('山星九紫旺丁')}if(facingStar===9){score+=10;notes.push('向星九紫喜事')}if(annualStar===9){score+=8;notes.push('年星九紫喜庆')}if(periodStar===1){score+=8;notes.push('运星一白文昌')}if(mountainStar===1){score+=8;notes.push('山星一白旺人缘')}if(facingStar===1){score+=8;notes.push('向星一白旺桃花')}if(annualStar===1){score+=6;notes.push('年星一白旺人缘')}if(periodStar===6){score+=8;notes.push('运星六白权贵')}if(mountainStar===6){score+=8;notes.push('山星六白旺官运')}if(facingStar===6){score+=8;notes.push('向星六白旺偏财')}if(annualStar===6){score+=6;notes.push('年星六白旺官运')}if(periodStar===4){score+=5;notes.push('运星四绿文昌')}if(annualStar===4){score+=4;notes.push('年星四绿文昌')}if(periodStar===3){score-=5;warnings.push('运星三碧是非')}if(annualStar===3){score-=6;warnings.push('年星三碧是非')}if(periodStar===7){score-=5;warnings.push('运星七赤破财')}if(annualStar===7){score-=6;warnings.push('年星七赤破财')}if(mountainStar+facingStar===10){score+=10;notes.push('山向合十')}var gongWx=GONG_WUXING[gongIdx];var periodWx=(STARS[periodStar]||{}).wuxing||'';var wxSheng={木:'水',火:'木',土:'火',金:'土',水:'金'};var wxKe={木:'金',火:'水',土:'木',金:'火',水:'土'};if(periodWx&&wxSheng[gongWx]===periodWx){score+=5;notes.push('运星生宫')}if(periodWx&&wxKe[gongWx]===periodWx){score-=5;warnings.push('运星克宫')}score=Math.max(10,Math.min(100,Math.round(score)));var level=score>=80?'大吉':score>=65?'吉':score>=50?'中平':score>=35?'凶':'大凶';return {score:score,level:level,notes:notes,warnings:warnings}}
-  function fullAnalysis(sitting,facing,buildYear,currentYear){var periodNum=getPeriod(buildYear);var periodChart=getPeriodChart(periodNum);var stars=calcStars(sitting,facing,periodNum);var annualStars=getAnnualStars(currentYear);var palaces=[],totalScore=0;for(var i=0;i<9;i++){var p=evaluatePalace(periodChart[i],stars.mountainStars[i],stars.facingStars[i],annualStars[i],i);palaces.push({idx:i,name:GONG_NAMES[i],gua:GONG_GUA[i],wuxing:GONG_WUXING[i],periodStar:periodChart[i],mountainStar:stars.mountainStars[i],facingStar:stars.facingStars[i],annualStar:annualStars[i],score:p.score,level:p.level,notes:p.notes,warnings:p.warnings});totalScore+=p.score}var overallScore=Math.round(totalScore/9);var overallLevel=overallScore>=75?'上吉':overallScore>=60?'中吉':overallScore>=45?'中平':overallScore>=30?'凶':'大凶';var best=palaces[0],worst=palaces[0];for(var i=1;i<9;i++){if(palaces[i].score>best.score)best=palaces[i];if(palaces[i].score<worst.score)worst=palaces[i]}return {sitting:sitting,facing:facing,buildYear:buildYear,currentYear:currentYear,periodNum:periodNum,overallScore:overallScore,overallLevel:overallLevel,palaces:palaces,bestPalace:best,worstPalace:worst,periodChart:periodChart,annualStars:annualStars,mountainStars:stars.mountainStars,facingStars:stars.facingStars}}
+  function evaluatePalace(periodStar,mountainStar,facingStar,annualStar,gongIdx){var score=60,notes=[],warnings=[];var wxSheng={木:'水',火:'木',土:'火',金:'土',水:'金'};var wxKe={木:'金',火:'水',土:'木',金:'火',水:'土'};var gongWx=GONG_WUXING[gongIdx];var pWx=(STARS[periodStar]||{}).wuxing||'';var mWx=(STARS[mountainStar]||{}).wuxing||'';var fWx=(STARS[facingStar]||{}).wuxing||'';var aWx=(STARS[annualStar]||{}).wuxing||'';var pJi=(STARS[periodStar]||{}).ji||'';var mJi=(STARS[mountainStar]||{}).ji||'';var fJi=(STARS[facingStar]||{}).ji||'';var aJi=(STARS[annualStar]||{}).ji||'';var pName=(STARS[periodStar]||{}).name||'';var mName=(STARS[mountainStar]||{}).name||'';var fName=(STARS[facingStar]||{}).name||'';var aName=(STARS[annualStar]||{}).name||'';if(periodStar===5){score-=18;warnings.push('运星五黄临宫')}if(mountainStar===5){score-=18;warnings.push('山星五黄临宫')}if(facingStar===5){score-=18;warnings.push('向星五黄临宫')}if(annualStar===5){score-=22;warnings.push('年星五黄临宫——今年大凶')}if(periodStar===2){score-=10;warnings.push('运星二黑病符')}if(mountainStar===2){score-=10;warnings.push('山星二黑病符')}if(facingStar===2){score-=10;warnings.push('向星二黑病符')}if(annualStar===2){score-=12;warnings.push('年星二黑病符——今年防病')}if(periodStar===8){score+=14;notes.push('运星八白旺财')}if(mountainStar===8){score+=14;notes.push('山星八白旺丁')}if(facingStar===8){score+=14;notes.push('向星八白旺财')}if(annualStar===8){score+=12;notes.push('年星八白——今年财运旺')}if(periodStar===9){score+=12;notes.push('运星九紫喜庆')}if(mountainStar===9){score+=12;notes.push('山星九紫旺丁')}if(facingStar===9){score+=12;notes.push('向星九紫喜事')}if(annualStar===9){score+=10;notes.push('年星九紫——今年喜事临门')}if(periodStar===1){score+=10;notes.push('运星一白文昌')}if(mountainStar===1){score+=10;notes.push('山星一白旺人缘')}if(facingStar===1){score+=10;notes.push('向星一白旺桃花')}if(annualStar===1){score+=8;notes.push('年星一白——今年桃花旺')}if(periodStar===6){score+=10;notes.push('运星六白权贵')}if(mountainStar===6){score+=10;notes.push('山星六白旺官运')}if(facingStar===6){score+=10;notes.push('向星六白旺偏财')}if(annualStar===6){score+=8;notes.push('年星六白——今年官运佳')}if(periodStar===4){score+=6;notes.push('运星四绿文昌')}if(mountainStar===4){score+=6;notes.push('山星四绿利学业')}if(facingStar===4){score+=6;notes.push('向星四绿利考试')}if(annualStar===4){score+=5;notes.push('年星四绿——今年文昌旺')}if(periodStar===3){score-=6;warnings.push('运星三碧是非')}if(mountainStar===3){score-=6;warnings.push('山星三碧口舌')}if(facingStar===3){score-=6;warnings.push('向星三碧争斗')}if(annualStar===3){score-=8;warnings.push('年星三碧——今年防官非')}if(periodStar===7){score-=6;warnings.push('运星七赤破财')}if(mountainStar===7){score-=6;warnings.push('山星七赤盗贼')}if(facingStar===7){score-=6;warnings.push('向星七赤手术')}if(annualStar===7){score-=8;warnings.push('年星七赤——今年防破财')}if(mountainStar+facingStar===10){score+=12;notes.push('山向合十——夫妻同心，大局安稳')}if(periodWx&&wxSheng[gongWx]===periodWx){score+=6;notes.push('运星' + periodWx + '生宫' + gongWx + '——根基稳固')}if(periodWx&&wxKe[gongWx]===periodWx){score-=6;warnings.push('运星' + periodWx + '克宫' + gongWx + '——根基受克')}if(mWx&&wxSheng[gongWx]===mWx){score+=5;notes.push('山星' + mWx + '生宫' + gongWx + '——人丁得气')}if(mWx&&wxKe[gongWx]===mWx){score-=5;warnings.push('山星' + mWx + '克宫' + gongWx + '——人丁受损')}if(fWx&&wxSheng[gongWx]===fWx){score+=5;notes.push('向星' + fWx + '生宫' + gongWx + '——财运得气')}if(fWx&&wxKe[gongWx]===fWx){score-=5;warnings.push('向星' + fWx + '克宫' + gongWx + '——财运受损')}
+  // ═══ 星组组合分析 ═══
+  var combos = [
+    {s1:periodStar,s2:mountainStar,label:'运山'},{s1:periodStar,s2:facingStar,label:'运向'},
+    {s1:periodStar,s2:annualStar,label:'运年'},{s1:mountainStar,s2:facingStar,label:'山向'},
+    {s1:mountainStar,s2:annualStar,label:'山年'},{s1:facingStar,s2:annualStar,label:'向年'}
+  ];
+  for (var ci = 0; ci < combos.length; ci++) {
+    var c = combos[ci];
+    if (c.s1 === 2 && c.s2 === 5 || c.s1 === 5 && c.s2 === 2) {
+      score -= 20; warnings.push(c.label + '二五交加——主重病、灾祸，此方大凶！宜以金属器物（铜铃、六帝钱）化泄');
+    }
+    if (c.s1 === 5 && c.s2 === 9 || c.s1 === 9 && c.s2 === 5) {
+      score -= 12; warnings.push(c.label + '九五火土相生——凶焰更炽，主火灾、急症、血光。宜用水制火（黑色物品、鱼缸）');
+    }
+    if (c.s1 === 2 && c.s2 === 9 || c.s1 === 9 && c.s2 === 2) {
+      score -= 10; warnings.push(c.label + '二九火土——病符遇火，炎症发热之象。宜金泄土（铜器）');
+    }
+    if (c.s1 === 1 && c.s2 === 4 || c.s1 === 4 && c.s2 === 1) {
+      score += 10; notes.push(c.label + '一四同宫——文昌大旺，利学业、考试、功名！宜摆放文昌塔、毛笔、绿色植物');
+    }
+    if (c.s1 === 3 && c.s2 === 8 || c.s1 === 8 && c.s2 === 3) {
+      score -= 6; warnings.push(c.label + '三八木克土——财星受损，因是非破财。宜火泄木（红色物品）');
+    }
+    if (c.s1 === 7 && c.s2 === 9 || c.s1 === 9 && c.s2 === 7) {
+      score -= 8; warnings.push(c.label + '七九火克金——回禄之灾，防火盗。宜土泄火（黄色物品）');
+    }
+    if (c.s1 === 6 && c.s2 === 8 || c.s1 === 8 && c.s2 === 6) {
+      score += 10; notes.push(c.label + '六八土生金——官财两旺，富贵双全之象！宜金属摆件、水晶球催旺');
+    }
+    if (c.s1 === 8 && c.s2 === 9 || c.s1 === 9 && c.s2 === 8) {
+      score += 8; notes.push(c.label + '八九火土相生——财喜双至，旺财添丁。宜红色/黄色装饰催旺');
+    }
+    if (c.s1 === 4 && c.s2 === 9 || c.s1 === 9 && c.s2 === 4) {
+      score += 6; notes.push(c.label + '四九木火通明——文采飞扬，利于创作、考试。宜绿色植物搭配红色装饰');
+    }
+  }
+  score=Math.max(5,Math.min(100,Math.round(score)));var level=score>=80?'大吉':score>=65?'吉':score>=50?'中平':score>=35?'凶':'大凶';return {score:score,level:level,notes:notes,warnings:warnings}}
+  function fullAnalysis(sitting,facing,buildYear,currentYear){var periodNum=getPeriod(buildYear);var periodChart=getPeriodChart(periodNum);var stars=calcStars(sitting,facing,periodNum);var annualStars=getAnnualStars(currentYear);var palaces=[],totalScore=0;for(var i=0;i<9;i++){var p=evaluatePalace(periodChart[i],stars.mountainStars[i],stars.facingStars[i],annualStars[i],i);palaces.push({idx:i,name:GONG_NAMES[i],gua:GONG_GUA[i],wuxing:GONG_WUXING[i],periodStar:periodChart[i],mountainStar:stars.mountainStars[i],facingStar:stars.facingStars[i],annualStar:annualStars[i],score:p.score,level:p.level,notes:p.notes,warnings:p.warnings});totalScore+=p.score}var overallScore=Math.round(totalScore/9);var overallLevel=overallScore>=75?'上吉':overallScore>=60?'中吉':overallScore>=45?'中平':overallScore>=30?'凶':'大凶';var best=palaces[0],worst=palaces[0];for(var i=1;i<9;i++){if(palaces[i].score>best.score)best=palaces[i];if(palaces[i].score<worst.score)worst=palaces[i]}
+  // ═══ 三般卦检测 ═══
+  var sanBanGua=null;var mtnStars=stars.mountainStars,facStars=stars.facingStars;
+  var checkSBG=[147,258,369];for(var si=0;si<checkSBG.length;si++){var nums=checkSBG[si];var a=nums%10,b=Math.floor(nums/10)%10,c=Math.floor(nums/100);var found=true;for(var gi=0;gi<9;gi++){var hasA=(mtnStars[gi]===a||facStars[gi]===a);var hasB=(mtnStars[gi]===b||facStars[gi]===b);var hasC=(mtnStars[gi]===c||facStars[gi]===c);if(!hasA&&!hasB&&!hasC){found=false;break}}if(found){sanBanGua={type:'父母三般卦',nums:''+a+b+c,desc:'山向飞星各宫均含' + a + b + c + '三数，此为大吉之局！主世代昌盛、人财两旺、官运亨通。'};break}}
+  // ═══ 七星打劫检测 ═══
+  var qiXingDJ=null;var liGong=palaces[8],kanGong=palaces[0],zhenGong=palaces[2],xunGong=palaces[3];
+  if(liGong.mountainStar===periodNum&&kanGong.facingStar===periodNum&&zhenGong.facingStar===periodNum){qiXingDJ={type:'离震坎打劫',desc:'离宫山星、坎宫向星、震宫向星均为当令旺星' + periodNum + '，此乃七星打劫之局！主富贵骤至、横发一时，但需防劫后回落。'}}
+  if(liGong.facingStar===periodNum&&kanGong.mountainStar===periodNum&&zhenGong.mountainStar===periodNum){qiXingDJ={type:'离震坎打劫(向)',desc:'离宫向星、坎宫山星、震宫山星均为当令旺星' + periodNum + '，七星打劫之局已成！主横财暴发。'}}
+  // ═══ 城门诀 ═══
+  var chengMenJue=null;var sitIdx=MOUNTAINS_24.indexOf(sitting);if(sitIdx>=0){var leftIdx=(sitIdx-1+24)%24,rightIdx=(sitIdx+1)%24;var leftMtn=MOUNTAINS_24[leftIdx],rightMtn=MOUNTAINS_24[rightIdx];var leftGua=MOUNTAIN_GUA[leftMtn],rightGua=MOUNTAIN_GUA[rightMtn];var sitGua=MOUNTAIN_GUA[sitting];if(leftGua===sitGua){chengMenJue={side:'左',mtn:leftMtn,gua:leftGua,desc:'坐山' + sitting + '左侧' + leftMtn + '同为' + leftGua + '卦，可开城门以纳旺气。'}}if(rightGua===sitGua){chengMenJue={side:'右',mtn:rightMtn,gua:rightGua,desc:'坐山' + sitting + '右侧' + rightMtn + '同为' + rightGua + '卦，可开城门引吉气入宅。'}}}
+  return {sitting:sitting,facing:facing,buildYear:buildYear,currentYear:currentYear,periodNum:periodNum,overallScore:overallScore,overallLevel:overallLevel,palaces:palaces,bestPalace:best,worstPalace:worst,periodChart:periodChart,annualStars:annualStars,mountainStars:stars.mountainStars,facingStars:stars.facingStars,mountainShun:stars.mountainShun,facingShun:stars.facingShun,sanBanGua:sanBanGua,qiXingDJ:qiXingDJ,chengMenJue:chengMenJue}
   return {MOUNTAINS_24:MOUNTAINS_24,MOUNTAIN_NAMES:MOUNTAIN_NAMES,STARS:STARS,GONG_NAMES:GONG_NAMES,divine:function(params){params=params||{};return fullAnalysis(params.sitting||'子',params.facing||'午',params.buildYear||2024,params.currentYear||2026)}};
 })();
 
@@ -403,17 +451,20 @@ function generateFengshuiAnalysis(result) {
   var html = '';
   var levelColors = {上吉:'#b8d8a8',中吉:'#d8c8a8',中平:'#a8b8c8',凶:'#d8a8a8',大凶:'#e84848'};
   var lc = levelColors[result.overallLevel] || '#c8d8a8';
+  var bp = result.bestPalace, wp = result.worstPalace;
+  var wxSheng = {木:'水',火:'木',土:'火',金:'土',水:'金'};
+  var wxKe = {木:'金',火:'水',土:'木',金:'火',水:'土'};
 
   // 1. 总体评估
   html += '<div class="analysis-block">';
   html += '<h4><span class="icon">📊</span>总体评估</h4>';
-  html += '<p>此宅坐<span class="highlight">' + result.sitting + '</span>向<span class="highlight">' + result.facing + '</span>，建于<span class="highlight">' + result.buildYear + '年</span>（' + result.periodNum + '运），当前为<span class="highlight">' + result.currentYear + '年</span>流年飞星盘。</p>';
+  html += '<p>此宅坐<span class="highlight">' + result.sitting + '</span>向<span class="highlight">' + result.facing + '</span>，建于<span class="highlight">' + result.buildYear + '年</span>（' + result.periodNum + '运），当前为<span class="highlight">' + result.currentYear + '年</span>流年飞星盘。综合评分 <span class="highlight">' + result.overallScore + '</span> 分，评级：<span class="highlight">' + result.overallLevel + '</span>。</p>';
   var desc = '';
-  if (result.overallScore >= 75) desc = '整体风水格局上佳，九宫飞星配置得当，旺星得位，衰星退避，是难得的吉宅。宅运亨通，居住者身心健康，事业财运皆有良好发展。';
-  else if (result.overallScore >= 60) desc = '整体风水格局中吉，多数宫位配置尚可，但部分方位存在缺陷，需加以注意和化解。总体而言，此宅可居，但需关注特定方位的变化。';
-  else if (result.overallScore >= 45) desc = '整体风水格局中平，有吉有凶，需重点关注凶位化解。部分宫位飞星组合欠佳，可能影响居住者的运势和健康，建议针对性调整。';
-  else if (result.overallScore >= 30) desc = '整体风水格局偏凶，多个宫位存在明显的风水缺陷。五黄、二黑等凶星临重要宫位，建议尽快进行风水调理，不可掉以轻心。';
-  else desc = '整体风水格局大凶，九宫飞星配置严重失衡，凶星当道，吉星失位。此宅风水问题较多，建议请专业风水师实地勘察，进行综合调理。';
+  if (result.overallScore >= 75) desc = '整体风水格局上佳，九宫飞星配置得当，旺星得位，衰星退避，是难得的吉宅。山向配合得当，丁财两旺之象。宅运亨通，居住者身心健康，事业财运皆有良好发展。九宫之中，多数宫位得吉星照临，只需注意流年变化，即可长保平安。';
+  else if (result.overallScore >= 60) desc = '整体风水格局中吉，多数宫位配置尚可，但部分方位存在缺陷，需加以注意和化解。总体而言，此宅可居，但需关注特定方位的变化。吉星虽占多数，但个别宫位凶星临位，需针对性调理，方可趋吉避凶。';
+  else if (result.overallScore >= 45) desc = '整体风水格局中平，有吉有凶，需重点关注凶位化解。部分宫位飞星组合欠佳，可能影响居住者的运势和健康。吉凶参半，关键在于能否将凶位的影响力降到最低，同时将吉位的旺气充分引入生活空间。建议针对性调整，不可掉以轻心。';
+  else if (result.overallScore >= 30) desc = '整体风水格局偏凶，多个宫位存在明显的风水缺陷。五黄、二黑等凶星临重要宫位，对居住者健康、财运均有不利影响。建议尽快进行风水调理，重点化解凶位煞气，同时尽量利用吉位布局。若有条件，可考虑调整坐向或进行风水改造。';
+  else desc = '整体风水格局大凶，九宫飞星配置严重失衡，凶星当道，吉星失位。此宅风水问题较多，五黄、二黑等大凶之星占据重要方位，可能对居住者造成较大的负面影响。建议请专业风水师实地勘察，进行综合调理，或考虑搬迁至风水更佳之处。';
   html += '<p>' + desc + '</p>';
   html += '</div>';
 
@@ -423,36 +474,169 @@ function generateFengshuiAnalysis(result) {
   var periodDesc = {1:'一运（水运）',2:'二运（土运）',3:'三运（木运）',4:'四运（木运）',5:'五运（土运）',6:'六运（金运）',7:'七运（金运）',8:'八运（土运）',9:'九运（火运）'};
   var periodWx = {1:'水',2:'土',3:'木',4:'木',5:'土',6:'金',7:'金',8:'土',9:'火'};
   html += '<p>此宅建于<span class="highlight">' + periodDesc[result.periodNum] + '</span>，当令旺星为<span class="highlight">' + result.periodNum + '星</span>（' + (FengshuiEngine.STARS[result.periodNum]||{}).name + '），五行属<span class="highlight">' + (periodWx[result.periodNum]||'') + '</span>。</p>';
-  if (result.periodNum === 9) html += '<p>当前正值九运（2024-2043），九紫右弼星当令。此宅建于九运期间，正值旺运，宅运与天运相合，根基稳固。九紫为火，主喜庆、桃花、添丁，此宅在此运中基础运势良好。</p>';
-  else if (result.periodNum === 8) html += '<p>此宅建于八运期间，八白左辅星当令。当前已进入九运，八运虽已退气，但八白为财星，仍有旺气可借。不过需注意九运火生土，旺气渐退，应关注九运当旺方位。</p>';
-  else html += '<p>此宅建于' + result.periodNum + '运，当前已进入九运，原运旺气已过。需特别关注当前九运的飞星布局，以九运旺星为重心进行调理。</p>';
+  if (result.periodNum === 9) {
+    html += '<p>当前正值九运（2024-2043），九紫右弼星当令，五行属火。此宅建于九运期间，正值旺运，宅运与天运相合，根基稳固。九紫为火，主喜庆、桃花、添丁、文明之象，此宅在此运中基础运势良好。</p>';
+    html += '<p>九运火旺，宜在南方离宫布置红色、紫色等喜庆元素，可进一步催旺宅运。但需注意火过旺则克金，若家中成员八字忌火，则需以水制火，如放置鱼缸、黑色装饰等。</p>';
+  } else if (result.periodNum === 8) {
+    html += '<p>此宅建于八运期间，八白左辅星当令，五行属土。当前已进入九运（2024-2043），八运虽已退气，但八白为财星，仍有旺气可借。不过需注意九运火生土，旺气渐退，应关注九运当旺方位。</p>';
+    html += '<p>八运财星八白在九运中仍有余气，可在八白方位放置招财物品以延续财气。但重心应逐渐转向九运的九紫喜庆星，以适应天运之变。</p>';
+  } else {
+    html += '<p>此宅建于' + result.periodNum + '运，当前已进入九运（2024-2043），原运旺气已过。需特别关注当前九运的飞星布局，以九运旺星为重心进行调理。原运旺星虽已退气，但若原运旺星所在宫位与九运吉星重叠，则仍有利用价值。</p>';
+    html += '<p>退气之宅，重在借运。可通过调整室内布局，将主要活动区域移至九运旺星所在方位，同时加强流年飞星的利用，以补原运之不足。</p>';
+  }
   html += '</div>';
 
-  // 3. 最佳/最差方位
+  // 3. 坐山朝向分析
   html += '<div class="analysis-block">';
-  html += '<h4><span class="icon">🎯</span>方位吉凶</h4>';
-  var bp = result.bestPalace, wp = result.worstPalace;
-  html += '<p><span class="good">最佳方位：' + bp.name + '</span>，综合评分 <span class="highlight">' + bp.score + '</span>（' + bp.level + '）。运星' + bp.periodStar + '、山星' + bp.mountainStar + '、向星' + bp.facingStar + '、年星' + bp.annualStar + '。</p>';
-  if (bp.notes && bp.notes.length > 0) html += '<p>此方位' + bp.notes.join('，') + '。宜作为客厅、主卧等重要功能区域，以纳旺气。</p>';
-  html += '<p><span class="warn">最差方位：' + wp.name + '</span>，综合评分 <span class="highlight">' + wp.score + '</span>（' + wp.level + '）。运星' + wp.periodStar + '、山星' + wp.mountainStar + '、向星' + wp.facingStar + '、年星' + wp.annualStar + '。</p>';
-  if (wp.warnings && wp.warnings.length > 0) html += '<p>此方位' + wp.warnings.join('，') + '。宜作为储藏间、卫生间等次要区域，或放置风水化煞物品。</p>';
+  html += '<h4><span class="icon">🧭</span>坐山朝向分析</h4>';
+  html += '<p>坐<span class="highlight">' + result.sitting + '</span>向<span class="highlight">' + result.facing + '</span>，山管人丁水管财。坐山' + result.sitting + '主家中人丁健康、人际关系，朝向' + result.facing + '主财运事业、对外发展。</p>';
+  var sitGong = result.palaces.length > 0 ? result.palaces[4] : null;
+  var facePalace = null;
+  for (var i = 0; i < result.palaces.length; i++) {
+    if (result.palaces[i].name.indexOf(result.facing) >= 0 || (result.palaces[i].gua && FengshuiEngine.MOUNTAIN_GUA && FengshuiEngine.MOUNTAIN_GUA[result.facing] === result.palaces[i].gua)) {
+      facePalace = result.palaces[i]; break;
+    }
+  }
+  if (!facePalace) facePalace = result.palaces[4];
+  // 飞星顺逆说明
+  var mtnDir = result.mountainShun ? '顺飞' : '逆飞';
+  var facDir = result.facingShun ? '顺飞' : '逆飞';
+  var sitYY = FengshuiEngine.MOUNTAIN_GUA ? '阳' : '阳'; // fallback
+  html += '<p>山星<span class="highlight">' + mtnDir + '</span>（坐山' + result.sitting + '属' + (MOUNTAIN_YINYANG[result.sitting]||'') + '，' + (result.mountainShun?'阳顺':'阴逆') + '），向星<span class="highlight">' + facDir + '</span>（朝向' + result.facing + '属' + (MOUNTAIN_YINYANG[result.facing]||'') + '，' + (result.facingShun?'阳顺':'阴逆') + '）。此为玄空飞星排盘之关键，顺逆有别，吉凶各异。</p>';
+  if (sitGong) {
+    html += '<p>中宫飞星组合：运' + sitGong.periodStar + ' · 山' + sitGong.mountainStar + ' · 向' + sitGong.facingStar + ' · 年' + sitGong.annualStar + '。' + (sitGong.mountainStar + sitGong.facingStar === 10 ? '<span class="good">山向合十，大吉之象，夫妻同心，家宅安宁。</span>' : (sitGong.mountainStar === 8 ? '<span class="good">山星八白旺丁，向星' + sitGong.facingStar + '，丁旺于财，需注意财位布局。</span>' : (sitGong.facingStar === 8 ? '<span class="good">向星八白旺财，山星' + sitGong.mountainStar + '，财旺于丁，需注意健康调理。</span>' : '山向组合中平，需结合各宫位综合判断。'))) + '</p>';
+  }
+  html += '<p>山星管人丁，宜在高处、安静处；向星管财运，宜在低处、开阔处。若山星落水（低处）或向星上山（高处），则丁财失调，需通过室内布局调整。' + (sitGong && (sitGong.mountainStar === 5 || sitGong.facingStar === 5) ? '<span class="warn">中宫山向飞星有五黄，需格外注意！</span>' : '') + '</p>';
+  // 城门诀
+  if (result.chengMenJue) {
+    html += '<p><span class="good">城门诀：</span>' + result.chengMenJue.desc + '可在' + result.chengMenJue.mtn + '方开门窗，引旺气入宅，此为玄空秘法之一。</p>';
+  }
   html += '</div>';
 
-  // 4. 年星重点
+  // 4. 九宫逐一详解
+  html += '<div class="analysis-block">';
+  html += '<h4><span class="icon">🏯</span>九宫逐一详解</h4>';
+  for (var i = 0; i < result.palaces.length; i++) {
+    var p = result.palaces[i];
+    var allNotes = (p.notes || []).concat(p.warnings || []);
+    var levelIcon = p.level === '大吉' || p.level === '吉' ? '✅' : (p.level === '中平' ? '➖' : '⚠️');
+    html += '<p><strong>' + levelIcon + ' ' + p.name + '</strong>（' + p.gua + '卦 · ' + p.wuxing + '）评' + p.score + ' · ' + p.level + '。运' + p.periodStar + '山' + p.mountainStar + '向' + p.facingStar + '年' + p.annualStar + '。' + (allNotes.length > 0 ? allNotes.join('；') + '。' : '此宫飞星组合中平，无明显吉凶偏向。') + '</p>';
+    // 宫位装修建议
+    var gongAdvice = '';
+    if (p.level === '大吉' || p.level === '吉') {
+      gongAdvice = '宜作为客厅、主卧、书房等重要功能区域，以纳旺气。可在此方位放置绿色植物、水晶、聚宝盆等催旺物品。';
+    } else if (p.level === '中平') {
+      gongAdvice = '可作为次卧、餐厅、走廊等日常区域。保持整洁明亮即可，无需特别布置。';
+    } else {
+      gongAdvice = '宜作为储藏间、卫生间、洗衣房等次要区域。若无法避免作为重要区域，需放置化煞物品。';
+    }
+    html += '<p style="font-size:0.78rem;color:var(--text3);padding-left:1.5em;margin-top:2px">└ 建议：' + gongAdvice + '</p>';
+  }
+  html += '</div>';
+
+  // 4.5 三般卦 / 七星打劫（特殊格局）
+  if (result.sanBanGua) {
+    html += '<div class="analysis-block">';
+    html += '<h4><span class="icon">🏆</span>特殊格局：' + result.sanBanGua.type + '</h4>';
+    html += '<p><span class="good">' + result.sanBanGua.desc + '</span></p>';
+    html += '<p>父母三般卦为玄空飞星中极为罕见的上吉格局，三般卦即成，则三元不败，世代兴旺。此宅得天独厚，当善加维护，保持各宫位整洁明亮，以纳天地之旺气。三般卦之宅，忌在凶位动土装修，以免破坏格局。</p>';
+    html += '</div>';
+  }
+  if (result.qiXingDJ) {
+    html += '<div class="analysis-block">';
+    html += '<h4><span class="icon">⚡</span>特殊格局：七星打劫</h4>';
+    html += '<p><span class="good">' + result.qiXingDJ.desc + '</span></p>';
+    html += '<p>七星打劫为玄空飞星中的速发格局，主短时间内财源广进、事业突飞猛进。但此格局不稳，劫后可能回落，需在旺运期间积累根基，为退运做好准备。建议在旺星方位布置催旺物品，同时注意凶星方位的化解，不可因一时之旺而忽视调理。</p>';
+    html += '</div>';
+  }
+
+  // 5. 旺财旺丁方位详解
+  html += '<div class="analysis-block">';
+  html += '<h4><span class="icon">💰</span>旺财旺丁方位详解</h4>';
+  var caiWei = [], dingWei = [];
+  for (var i = 0; i < result.palaces.length; i++) {
+    var p = result.palaces[i];
+    if (p.facingStar === 8) caiWei.push(p);
+    if (p.mountainStar === 8) dingWei.push(p);
+    if (p.annualStar === 8 && caiWei.indexOf(p) < 0) caiWei.push(p);
+  }
+  html += '<p><span class="good">旺财方位：</span>' + (caiWei.length > 0 ? '' : '本年无特别突出的旺财方位，可关注') + '</p>';
+  for (var j = 0; j < caiWei.length; j++) {
+    var cw = caiWei[j];
+    html += '<p>' + cw.name + ' — 八白左辅星临位，主正财、置业、升职。宜在此方放置<span class="highlight">貔貅、金元宝、聚宝盆、黄水晶</span>等招财物件。保持明亮整洁，可放置常绿植物（如发财树、金钱树）以催旺财气。忌堆放杂物、放置垃圾桶。</p>';
+  }
+  html += '<p style="margin-top:8px"><span class="good">旺丁方位：</span>' + (dingWei.length > 0 ? '' : '本年无特别突出的旺丁方位，可关注') + '</p>';
+  for (var j = 0; j < dingWei.length; j++) {
+    var dw = dingWei[j];
+    html += '<p>' + dw.name + ' — 八白左辅星临山星位，主人口健康、家庭和睦、添丁进口。宜在此方放置<span class="highlight">紫水晶、石榴石、葫芦</span>等旺丁物品。此方位宜安静，忌嘈杂喧闹。</p>';
+  }
+  html += '</div>';
+
+  // 6. 化煞方案
+  html += '<div class="analysis-block">';
+  html += '<h4><span class="icon">🛡️</span>化煞方案</h4>';
+  var shaGong = [];
+  for (var i = 0; i < result.palaces.length; i++) {
+    var p = result.palaces[i];
+    if (p.annualStar === 5 || p.periodStar === 5 || p.mountainStar === 5 || p.facingStar === 5) {
+      shaGong.push({palace: p, type: '五黄煞'});
+    }
+    if (p.annualStar === 2) shaGong.push({palace: p, type: '二黑病符'});
+    if (p.annualStar === 3) shaGong.push({palace: p, type: '三碧是非'});
+    if (p.annualStar === 7) shaGong.push({palace: p, type: '七赤破军'});
+  }
+  if (shaGong.length > 0) {
+    for (var j = 0; j < shaGong.length; j++) {
+      var sg = shaGong[j];
+      if (sg.type === '五黄煞') {
+        html += '<p><span class="warn">' + sg.palace.name + ' — 五黄煞：</span>五黄廉贞星为九星中最凶之星，主灾祸、疾病、血光。此方今年<span class="warn">忌动土、装修、钻孔、放置红色或黄色物品</span>。化解方法：悬挂<span class="highlight">铜铃、六帝钱、铜葫芦</span>，以金泄土气。保持安静，不宜在此方位长时间停留。</p>';
+      } else if (sg.type === '二黑病符') {
+        html += '<p><span class="warn">' + sg.palace.name + ' — 二黑病符：</span>二黑巨门星主疾病、伤痛，尤其影响家中老人和体弱者。化解方法：放置<span class="highlight">铜葫芦、五帝钱、金属摆件</span>，以金泄土气。保持通风干燥，定期打扫，避免堆积杂物。</p>';
+      } else if (sg.type === '三碧是非') {
+        html += '<p><span class="warn">' + sg.palace.name + ' — 三碧是非：</span>三碧禄存星主口舌是非、官非纠纷。化解方法：放置<span class="highlight">红色物品（如红色地毯、中国结）</span>，以火泄木气。避免在此方位进行重要谈判或签署合同。</p>';
+      } else if (sg.type === '七赤破军') {
+        html += '<p><span class="warn">' + sg.palace.name + ' — 七赤破军：</span>七赤破军星主破财、盗窃、口舌。化解方法：放置<span class="highlight">蓝色或黑色物品（如黑曜石、蓝水晶）</span>，以水泄金气。加强安防，注意财物保管。</p>';
+      }
+    }
+  } else {
+    html += '<p>本年各宫位无明显大煞，但仍需注意保持各方位整洁明亮，避免堆放杂物。定期通风换气，保持气场流通，即为最好的风水调理。</p>';
+  }
+  // 通用化煞物品
+  html += '<p style="margin-top:8px"><span class="highlight">通用化煞物品清单：</span>铜葫芦（化病气）、六帝钱（化五黄）、八卦镜（挡外煞）、黑曜石（镇宅）、水晶洞（聚气）、盐灯（净化气场）。摆放时需注意方向，化煞物品一般朝向煞方。</p>';
+  html += '</div>';
+
+  // 7. 流年逐月吉凶
   html += '<div class="analysis-block">';
   html += '<h4><span class="icon">📅</span>' + result.currentYear + '年流年飞星重点</h4>';
   var annualAlerts = [];
   for (var i = 0; i < result.palaces.length; i++) {
     var p = result.palaces[i];
-    if (p.annualStar === 5) annualAlerts.push('<span class="warn">' + p.name + '年星五黄大凶，今年此方位忌动土、装修，宜静不宜动</span>');
-    if (p.annualStar === 2) annualAlerts.push(p.name + '年星二黑病符，注意健康，可放置铜葫芦化解');
-    if (p.annualStar === 8) annualAlerts.push('<span class="good">' + p.name + '年星八白旺财，今年此方位宜活跃，可放置招财物件</span>');
-    if (p.annualStar === 9) annualAlerts.push('<span class="good">' + p.name + '年星九紫喜庆，今年此方位宜布置喜庆之物</span>');
-    if (p.annualStar === 4) annualAlerts.push(p.name + '年星四绿文昌，今年此方位利学业考试');
-    if (p.annualStar === 6) annualAlerts.push(p.name + '年星六白权贵，今年此方位利事业官运');
+    if (p.annualStar === 5) annualAlerts.push('<span class="warn">' + p.name + '：年星五黄大凶，今年此方位忌动土、装修，宜静不宜动。悬挂铜铃或六帝钱化解。</span>');
+    if (p.annualStar === 2) annualAlerts.push(p.name + '：年星二黑病符，注意家人健康，尤其呼吸系统和消化系统。可放置铜葫芦化解，定期通风。');
+    if (p.annualStar === 8) annualAlerts.push('<span class="good">' + p.name + '：年星八白旺财，今年此方位宜活跃，可放置貔貅、聚宝盆等招财物件，常在此方位活动以纳财气。</span>');
+    if (p.annualStar === 9) annualAlerts.push('<span class="good">' + p.name + '：年星九紫喜庆，今年此方位宜布置红色/紫色装饰，利婚恋、添丁、喜事。可放置红色鲜花或灯笼。</span>');
+    if (p.annualStar === 4) annualAlerts.push(p.name + '：年星四绿文昌，今年此方位利学业考试、文书工作。可放置文昌塔、毛笔、绿植。');
+    if (p.annualStar === 6) annualAlerts.push(p.name + '：年星六白权贵，今年此方位利事业官运、求名求贵。可放置金属摆件、水晶球。');
+    if (p.annualStar === 1) annualAlerts.push(p.name + '：年星一白贪狼，今年此方位利桃花人缘、人际关系。可放置水养植物、鱼缸。');
   }
   for (var j = 0; j < annualAlerts.length; j++) {
     html += '<p>' + annualAlerts[j] + '</p>';
+  }
+  html += '<p style="margin-top:8px;font-size:0.78rem;color:var(--text3)">注：流年飞星每年立春后更新，以上为' + result.currentYear + '年飞星布局。建议每年年初重新排盘，根据当年飞星调整布局。</p>';
+  html += '</div>';
+
+  // 8. 综合调理建议
+  html += '<div class="analysis-block">';
+  html += '<h4><span class="icon">🔧</span>综合调理建议</h4>';
+  var advices = [];
+  advices.push('<strong>门口玄关：</strong>保持明亮整洁，放置常绿植物或水晶，以纳吉气入门。鞋柜不可正对大门，门口不可堆放杂物。');
+  advices.push('<strong>客厅布局：</strong>沙发宜靠实墙，背后不宜为空。电视不宜正对沙发，避免形成"对冲"。客厅中央宜开阔，不宜放置大型家具阻断气场流通。');
+  advices.push('<strong>卧室布局：</strong>床头宜靠实墙，不宜靠窗或悬空。镜子不宜正对床，衣柜门不宜对床。卧室宜安静柔和，颜色以暖色为主，忌大红大紫。');
+  advices.push('<strong>厨房布局：</strong>灶台不宜正对厨房门或水槽（水火相冲）。冰箱不宜正对灶台。厨房宜保持整洁，刀具应收纳好，不宜外露。');
+  advices.push('<strong>卫生间布局：</strong>卫生间门不宜正对大门、卧室门或厨房门。卫生间宜保持干燥通风，可放置盐灯或植物净化气场。马桶盖在不使用时宜盖上。');
+  advices.push('<strong>整体气场：</strong>全屋宜保持通风明亮，定期开窗换气。避免堆放过多杂物，定期清理无用物品。可在客厅或玄关放置水晶洞，以聚气纳福。');
+  for (var j = 0; j < advices.length; j++) {
+    html += '<p>' + advices[j] + '</p>';
   }
   html += '</div>';
 
@@ -463,8 +647,8 @@ function generateFengshuiAnalysis(result) {
 var FENGSHUI_MASTERS = [
   {id:'yangyunsong',name:'杨筠松',title:'风水祖师·救贫仙人',era:'唐',avatar:'⛰️',style:'峦头派宗师，寻龙点穴，以山水形势论吉凶，重视龙穴砂水向五诀',
    phrase:'寻龙点穴，救贫济世',
-   opening:['筠松以峦头之法，观汝宅之形势。龙脉走势，砂水环抱，吉凶自在山水之间。今观此宅，坐{坐}向{向}，建于{年}年（{运}运），{整体}。',
-            '风水之道，首重峦头。汝宅坐{坐}向{向}，{整体}。待筠松细察九宫飞星，以断吉凶。'],
+   opening:['筠松以峦头之法，观汝宅之形势。龙脉走势，砂水环抱，吉凶自在山水之间。今观此宅，坐{坐}向{向}，建于{年}年（{运}运），山星{山星飞}、向星{向星飞}，{整体}。{三般卦}{七星打劫}',
+            '风水之道，首重峦头。汝宅坐{坐}向{向}，山星{山星飞}、向星{向星飞}，{整体}。{城门诀}待筠松细察九宫飞星，以断吉凶。'],
    overview:['九宫飞星，各有其主。此宅中宫{中宫}，{中宫评}。全盘{总评}。{旺宫}方位得旺气，最为得力；{衰宫}方位受衰气所困，需加调理。',
              '观此宅飞星盘，{旺星}得位，{衰星}失势。{总评}。山星管人丁，向星管财运，合而论之：{山向评}。'],
    specialty:['专论{最佳}方位：此宫{最佳星}，{最佳评}。宜作为{最佳用}之用，以纳旺气。\n再论{最差}方位：此宫{最差星}，{最差评}。此方宜静不宜动，忌红色、火属性物品，可放置{化解}以化煞。',
@@ -475,8 +659,8 @@ var FENGSHUI_MASTERS = [
             '峦头所示，吉凶已明。筠松以为，{建议}，方得山水之助。']},
   {id:'laibuyi',name:'赖布衣',title:'理气派宗师',era:'宋',avatar:'🧭',style:'理气派宗师，重视罗盘分金与卦气方位，以天星催官，以卦理断吉凶',
    phrase:'天星催官，卦气通神',
-   opening:['布衣以理气之法，推演汝宅之卦气。罗盘分金，卦位吉凶，天星照临，自有定数。此宅坐{坐}向{向}，{整体}，当以卦气论之。',
-            '理气者，以卦气推方位之吉凶也。汝宅坐{坐}向{向}，建于{年}年，卦气流转，当以理气之法推演。'],
+   opening:['布衣以理气之法，推演汝宅之卦气。罗盘分金，卦位吉凶，天星照临，自有定数。此宅坐{坐}向{向}，山星{山星飞}、向星{向星飞}，{整体}，当以卦气论之。{三般卦}{七星打劫}',
+            '理气者，以卦气推方位之吉凶也。汝宅坐{坐}向{向}，建于{年}年，卦气流转，当以理气之法推演。{城门诀}'],
    overview:['以卦气推之，此宅坐{坐}属{坐卦}卦，向{向}属{向卦}卦。九宫飞星配合卦气，{吉宫数}宫为吉，{凶宫数}宫为凶。{总评}。',
             '罗盘分金，一度之差，祸福千里。此宅坐{坐}向{向}，分金线度当以{坐卦}卦{向卦}卦为基准。{总评}。'],
    specialty:['天星催官，当以{最佳}宫为要。此宫{最佳星}，得{最佳用}之用，天星照临，催官旺财，最为得力。\n{最差}宫则{最差星}，星气衰败，宜以{化解}之法化解之。',
@@ -487,12 +671,12 @@ var FENGSHUI_MASTERS = [
             '理气所示，吉凶分明。布衣以为，{建议}，方为趋吉避凶之道。']},
   {id:'jiangdahong',name:'蒋大鸿',title:'玄空飞星宗师',era:'清',avatar:'🌟',style:'玄空飞星派宗师，以三元九运推演时空吉凶，重视山向飞星与旺衰生死',
    phrase:'三元九运，飞星断吉凶',
-   opening:['大鸿以玄空飞星之法，推演汝宅之星盘。三元九运，山向飞星，旺衰生死，尽在盘中。此宅坐{坐}向{向}，建于{年}年（{运}运），{整体}。',
-            '玄空者，时空之飞星也。汝宅建于{年}年，运星{运星}入中，山向飞星各有其位。{整体}，待大鸿细论。'],
+   opening:['大鸿以玄空飞星之法，推演汝宅之星盘。三元九运，山向飞星，旺衰生死，尽在盘中。此宅坐{坐}向{向}，建于{年}年（{运}运），山星{山星飞}（坐{坐}属{坐阴}，{坐阴}则{山星飞}）、向星{向星飞}（向{向}属{向阴}，{向阴}则{向星飞}）。{整体}。{三般卦}{七星打劫}',
+            '玄空者，时空之飞星也。汝宅建于{年}年，运星{运星}入中。山星{山星飞}、向星{向星飞}，{整体}。{城门诀}待大鸿细论。'],
    overview:['此宅{运}运所建，运星{运星}入中宫。山星{山星}到坐，向星{向星}到向。{山向评}。全盘九宫，{旺宫}宫得旺气，{衰宫}宫受衰气，{总评}。',
             '三元九运，周而复始。此宅值{运}运，当令之星为{旺星}。然今已至{年}年，运之流转，吉凶亦随之而变。{总评}。'],
-   specialty:['山上龙神不下水，水里龙神不上山。此宅{最佳}宫山向配合{最佳星}，山向合局，{最佳评}。\n{最差}宫则{最差星}，{最差评}。此方宜以{化解}化解，勿使衰气侵扰。',
-              '今岁{年}年，年星{年星}入中。{年五黄}方五黄临宫，为大凶之位，宜静不宜动。{年八白}方八白旺财，宜以{招财}催旺之。{年九紫}方九紫喜庆，可布置喜庆之物纳吉。'],
+   specialty:['山上龙神不下水，水里龙神不上山。此宅{最佳}宫山向配合{最佳星}，山向合局，{最佳评}。\n{最差}宫则{最差星}，{最差评}。此方宜以{化解}化解，勿使衰气侵扰。{三般卦}{七星打劫}',
+              '今岁{年}年，年星{年星}入中。{年五黄}方五黄临宫，为大凶之位，宜静不宜动。{年八白}方八白旺财，宜以{招财}催旺之。{年九紫}方九紫喜庆，可布置喜庆之物纳吉。{城门诀}'],
    quote:['《地理辨正》云："三元九运，周而复始。旺星当令者吉，衰星失令者凶。"此宅建于{运}运，旺星为{旺星}，当令与否，关乎宅运盛衰。',
            '蒋大鸿曰："山上龙神不下水，水里龙神不上山。山向合局，方为吉宅。"此宅坐{坐}向{向}，山向之局，{山向评}。'],
    closing:['大鸿以玄空飞星断之：此宅{整体}，{建议}。飞星已排，吉凶已判，旺星得位则吉，衰星退避则安。',
@@ -575,6 +759,19 @@ function fengshuiMasterAnalyze(master, result) {
   else if (result.overallScore >= 60) data['建议'] = '宜重点关注' + result.worstPalace.name + '方位，放置化煞物品，同时旺' + result.bestPalace.name + '方位以纳吉气';
   else if (result.overallScore >= 45) data['建议'] = '宜对' + result.worstPalace.name + '等凶位进行重点调理，放置铜葫芦、六帝钱等化煞物品，同时关注流年飞星变化';
   else data['建议'] = '建议请专业风水师实地勘察，进行综合调理，不可仅凭理气之法自行判断';
+
+  // 顺逆飞
+  data['山星飞'] = result.mountainShun ? '顺飞' : '逆飞';
+  data['向星飞'] = result.facingShun ? '顺飞' : '逆飞';
+  data['坐阴'] = MOUNTAIN_YINYANG[result.sitting] || '阳';
+  data['向阴'] = MOUNTAIN_YINYANG[result.facing] || '阳';
+
+  // 三般卦 / 七星打劫
+  data['三般卦'] = result.sanBanGua ? result.sanBanGua.desc : '';
+  data['七星打劫'] = result.qiXingDJ ? result.qiXingDJ.desc : '';
+
+  // 城门诀
+  data['城门诀'] = result.chengMenJue ? result.chengMenJue.desc : '';
 
   // 填充模板
   function fill(tpl) {

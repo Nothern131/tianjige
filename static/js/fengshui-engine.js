@@ -133,30 +133,44 @@
     // 向星入中数字
     var facingCenter = facePeriodStar;
 
+    // 判断顺逆飞：坐山阴阳决定山星顺逆，朝向阴阳决定向星顺逆
+    var sitYY = MOUNTAIN_YINYANG[sitting] || '阳';
+    var faceYY = MOUNTAIN_YINYANG[facing] || '阳';
+    var mtnShun = (sitYY === '阳'); // 阳顺阴逆
+    var facShun = (faceYY === '阳');
+
+    var flyOrder = [4, 5, 6, 7, 8, 0, 1, 2, 3];     // 顺飞轨迹
+    var revFlyOrder = [4, 3, 2, 1, 0, 8, 7, 6, 5];   // 逆飞轨迹
+
     // 飞泊山星
     var mountainStars = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     mountainStars[4] = mountainCenter;
-    var flyOrder = [4, 5, 6, 7, 8, 0, 1, 2, 3];
+    var order = mtnShun ? flyOrder : revFlyOrder;
     for (var i = 0; i < 9; i++) {
-      var val = mountainCenter + i;
-      if (val > 9) val -= 9;
-      mountainStars[flyOrder[i]] = val;
+      var val = mtnShun ? (mountainCenter + i) : (mountainCenter - i);
+      while (val > 9) val -= 9;
+      while (val < 1) val += 9;
+      mountainStars[order[i]] = val;
     }
 
     // 飞泊向星
     var facingStars = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     facingStars[4] = facingCenter;
+    order = facShun ? flyOrder : revFlyOrder;
     for (var i = 0; i < 9; i++) {
-      var val = facingCenter + i;
-      if (val > 9) val -= 9;
-      facingStars[flyOrder[i]] = val;
+      var val = facShun ? (facingCenter + i) : (facingCenter - i);
+      while (val > 9) val -= 9;
+      while (val < 1) val += 9;
+      facingStars[order[i]] = val;
     }
 
     return {
       mountainStars: mountainStars,
       facingStars: facingStars,
       sitGongIdx: sitGongIdx,
-      faceGongIdx: faceGongIdx
+      faceGongIdx: faceGongIdx,
+      mountainShun: mtnShun,
+      facingShun: facShun
     };
   }
 
@@ -189,75 +203,129 @@
     var notes = [];
     var warnings = [];
 
+    var wxSheng = {木:'水',火:'木',土:'火',金:'土',水:'金'};
+    var wxKe = {木:'金',火:'水',土:'木',金:'火',水:'土'};
+    var gongWx = GONG_WUXING[gongIdx];
+    var pWx = (STARS[periodStar] || {}).wuxing || '';
+    var mWx = (STARS[mountainStar] || {}).wuxing || '';
+    var fWx = (STARS[facingStar] || {}).wuxing || '';
+
     // 检查五黄（5）
-    if (periodStar === 5) { score -= 15; warnings.push('运星五黄临宫'); }
-    if (mountainStar === 5) { score -= 15; warnings.push('山星五黄临宫'); }
-    if (facingStar === 5) { score -= 15; warnings.push('向星五黄临宫'); }
-    if (annualStar === 5) { score -= 20; warnings.push('年星五黄临宫——今年此方位大凶'); }
+    if (periodStar === 5) { score -= 18; warnings.push('运星五黄临宫'); }
+    if (mountainStar === 5) { score -= 18; warnings.push('山星五黄临宫'); }
+    if (facingStar === 5) { score -= 18; warnings.push('向星五黄临宫'); }
+    if (annualStar === 5) { score -= 22; warnings.push('年星五黄临宫——今年此方位大凶'); }
 
     // 检查二黑（2）
-    if (periodStar === 2) { score -= 8; warnings.push('运星二黑病符'); }
-    if (mountainStar === 2) { score -= 8; warnings.push('山星二黑病符'); }
-    if (facingStar === 2) { score -= 8; warnings.push('向星二黑病符'); }
-    if (annualStar === 2) { score -= 10; warnings.push('年星二黑病符——今年注意健康'); }
+    if (periodStar === 2) { score -= 10; warnings.push('运星二黑病符'); }
+    if (mountainStar === 2) { score -= 10; warnings.push('山星二黑病符'); }
+    if (facingStar === 2) { score -= 10; warnings.push('向星二黑病符'); }
+    if (annualStar === 2) { score -= 12; warnings.push('年星二黑病符——今年注意健康'); }
 
     // 吉星加分
-    if (periodStar === 8) { score += 12; notes.push('运星八白旺财'); }
-    if (mountainStar === 8) { score += 12; notes.push('山星八白旺丁'); }
-    if (facingStar === 8) { score += 12; notes.push('向星八白旺财'); }
-    if (annualStar === 8) { score += 10; notes.push('年星八白——今年财运佳'); }
+    if (periodStar === 8) { score += 14; notes.push('运星八白旺财'); }
+    if (mountainStar === 8) { score += 14; notes.push('山星八白旺丁'); }
+    if (facingStar === 8) { score += 14; notes.push('向星八白旺财'); }
+    if (annualStar === 8) { score += 12; notes.push('年星八白——今年财运佳'); }
 
-    if (periodStar === 9) { score += 10; notes.push('运星九紫喜庆'); }
-    if (mountainStar === 9) { score += 10; notes.push('山星九紫旺丁'); }
-    if (facingStar === 9) { score += 10; notes.push('向星九紫喜事'); }
-    if (annualStar === 9) { score += 8; notes.push('年星九紫——今年喜事临门'); }
+    if (periodStar === 9) { score += 12; notes.push('运星九紫喜庆'); }
+    if (mountainStar === 9) { score += 12; notes.push('山星九紫旺丁'); }
+    if (facingStar === 9) { score += 12; notes.push('向星九紫喜事'); }
+    if (annualStar === 9) { score += 10; notes.push('年星九紫——今年喜事临门'); }
 
-    if (periodStar === 1) { score += 8; notes.push('运星一白文昌'); }
-    if (mountainStar === 1) { score += 8; notes.push('山星一白旺人缘'); }
-    if (facingStar === 1) { score += 8; notes.push('向星一白旺桃花'); }
-    if (annualStar === 1) { score += 6; notes.push('年星一白——今年人缘桃花旺'); }
+    if (periodStar === 1) { score += 10; notes.push('运星一白文昌'); }
+    if (mountainStar === 1) { score += 10; notes.push('山星一白旺人缘'); }
+    if (facingStar === 1) { score += 10; notes.push('向星一白旺桃花'); }
+    if (annualStar === 1) { score += 8; notes.push('年星一白——今年人缘桃花旺'); }
 
-    if (periodStar === 6) { score += 8; notes.push('运星六白权贵'); }
-    if (mountainStar === 6) { score += 8; notes.push('山星六白旺官运'); }
-    if (facingStar === 6) { score += 8; notes.push('向星六白旺偏财'); }
-    if (annualStar === 6) { score += 6; notes.push('年星六白——今年官运/偏财佳'); }
+    if (periodStar === 6) { score += 10; notes.push('运星六白权贵'); }
+    if (mountainStar === 6) { score += 10; notes.push('山星六白旺官运'); }
+    if (facingStar === 6) { score += 10; notes.push('向星六白旺偏财'); }
+    if (annualStar === 6) { score += 8; notes.push('年星六白——今年官运/偏财佳'); }
 
-    if (periodStar === 4) { score += 5; notes.push('运星四绿文昌'); }
-    if (mountainStar === 4) { score += 5; notes.push('山星四绿利学业'); }
-    if (facingStar === 4) { score += 5; notes.push('向星四绿利考试'); }
-    if (annualStar === 4) { score += 4; notes.push('年星四绿——今年文昌运旺'); }
+    if (periodStar === 4) { score += 6; notes.push('运星四绿文昌'); }
+    if (mountainStar === 4) { score += 6; notes.push('山星四绿利学业'); }
+    if (facingStar === 4) { score += 6; notes.push('向星四绿利考试'); }
+    if (annualStar === 4) { score += 5; notes.push('年星四绿——今年文昌运旺'); }
 
     // 凶星减分
-    if (periodStar === 3) { score -= 5; warnings.push('运星三碧是非'); }
-    if (annualStar === 3) { score -= 6; warnings.push('年星三碧——今年防口舌是非'); }
+    if (periodStar === 3) { score -= 6; warnings.push('运星三碧是非'); }
+    if (mountainStar === 3) { score -= 6; warnings.push('山星三碧口舌'); }
+    if (facingStar === 3) { score -= 6; warnings.push('向星三碧争斗'); }
+    if (annualStar === 3) { score -= 8; warnings.push('年星三碧——今年防口舌是非'); }
 
-    if (periodStar === 7) { score -= 5; warnings.push('运星七赤破财'); }
-    if (annualStar === 7) { score -= 6; warnings.push('年星七赤——今年防盗贼破财'); }
+    if (periodStar === 7) { score -= 6; warnings.push('运星七赤破财'); }
+    if (mountainStar === 7) { score -= 6; warnings.push('山星七赤盗贼'); }
+    if (facingStar === 7) { score -= 6; warnings.push('向星七赤手术'); }
+    if (annualStar === 7) { score -= 8; warnings.push('年星七赤——今年防盗贼破财'); }
 
-    // 星组生克分析
     // 山向合十（山星+向星=10）为吉
     if (mountainStar + facingStar === 10) {
-      score += 10;
+      score += 12;
       notes.push('山向合十——夫妻同心，大局安稳');
     }
 
     // 宫位五行与星曜五行生克
-    var gongWx = GONG_WUXING[gongIdx];
-    var periodWx = (STARS[periodStar] || {}).wuxing || '';
-    // 星生宫为吉
-    var wxSheng = {木:'水',火:'木',土:'火',金:'土',水:'金'};
-    var wxKe = {木:'金',火:'水',土:'木',金:'火',水:'土'};
-    if (periodWx && wxSheng[gongWx] === periodWx) {
-      score += 5;
-      notes.push('运星' + periodWx + '生宫' + gongWx + '——宫位得生，根基稳固');
+    if (pWx && wxSheng[gongWx] === pWx) {
+      score += 6;
+      notes.push('运星' + pWx + '生宫' + gongWx + '——宫位得生，根基稳固');
     }
-    if (periodWx && wxKe[gongWx] === periodWx) {
-      score -= 5;
-      warnings.push('运星' + periodWx + '克宫' + gongWx + '——宫位受克，根基不稳');
+    if (pWx && wxKe[gongWx] === pWx) {
+      score -= 6;
+      warnings.push('运星' + pWx + '克宫' + gongWx + '——宫位受克，根基不稳');
+    }
+    if (mWx && wxSheng[gongWx] === mWx) {
+      score += 5; notes.push('山星' + mWx + '生宫' + gongWx + '——人丁得气');
+    }
+    if (mWx && wxKe[gongWx] === mWx) {
+      score -= 5; warnings.push('山星' + mWx + '克宫' + gongWx + '——人丁受损');
+    }
+    if (fWx && wxSheng[gongWx] === fWx) {
+      score += 5; notes.push('向星' + fWx + '生宫' + gongWx + '——财运得气');
+    }
+    if (fWx && wxKe[gongWx] === fWx) {
+      score -= 5; warnings.push('向星' + fWx + '克宫' + gongWx + '——财运受损');
+    }
+
+    // ═══ 星组组合分析 ═══
+    var combos = [
+      {s1:periodStar,s2:mountainStar,label:'运山'},{s1:periodStar,s2:facingStar,label:'运向'},
+      {s1:periodStar,s2:annualStar,label:'运年'},{s1:mountainStar,s2:facingStar,label:'山向'},
+      {s1:mountainStar,s2:annualStar,label:'山年'},{s1:facingStar,s2:annualStar,label:'向年'}
+    ];
+    for (var ci = 0; ci < combos.length; ci++) {
+      var c = combos[ci];
+      if (c.s1 === 2 && c.s2 === 5 || c.s1 === 5 && c.s2 === 2) {
+        score -= 20; warnings.push(c.label + '二五交加——主重病、灾祸，此方大凶！宜以金属器物（铜铃、六帝钱）化泄');
+      }
+      if (c.s1 === 5 && c.s2 === 9 || c.s1 === 9 && c.s2 === 5) {
+        score -= 12; warnings.push(c.label + '九五火土相生——凶焰更炽，主火灾、急症、血光。宜用水制火（黑色物品、鱼缸）');
+      }
+      if (c.s1 === 2 && c.s2 === 9 || c.s1 === 9 && c.s2 === 2) {
+        score -= 10; warnings.push(c.label + '二九火土——病符遇火，炎症发热之象。宜金泄土（铜器）');
+      }
+      if (c.s1 === 1 && c.s2 === 4 || c.s1 === 4 && c.s2 === 1) {
+        score += 10; notes.push(c.label + '一四同宫——文昌大旺，利学业、考试、功名！宜摆放文昌塔、毛笔、绿色植物');
+      }
+      if (c.s1 === 3 && c.s2 === 8 || c.s1 === 8 && c.s2 === 3) {
+        score -= 6; warnings.push(c.label + '三八木克土——财星受损，因是非破财。宜火泄木（红色物品）');
+      }
+      if (c.s1 === 7 && c.s2 === 9 || c.s1 === 9 && c.s2 === 7) {
+        score -= 8; warnings.push(c.label + '七九火克金——回禄之灾，防火盗。宜土泄火（黄色物品）');
+      }
+      if (c.s1 === 6 && c.s2 === 8 || c.s1 === 8 && c.s2 === 6) {
+        score += 10; notes.push(c.label + '六八土生金——官财两旺，富贵双全之象！宜金属摆件、水晶球催旺');
+      }
+      if (c.s1 === 8 && c.s2 === 9 || c.s1 === 9 && c.s2 === 8) {
+        score += 8; notes.push(c.label + '八九火土相生——财喜双至，旺财添丁。宜红色/黄色装饰催旺');
+      }
+      if (c.s1 === 4 && c.s2 === 9 || c.s1 === 9 && c.s2 === 4) {
+        score += 6; notes.push(c.label + '四九木火通明——文采飞扬，利于创作、考试。宜绿色植物搭配红色装饰');
+      }
     }
 
     // 分数限制
-    score = Math.max(10, Math.min(100, Math.round(score)));
+    score = Math.max(5, Math.min(100, Math.round(score)));
 
     // 等级判定
     var level;
@@ -339,7 +407,56 @@
       periodChart: periodChart,
       annualStars: annualStars,
       mountainStars: stars.mountainStars,
-      facingStars: stars.facingStars
+      facingStars: stars.facingStars,
+      mountainShun: stars.mountainShun,
+      facingShun: stars.facingShun,
+      // 三般卦检测
+      sanBanGua: (function() {
+        var mtnStars = stars.mountainStars, facStars = stars.facingStars;
+        var checkSBG = [147, 258, 369];
+        for (var si = 0; si < checkSBG.length; si++) {
+          var nums = checkSBG[si];
+          var a = nums % 10, b = Math.floor(nums / 10) % 10, c = Math.floor(nums / 100);
+          var found = true;
+          for (var gi = 0; gi < 9; gi++) {
+            var hasA = (mtnStars[gi] === a || facStars[gi] === a);
+            var hasB = (mtnStars[gi] === b || facStars[gi] === b);
+            var hasC = (mtnStars[gi] === c || facStars[gi] === c);
+            if (!hasA && !hasB && !hasC) { found = false; break; }
+          }
+          if (found) {
+            return { type: '父母三般卦', nums: '' + a + b + c, desc: '山向飞星各宫均含' + a + b + c + '三数，此为大吉之局！主世代昌盛、人财两旺、官运亨通。' };
+          }
+        }
+        return null;
+      })(),
+      // 七星打劫检测
+      qiXingDJ: (function() {
+        var liGong = palaces[8], kanGong = palaces[0], zhenGong = palaces[2];
+        if (liGong.mountainStar === periodNum && kanGong.facingStar === periodNum && zhenGong.facingStar === periodNum) {
+          return { type: '离震坎打劫', desc: '离宫山星、坎宫向星、震宫向星均为当令旺星' + periodNum + '，此乃七星打劫之局！主富贵骤至、横发一时，但需防劫后回落。' };
+        }
+        if (liGong.facingStar === periodNum && kanGong.mountainStar === periodNum && zhenGong.mountainStar === periodNum) {
+          return { type: '离震坎打劫(向)', desc: '离宫向星、坎宫山星、震宫山星均为当令旺星' + periodNum + '，七星打劫之局已成！主横财暴发。' };
+        }
+        return null;
+      })(),
+      // 城门诀
+      chengMenJue: (function() {
+        var sitIdx = MOUNTAINS_24.indexOf(sitting);
+        if (sitIdx < 0) return null;
+        var leftIdx = (sitIdx - 1 + 24) % 24, rightIdx = (sitIdx + 1) % 24;
+        var leftMtn = MOUNTAINS_24[leftIdx], rightMtn = MOUNTAINS_24[rightIdx];
+        var leftGua = MOUNTAIN_GUA[leftMtn], rightGua = MOUNTAIN_GUA[rightMtn];
+        var sitGua = MOUNTAIN_GUA[sitting];
+        if (leftGua === sitGua) {
+          return { side: '左', mtn: leftMtn, gua: leftGua, desc: '坐山' + sitting + '左侧' + leftMtn + '同为' + leftGua + '卦，可开城门以纳旺气。' };
+        }
+        if (rightGua === sitGua) {
+          return { side: '右', mtn: rightMtn, gua: rightGua, desc: '坐山' + sitting + '右侧' + rightMtn + '同为' + rightGua + '卦，可开城门引吉气入宅。' };
+        }
+        return null;
+      })()
     };
   }
 
