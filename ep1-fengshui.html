@@ -438,7 +438,7 @@ var FengshuiEngine = (function(){
   overallScore=Math.max(5,Math.min(100,overallScore+specialBonus));var overallLevel=overallScore>=80?'上吉':overallScore>=65?'中吉':overallScore>=50?'中平':overallScore>=35?'凶':'大凶';var best=palaces[0],worst=palaces[0];for(var i=1;i<9;i++){if(palaces[i].score>best.score)best=palaces[i];if(palaces[i].score<worst.score)worst=palaces[i]}
   var scoreBreakdown={starQuality:Math.round(aggStarQ/weightSum),wuxing:Math.round(aggWuxing/weightSum),combos:Math.round(aggCombos/weightSum),specialPatterns:specialBonus,weightedAvg:Math.round(totalScore/weightSum)};
   return {sitting:sitting,facing:facing,buildYear:buildYear,currentYear:currentYear,periodNum:periodNum,overallScore:overallScore,overallLevel:overallLevel,palaces:palaces,bestPalace:best,worstPalace:worst,periodChart:periodChart,annualStars:annualStars,mountainStars:stars.mountainStars,facingStars:stars.facingStars,mountainShun:stars.mountainShun,facingShun:stars.facingShun,sanBanGua:sanBanGua,qiXingDJ:qiXingDJ,chengMenJue:chengMenJue,scoreBreakdown:scoreBreakdown}}
-  return {MOUNTAINS_24:MOUNTAINS_24,MOUNTAIN_NAMES:MOUNTAIN_NAMES,MOUNTAIN_GUA:MOUNTAIN_GUA,MOUNTAIN_YINYANG:MOUNTAIN_YINYANG,STARS:STARS,GONG_NAMES:GONG_NAMES,divine:function(params){params=params||{};return fullAnalysis(params.sitting||'子',params.facing||'午',params.buildYear||2024,params.currentYear||2026)}};
+  return {MOUNTAINS_24:MOUNTAINS_24,MOUNTAIN_NAMES:MOUNTAIN_NAMES,MOUNTAIN_GUA:MOUNTAIN_GUA,MOUNTAIN_YINYANG:MOUNTAIN_YINYANG,GONG_GUA:GONG_GUA,STARS:STARS,GONG_NAMES:GONG_NAMES,divine:function(params){params=params||{};return fullAnalysis(params.sitting||'子',params.facing||'午',params.buildYear||2024,params.currentYear||2026)}};
 })();
 
 // ===== 风水详解生成 =====
@@ -1180,8 +1180,8 @@ function fengshuiMasterAnalyze(master, result) {
   }
 
   // ═══ 中宫坐山向首宫 ═══
-  var sitGong = result.palaces[GONG_GUA.indexOf(MOUNTAIN_GUA[result.sitting])] || result.palaces[4];
-  var faceGong = result.palaces[GONG_GUA.indexOf(MOUNTAIN_GUA[result.facing])] || result.palaces[4];
+  var sitGong = result.palaces[FengshuiEngine.GONG_GUA.indexOf(FengshuiEngine.MOUNTAIN_GUA[result.sitting])] || result.palaces[4];
+var faceGong = result.palaces[FengshuiEngine.GONG_GUA.indexOf(FengshuiEngine.MOUNTAIN_GUA[result.facing])] || result.palaces[4];
   data['坐山宫'] = sitGong.name;
   data['坐山宫评'] = sitGong.level + '（' + sitGong.score + '分）';
   data['坐山宫星'] = '运'+sitGong.periodStar+'山'+sitGong.mountainStar+'向'+sitGong.facingStar+'年'+sitGong.annualStar;
