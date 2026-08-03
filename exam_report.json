@@ -1,0 +1,74 @@
+{
+  "timestamp": "2026-07-22T00:14:17.841158",
+  "total": 240,
+  "passed": 240,
+  "failed": 0,
+  "accuracy": 100.0,
+  "grade": "S · 卓越",
+  "results": [
+    {
+      "name": "【常量】数据完整性",
+      "total": 18,
+      "passed": 18,
+      "failed": 0,
+      "accuracy": 100.0,
+      "errors": []
+    },
+    {
+      "name": "【六爻】纳甲·世应·六亲·六兽·变卦",
+      "total": 98,
+      "passed": 98,
+      "failed": 0,
+      "accuracy": 100.0,
+      "errors": []
+    },
+    {
+      "name": "【梅花易数】起卦·互卦·变卦·体用",
+      "total": 35,
+      "passed": 35,
+      "failed": 0,
+      "accuracy": 100.0,
+      "errors": []
+    },
+    {
+      "name": "【八字】四柱排盘",
+      "total": 24,
+      "passed": 24,
+      "failed": 0,
+      "accuracy": 100.0,
+      "errors": []
+    },
+    {
+      "name": "【八字】五虎遁·五鼠遁",
+      "total": 20,
+      "passed": 20,
+      "failed": 0,
+      "accuracy": 100.0,
+      "errors": []
+    },
+    {
+      "name": "【奇门遁甲】排盘",
+      "total": 20,
+      "passed": 20,
+      "failed": 0,
+      "accuracy": 100.0,
+      "errors": []
+    },
+    {
+      "name": "【太乙神数】排盘",
+      "total": 16,
+      "passed": 16,
+      "failed": 0,
+      "accuracy": 100.0,
+      "errors": []
+    },
+    {
+      "name": "【技能】知识覆盖度",
+      "total": 9,
+      "passed": 9,
+      "failed": 0,
+      "accuracy": 100.0,
+      "errors": []
+    }
+  ]
+}

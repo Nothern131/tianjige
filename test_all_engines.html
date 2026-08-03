@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>天机阁 · 全板块引擎测试</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0806;color:#e0dcd0;font-family:'Microsoft YaHei',sans-serif;display:flex;min-height:100vh}
+  
+  .sidebar{width:190px;background:rgba(16,13,9,0.96);border-right:1px solid rgba(184,154,92,0.15);padding:16px 0;flex-shrink:0;overflow-y:auto}
+  .sidebar h2{color:#b89a5c;font-size:0.9rem;text-align:center;padding:0 16px 14px;border-bottom:1px solid rgba(184,154,92,0.12);margin-bottom:6px}
+  .sidebar .engine-btn{display:block;width:100%;padding:9px 18px;background:none;border:none;color:#8a8576;text-align:left;cursor:pointer;font-size:0.82rem;transition:all 0.2s;font-family:inherit}
+  .sidebar .engine-btn:hover{background:rgba(184,154,92,0.08);color:#d4bb7c}
+  .sidebar .engine-btn.active{background:rgba(184,154,92,0.12);color:#b89a5c;border-left:3px solid #b89a5c}
+
+  .main{flex:1;overflow-y:auto;padding:20px 28px;max-width:960px}
+  .main h1{color:#b89a5c;font-size:1.3rem;margin-bottom:2px}
+  .main .subtitle{color:#8a8576;font-size:0.78rem;margin-bottom:20px}
+
+  .eng-header{background:rgba(20,16,12,0.94);border:1px solid rgba(184,154,92,0.15);border-radius:12px;padding:14px 18px;margin-bottom:16px}
+  .eng-header h3{color:#b89a5c;font-size:1rem;margin-bottom:4px}
+  .eng-header .info{color:#8a8576;font-size:0.78rem}
+  .eng-header .masters-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .eng-header .master-tag{background:rgba(184,154,92,0.1);color:#d4bb7c;padding:1px 9px;border-radius:9px;font-size:0.75rem;cursor:pointer;border:1px solid transparent;transition:all 0.2s}
+  .eng-header .master-tag:hover{border-color:rgba(184,154,92,0.3);background:rgba(184,154,92,0.18)}
+  .eng-header .master-tag.selected{background:rgba(184,154,92,0.25);border-color:#b89a5c;color:#b89a5c}
+
+  .card{background:rgba(20,16,12,0.94);border:1px solid rgba(184,154,92,0.12);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .card .card-hd{background:rgba(184,154,92,0.06);padding:9px 14px;border-bottom:1px solid rgba(184,154,92,0.08);display:flex;justify-content:space-between;align-items:center}
+  .card .card-hd .title{color:#b89a5c;font-weight:700;font-size:0.88rem}
+  .card .card-hd .meta{color:#8a8576;font-size:0.72rem}
+  .card .card-bd{padding:12px 14px}
+  .card .card-bd pre{background:#16120e;color:#c0b898;padding:10px;border-radius:8px;font-size:0.8rem;overflow-x:auto;white-space:pre-wrap;word-break:break-all;line-height:1.6;max-height:400px;overflow-y:auto}
+  .card .card-bd .analysis-text{color:#d4ccb8;font-size:0.88rem;line-height:1.85;white-space:pre-wrap}
+  .card .card-bd .analysis-text strong{color:#b89a5c}
+  .card .card-bd .stat{display:inline-block;background:rgba(184,154,92,0.1);color:#b89a5c;padding:2px 9px;border-radius:5px;font-size:0.72rem;margin-right:5px;margin-bottom:6px}
+
+  .btn{background:rgba(184,154,92,0.12);border:1px solid rgba(184,154,92,0.25);color:#b89a5c;padding:6px 16px;border-radius:7px;cursor:pointer;font-size:0.82rem;font-family:inherit;transition:all 0.2s}
+  .btn:hover{background:rgba(184,154,92,0.22)}
+
+  /* 追问区域 */
+  .followup-box{border:1px solid rgba(184,154,92,0.2);border-radius:12px;padding:16px;margin-bottom:14px;background:rgba(20,16,12,0.8)}
+  .followup-box h4{color:#b89a5c;font-size:0.9rem;margin-bottom:10px}
+  .followup-input-row{display:flex;gap:8px;margin-bottom:10px}
+  .followup-input-row input{flex:1;background:#16120e;border:1px solid rgba(184,154,92,0.2);color:#d4ccb8;padding:8px 12px;border-radius:7px;font-size:0.85rem;font-family:inherit;outline:none}
+  .followup-input-row input:focus{border-color:rgba(184,154,92,0.5)}
+  .followup-input-row .btn-send{background:rgba(184,154,92,0.2);border:1px solid rgba(184,154,92,0.4);color:#b89a5c;padding:8px 18px;border-radius:7px;cursor:pointer;font-size:0.85rem;font-family:inherit;white-space:nowrap}
+  .followup-input-row .btn-send:hover{background:rgba(184,154,92,0.35)}
+  .followup-history{margin-top:10px;max-height:400px;overflow-y:auto}
+  .followup-msg{margin-bottom:10px;padding:10px 14px;border-radius:10px;font-size:0.85rem;line-height:1.7}
+  .followup-msg.question{background:rgba(100,120,160,0.12);border-left:3px solid #6a8abf;color:#c0c8d8}
+  .followup-msg.answer{background:rgba(184,154,92,0.08);border-left:3px solid #b89a5c;color:#d4ccb8}
+  .followup-msg .msg-label{font-size:0.7rem;color:#8a8576;margin-bottom:4px}
+  .followup-msg .msg-master{color:#b89a5c;font-weight:700}
+
+  .quick-questions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .quick-questions .qq{background:rgba(184,154,92,0.06);border:1px solid rgba(184,154,92,0.15);color:#a09880;padding:4px 10px;border-radius:12px;font-size:0.75rem;cursor:pointer;font-family:inherit;transition:all 0.2s}
+  .quick-questions .qq:hover{background:rgba(184,154,92,0.15);color:#d4bb7c;border-color:rgba(184,154,92,0.3)}
+</style>
+</head>
+<body>
+
+<nav class="sidebar" id="sidebar">
+  <h2>术数引擎</h2>
+</nav>
+
+<div class="main">
+  <h1>天机阁 · 全板块引擎测试</h1>
+  <div class="subtitle">每个板块独立测试，大师不串测 | 支持追问排盘结果 | 纯前端算法，零API</div>
+  <div id="content"></div>
+</div>
+
+<script src="static/js/masters-engine.js"></script>
+<script src="static/js/bazi-engine.js"></script>
+<script src="static/js/liuyao-engine.js"></script>
+<script src="static/js/meihua-engine.js"></script>
+<script src="static/js/qimen-engine.js"></script>
+<script src="static/js/taiyi-engine.js"></script>
+<script src="static/js/zhuge-engine.js"></script>
+<script src="static/js/zhougong-engine.js"></script>
+<script src="static/js/daliuren-engine.js"></script>
+<script src="static/js/ziwei-engine.js"></script>
+<script src="static/js/fengshui-engine.js"></script>
+
+<script>
+(function(){
+  'use strict';
+
+  // ========== 全局状态 ==========
+  var currentEngineId = null;
+  var currentResult = null;
+  var currentMasterId = null;
+  var followupHistory = [];
+
+  // ========== 大师分类 ==========
+  function getMastersByCategory(cat) {
+    var all = MastersEngine.MASTERS;
+    var result = [];
+    for (var k in all) {
+      if (all.hasOwnProperty(k) && all[k].category === cat) result.push(all[k]);
+    }
+    return result;
+  }
+
+  // ========== 引擎配置 ==========
+  var ENGINES = [
+    { id:'bazi', name:'八字排盘', icon:'📅', category:'八字', masters:getMastersByCategory('八字'),
+      fn:function(){ return BaziEngine.paipan(2000,2,15,8); },
+      format:formatBazi },
+    { id:'liuyao', name:'六爻占卜', icon:'🪙', category:'六爻', masters:getMastersByCategory('六爻'),
+      fn:function(){ var ls=[]; for(var i=0;i<6;i++){ var t=(Math.random()>0.5?3:2)+(Math.random()>0.5?3:2)+(Math.random()>0.5?3:2); ls.push({type:t%2===0?'yin':'yang',changing:t===6||t===9}); } return LiuyaoEngine.divine(ls); },
+      format:formatLiuyao },
+    { id:'meihua', name:'梅花易数', icon:'🌸', category:'梅花', masters:getMastersByCategory('梅花'),
+      fn:function(){ return MeihuaEngine.divine({method:'random'}); },
+      format:formatMeihua },
+    { id:'qimen', name:'奇门遁甲', icon:'☯️', category:'奇门', masters:getMastersByCategory('奇门'),
+      fn:function(){ return QimenEngine.divine('2026-08-02','午时','auto'); },
+      format:formatQimen },
+    { id:'taiyi', name:'太乙神数', icon:'🌌', category:'太乙', masters:getMastersByCategory('太乙'),
+      fn:function(){ return TaiyiEngine.divine('2026-08-02','午时'); },
+      format:formatTaiyi },
+    { id:'zhuge', name:'诸葛神数', icon:'📜', category:'综合', masters:getMastersByCategory('综合'),
+      fn:function(){ var n1=Math.floor(Math.random()*999)+1,n2=Math.floor(Math.random()*999)+1,n3=Math.floor(Math.random()*999)+1; return ZhugeEngine.divine({method:'number',numbers:[n1,n2,n3]}); },
+      format:formatZhuge },
+    { id:'zhougong', name:'周公解梦', icon:'🌙', category:'解梦', masters:getMastersByCategory('解梦'),
+      fn:function(){ return ZhougongEngine.divine('梦见龙飞翔','事业运势'); },
+      format:formatZhougong },
+    { id:'daliuren', name:'大六壬', icon:'🌊', category:'大六壬', masters:getMastersByCategory('大六壬'),
+      fn:function(){ return DaLiuRenEngine.divine('2026-08-02',6); },
+      format:formatDaliuren },
+    { id:'ziwei', name:'紫微斗数', icon:'🔮', category:'紫微', masters:getMastersByCategory('紫微'),
+      fn:function(){ return ZiWeiEngine.paipan({year:2000,month:2,day:15,hour:'辰时',gender:'男',isLunar:false}); },
+      format:formatZiwei },
+    { id:'fengshui', name:'风水格局', icon:'⛰️', category:'风水', masters:getMastersByCategory('风水'),
+      fn:function(){ return FengshuiEngine.fullAnalysis('子','午',2020,2026); },
+      format:formatFengshui }
+  ];
+
+  // ========== 格式化函数 ==========
+  function formatBazi(r) {
+    var lines = [];
+    lines.push('八字：' + (r.年柱||'?') + '年 ' + (r.月柱||'?') + '月 ' + (r.日柱||'?') + '日 ' + (r.时柱||'?') + '时');
+    lines.push('日主：' + (r.日主||'?') + '（' + (r.日主五行||'?') + '）');
+    lines.push('生肖：' + (r.生肖||'?'));
+    lines.push('纳音：' + (r.年柱纳音||'?') + ' / ' + (r.月柱纳音||'?') + ' / ' + (r.日柱纳音||'?') + ' / ' + (r.时柱纳音||'?'));
+    return lines.join('\n');
+  }
+  function formatLiuyao(r) {
+    var lines = [];
+    lines.push('卦名：' + (r.gua_name||'?'));
+    if(r.original_gua) lines.push('宫位：' + r.original_gua.gong + '宫 | 上卦' + r.original_gua.upper + ' 下卦' + r.original_gua.lower);
+    if(r.dong_yao) lines.push('动爻：第' + r.dong_yao + '爻');
+    if(r.shi_yao) lines.push('世爻：第' + r.shi_yao + '爻 | 应爻：第' + (r.ying_yao||'?') + '爻');
+    if(r.changed_gua) lines.push('变卦：' + r.changed_gua.name);
+    if(r.liu_qin) lines.push('六亲：' + r.liu_qin.join(' / '));
+    if(r.liu_shou) lines.push('六兽：' + r.liu_shou.join(' / '));
+    if(r.interpretation) lines.push('\n【解读】\n' + r.interpretation);
+    return lines.join('\n');
+  }
+  function formatMeihua(r) {
+    var lines = [];
+    if(r.original_gua) lines.push('本卦：' + r.original_gua);
+    if(r.hu_gua) lines.push('互卦：' + r.hu_gua);
+    if(r.changed_gua) lines.push('变卦：' + r.changed_gua);
+    if(r.ti_gua) lines.push('体卦：' + r.ti_gua + ' | 用卦：' + r.yong_gua);
+    if(r.sheng_ke) lines.push('体用生克：' + r.sheng_ke);
+    if(r.interpretation) lines.push('\n【解读】\n' + r.interpretation);
+    return lines.join('\n');
+  }
+  function formatQimen(r) {
+    var lines = [];
+    lines.push('局数：' + (r.ju||'?') + ' | 节气：' + (r.jieqi||'?'));
+    lines.push('日干支：' + (r.day_gz||'?') + ' | 时干支：' + (r.time_gz||'?'));
+    if(r.interpretation) lines.push('\n【解读】\n' + r.interpretation);
+    return lines.join('\n');
+  }
+  function formatTaiyi(r) {
+    var lines = [];
+    lines.push('太乙纪元：' + (r.epoch||'?'));
+    lines.push('积年：' + (r.ji_nian||'?') + ' | 太乙入：' + (r.taiyi_position||'?'));
+    if(r.wufu) lines.push('五福：' + (r.wufu.position||'?'));
+    if(r.sanji) lines.push('三基：' + (r.sanji.position||'?'));
+    if(r.interpretation) lines.push('\n【解读】\n' + r.interpretation);
+    return lines.join('\n');
+  }
+  function formatZhuge(r) {
+    var lines = [];
+    lines.push('签号：第' + (r.number||'?') + '签');
+    if(r.level) lines.push('等级：' + r.level);
+    if(r.poem) lines.push('签诗：' + r.poem);
+    if(r.interpretation) lines.push('解签：' + r.interpretation);
+    if(r.verdict) lines.push('判断：' + r.verdict);
+    return lines.join('\n');
+  }
+  function formatZhougong(r) {
+    var lines = [];
+    if(r.input) lines.push('梦境：' + r.input);
+    if(r.domain) lines.push('分类：' + r.domain.name + '（' + r.domain.icon + '）');
+    if(r.ji) lines.push('吉凶：' + r.ji);
+    if(r.count) lines.push('匹配条目：' + r.count + '条');
+    if(r.interpretation) lines.push('解梦：' + r.interpretation);
+    return lines.join('\n');
+  }
+  function formatDaliuren(r) {
+    var lines = [];
+    lines.push('占时：' + (r.ri_gan||'?') + (r.ri_zhi||'?') + '日 | 月将：' + (r.yue_jiang||'?') + '（' + (r.yue_jiang_name||'') + '）');
+    if(r.ke_name) lines.push('课体：' + r.ke_name);
+    if(r.chuan) lines.push('三传：' + r.chuan);
+    if(r.interpretation) lines.push('\n【解读】\n' + r.interpretation);
+    return lines.join('\n');
+  }
+  function formatZiwei(r) {
+    var lines = [];
+    if(r.命宫) lines.push('命宫：' + r.命宫);
+    if(r.命宫主星) lines.push('命宫主星：' + r.命宫主星);
+    if(r.身宫) lines.push('身宫：' + r.身宫);
+    if(r.五行局) lines.push('五行局：' + r.五行局);
+    if(r.紫微星落) lines.push('紫微星落：' + r.紫微星落 + '宫');
+    if(r.四化) {
+      var sihuaStr = [];
+      for(var sk in r.四化) { if(r.四化.hasOwnProperty(sk)) sihuaStr.push(sk + '化' + r.四化[sk]); }
+      lines.push('四化：' + sihuaStr.join('、'));
+    }
+    if(r.十二宫 && r.十二宫.length) {
+      lines.push('\n【十二宫概况】');
+      for(var gi=0; gi<r.十二宫.length; gi++) {
+        var g = r.十二宫[gi];
+        lines.push(g.name + '（' + g.zhi + '）：' + (g.stars ? g.stars.join('、') : '无主星'));
+      }
+    }
+    if(r.总体运势) lines.push('\n【总体运势】\n' + r.总体运势);
+    if(r.interpretation) lines.push('\n【解读】\n' + r.interpretation);
+    return lines.join('\n');
+  }
+  function formatFengshui(r) {
+    var lines = [];
+    if(r.sitting) lines.push('坐山：' + r.sitting + ' | 朝向：' + r.facing);
+    lines.push('建造年份：' + (r.buildYear||'?') + '年 | 当前年份：' + (r.currentYear||'?') + '年');
+    lines.push('元运：' + (r.periodNum||'?') + '运');
+    lines.push('综合评分：' + (r.overallScore||'?') + '分 | 等级：' + (r.overallLevel||'?'));
+    if(r.bestPalace) lines.push('最佳宫位：' + r.bestPalace.name + '（评分：' + r.bestPalace.score + '分）');
+    if(r.worstPalace) lines.push('最差宫位：' + r.worstPalace.name + '（评分：' + r.worstPalace.score + '分）');
+    if(r.palaces && r.palaces.length) {
+      lines.push('\n【九宫飞星详情】');
+      for(var pi=0; pi<r.palaces.length; pi++) {
+        var p = r.palaces[pi];
+        lines.push(p.name + '：运星' + (p.periodStar||'?') + ' 山星' + (p.mountainStar||'?') + ' 向星' + (p.facingStar||'?') + ' 年星' + (p.annualStar||'?') + ' | ' + (p.score||'?') + '分 ' + (p.level||'?'));
+      }
+    }
+    return lines.join('\n');
+  }
+
+  // ========== 大师解读生成 ==========
+  function generateMasterAnalysis(eng, result, master) {
+    var p = master.pronouns;
+
+    // 对于八字，使用引擎自带的分析
+    if(eng.id === 'bazi') {
+      return analyzeBaziWithMaster(result, master);
+    }
+
+    var lines = [];
+    lines.push(p + '以' + master.phrase + '之法，细观此' + eng.name + '之象，为汝剖析如下：');
+    lines.push('');
+
+    // 根据引擎类型生成详细分析
+    switch(eng.id) {
+      case 'liuyao':
+        lines = lines.concat(analyzeLiuyaoMaster(result, p, master));
+        break;
+      case 'meihua':
+        lines = lines.concat(analyzeMeihuaMaster(result, p, master));
+        break;
+      case 'qimen':
+        lines = lines.concat(analyzeQimenMaster(result, p, master));
+        break;
+      case 'taiyi':
+        lines = lines.concat(analyzeTaiyiMaster(result, p, master));
+        break;
+      case 'zhuge':
+        lines = lines.concat(analyzeZhugeMaster(result, p, master));
+        break;
+      case 'zhougong':
+        lines = lines.concat(analyzeZhougongMaster(result, p, master));
+        break;
+      case 'daliuren':
+        lines = lines.concat(analyzeDaliurenMaster(result, p, master));
+        break;
+      case 'ziwei':
+        lines = lines.concat(analyzeZiweiMaster(result, p, master));
+        break;
+      case 'fengshui':
+        lines = lines.concat(analyzeFengshuiMaster(result, p, master));
+        break;
+      default:
+        lines.push(p + '此' + eng.name + '之象，吉凶已现，汝当以' + master.phrase + '之法参之。');
+    }
+
+    return lines.join('\n');
+  }
+
+  // ---- 各引擎大师分析函数 ----
+  function analyzeLiuyaoMaster(r, p, m) {
+    var lines = [];
+    lines.push('【卦象总览】');
+    lines.push(p + '观此' + (r.gua_name||'卦') + '之象，' + (r.original_gua ? '属' + r.original_gua.gong + '宫，上卦' + r.original_gua.upper + '为天，下卦' + r.original_gua.lower + '为地，' : '') + '天地交感，万象生焉。');
+    
+    lines.push('');
+    lines.push('【世应分析】');
+    if(r.shi_yao && r.ying_yao) {
+      lines.push(p + '世爻居第' + r.shi_yao + '位，为汝自身之象；应爻居第' + r.ying_yao + '位，为所问之事。' +
+        '世应相生则吉，相克则凶。' + (r.shi_yao === r.ying_yao ? '世应同位，此事与汝息息相关，不可轻忽。' : '世应之位已定，吉凶自现。'));
+    }
+
+    if(r.dong_yao) {
+      lines.push('');
+      lines.push('【动爻精解】');
+      lines.push(p + '此卦动爻在第' + r.dong_yao + '位，此为关键之变。' +
+        '动则生变，变则有机。' + (r.liu_qin && r.liu_qin[r.dong_yao-1] ? '动爻六亲为' + r.liu_qin[r.dong_yao-1] + '，' + r.liu_qin[r.dong_yao-1] + '发动，其力倍增。' : '') +
+        (r.liu_shou && r.liu_shou[r.dong_yao-1] ? '临' + r.liu_shou[r.dong_yao-1] + '，' + getShouDesc(r.liu_shou[r.dong_yao-1]) : ''));
+    }
+
+    if(r.changed_gua) {
+      lines.push('');
+      lines.push('【变卦推演】');
+      lines.push(p + '本卦' + (r.gua_name||'') + '变而为' + r.changed_gua.name + '，此乃事态发展之趋势。' +
+        '变卦为事之终，观变卦可知结局。');
+    }
+
+    if(r.liu_qin) {
+      lines.push('');
+      lines.push('【六亲六兽】');
+      lines.push(p + '六亲：' + r.liu_qin.join('、') + '。各有所主，或为财，或为官，或为父兄。');
+      if(r.liu_shou) lines.push('六兽：' + r.liu_shou.join('、') + '。青龙主喜，白虎主凶，各有所应。');
+    }
+
+    if(r.interpretation) {
+      lines.push('');
+      lines.push('【综合断语】');
+      lines.push(p + '综合断之：' + r.interpretation);
+    }
+    return lines;
+  }
+
+  function analyzeMeihuaMaster(r, p, m) {
+    var lines = [];
+    lines.push('【卦象推演】');
+    var origName = r.original_gua || '';
+    lines.push(p + '以先天易数起卦，得本卦' + origName + '。' +
+      '互卦' + (r.hu_gua||'') + '为中局之象，变卦' + (r.changed_gua||'') + '为结局之兆。');
+    
+    lines.push('');
+    lines.push('【体用生克】');
+    var ti = r.ti_gua || '体';
+    var yong = r.yong_gua || '用';
+    var sk = r.sheng_ke || '';
+    lines.push(p + '体卦' + ti + '为汝自身，用卦' + yong + '为所问之事。' +
+      '体用关系：' + sk + '。' + getShengKeDesc(sk, ti, yong, p) +
+      '此乃梅花易数之精髓，体用生克定吉凶。');
+
+    if(r.wanwu_leixiang) {
+      lines.push('');
+      lines.push('【万物类象】');
+      lines.push(p + '以万物类象推之：' + r.wanwu_leixiang);
+    }
+
+    if(r.interpretation) {
+      lines.push('');
+      lines.push('【综合解读】');
+      lines.push(p + '综而观之：' + r.interpretation);
+    }
+    return lines;
+  }
+
+  function analyzeQimenMaster(r, p, m) {
+    var lines = [];
+    lines.push('【局象总览】');
+    lines.push(p + '奇门遁甲，帝王之术也。' + (r.ju||'此局') + '，' + (r.jieqi||'') + '节气。' +
+      '日干支' + (r.day_gz||'') + '，时干支' + (r.time_gz||'') + '，' + (r.shichen||'') + '时。');
+    
+    lines.push('');
+    lines.push('【八门九星】');
+    lines.push(p + '八门者：休生伤杜景死惊开。吉门宜趋，凶门宜避。' +
+      '九星者：天蓬天芮天冲天辅天禽天心天柱天任天英。' +
+      '吉星照临则吉，凶星当值则凶。择吉门吉星而趋之，方可事半功倍。');
+
+    if(r.cells && r.cells.length) {
+      lines.push('');
+      lines.push('【九宫格局】');
+      var infoLines = [];
+      for(var ci=0; ci<r.cells.length; ci++) {
+        var c = r.cells[ci];
+        if(c.gong) infoLines.push(c.gong + '宫：' + (c.men||'') + '门 ' + (c.xing||'') + '星');
+      }
+      if(infoLines.length) lines.push(p + '各宫格局：' + infoLines.join('；') + '。');
+    }
+
+    if(r.interpretation) {
+      lines.push('');
+      lines.push('【局象解读】');
+      lines.push(p + '断之：' + r.interpretation);
+    }
+    return lines;
+  }
+
+  function analyzeTaiyiMaster(r, p, m) {
+    var lines = [];
+    lines.push('【太乙纪元】');
+    lines.push(p + '太乙神数，源于上古。' + (r.epoch||'') + '，积年' + (r.ji_nian||'') + '。' +
+      '太乙入' + (r.taiyi_position||'') + '，此乃天地运行之枢机。');
+    
+    if(r.wufu) {
+      lines.push('');
+      lines.push('【五福三基】');
+      lines.push(p + '五福临' + (r.wufu.position||'') + '，三基在' + (r.sanji ? r.sanji.position : '') + '。' +
+        '五福者，福禄寿喜财也；三基者，君基臣基民基也。' +
+        '五福临宫则吉，三基得位则安。');
+    }
+
+    if(r.interpretation) {
+      lines.push('');
+      lines.push('【太乙断语】');
+      lines.push(p + '以太乙神数推之：' + r.interpretation);
+    }
+    return lines;
+  }
+
+  function analyzeZhugeMaster(r, p, m) {
+    var lines = [];
+    lines.push('【签文解读】');
+    lines.push(p + '观此第' + (r.number||'') + '签，等级' + (r.level||'') + '。');
+    if(r.poem) lines.push(p + '签诗曰：' + r.poem);
+    lines.push('');
+    lines.push('【爻辞推演】');
+    lines.push(p + '以诸葛武侯神数推之：' + (r.interpretation||'此签之象，吉凶自现。'));
+    if(r.verdict) lines.push(p + '判断：' + r.verdict + '。');
+    return lines;
+  }
+
+  function analyzeZhougongMaster(r, p, m) {
+    var lines = [];
+    lines.push('【梦境还原】');
+    lines.push(p + '汝梦' + (r.input||'') + '，' + (r.domain ? '属' + r.domain.name + '之梦。' : ''));
+    lines.push(p + '梦者，魂之游也；象者，事之兆也。' +
+      '日有所思，夜有所梦。梦境虽虚幻，而其象可推人事之变。');
+    
+    lines.push('');
+    lines.push('【梦理解析】');
+    if(r.ji) lines.push(p + '此梦' + (r.ji === '吉' ? '吉兆也，主好事将近。' : r.ji === '凶' ? '凶兆也，需谨慎行事。' : '吉凶参半，需结合现实判断。'));
+    if(r.count) lines.push(p + '周公解梦中，与此梦相关条目' + r.count + '条，' +
+      '可见此梦非偶然，乃心之所向，魂之所游。');
+
+    if(r.interpretation) {
+      lines.push('');
+      lines.push('【综合解梦】');
+      lines.push(p + '解之：' + r.interpretation);
+    }
+    return lines;
+  }
+
+  function analyzeDaliurenMaster(r, p, m) {
+    var lines = [];
+    lines.push('【六壬课体】');
+    lines.push(p + '六壬神课，以' + (r.ri_gan||'') + (r.ri_zhi||'') + '日占，月将' + (r.yue_jiang_name||r.yue_jiang||'') + '。' +
+      '课体' + (r.ke_name||'') + '，此为天地盘交合之象。');
+    
+    lines.push('');
+    lines.push('【三传推演】');
+    if(r.chuan) {
+      lines.push(p + '三传者：' + r.chuan + '。' +
+        '初传为事之始，中传为事之中，末传为事之终。' +
+        '三传递进，如流水之不息，事态之发展尽在其中。');
+    }
+
+    lines.push('');
+    lines.push('【课体精解】');
+    lines.push(p + '六壬之道，课体为纲。' + (r.ke_name||'') + '之课，' +
+      '以象观之，天地盘之交错，四课之生克，皆有其理。' +
+      '明其理者，可断吉凶；昧其理者，如盲人摸象。');
+
+    if(r.interpretation) {
+      lines.push('');
+      lines.push('【六壬断语】');
+      lines.push(p + '以六壬神课断之：' + r.interpretation);
+    }
+    return lines;
+  }
+
+  function analyzeZiweiMaster(r, p, m) {
+    var lines = [];
+    var mingGong = r.命宫 || '';
+    var shenGong = r.身宫 || '';
+    var wuxingJu = r.五行局 || '';
+    var zhuXing = r.命宫主星 || '';
+    var ziweiLuo = r.紫微星落 || '';
+    var sihua = r.四化 || {};
+    var gongs = r.十二宫 || [];
+    
+    lines.push('【命盘总览】');
+    lines.push(p + '紫微斗数，帝王之学也。以' + mingGong + '为命宫立极，' +
+      shenGong + '为身宫，得' + wuxingJu + '之局。' +
+      '紫微帝星落于' + ziweiLuo + '宫，此为命盘之枢纽，' +
+      '群星拱之，万象生焉。');
+    
+    lines.push('');
+    lines.push('【命宫主星精解】');
+    if(zhuXing && zhuXing !== '无主星') {
+      var stars = zhuXing.split('、');
+      lines.push(p + '命宫主星' + zhuXing + '，共' + stars.length + '星坐守。');
+      for(var si=0; si<stars.length; si++) {
+        lines.push(p + '· ' + stars[si] + '：' + getZiweiStarDesc(stars[si]));
+      }
+      lines.push(p + '诸星汇聚命宫，' +
+        (stars.length > 2 ? '格局复杂，星曜互涉，需细察三方四正之组合，方能定其吉凶。' :
+         stars.length === 2 ? '双星同宫，相辅相成或相制相化，格局独特。' :
+         '格局清纯，方向明确，一生之主线清晰可见。'));
+    } else {
+      lines.push(p + '命宫无主星，需借对宫' + getOppositeGong(mingGong) + '之星曜来照。' +
+        '无主星之命宫，其人性格随环境而变，适应力强，但需借外势而成事。');
+    }
+
+    lines.push('');
+    lines.push('【四化飞星】');
+    var sihuaDescs = [];
+    for(var sk in sihua) {
+      if(sihua.hasOwnProperty(sk)) {
+        sihuaDescs.push(sk + '化' + sihua[sk] + '（' + getSihuaDesc(sk, sihua[sk]) + '）');
+      }
+    }
+    if(sihuaDescs.length) {
+      lines.push(p + '四化者，禄权科忌，乃星曜变化之枢机。');
+      lines.push(p + sihuaDescs.join('；') + '。');
+      lines.push(p + '四化飞星，如风之动，如云之变。' +
+        '化禄则财源广进，化权则权势在握，化科则名声远播，化忌则波折横生。' +
+        '四化之用，关乎一生之起伏。');
+    } else {
+      lines.push(p + '四化飞星，乃紫微斗数之精髓。禄权科忌，各有其主，各有其应。');
+    }
+
+    lines.push('');
+    lines.push('【十二宫精要】');
+    lines.push(p + '命宫为根，兄弟为枝，夫妻为花，子女为果。' +
+      '财帛为养，疾厄为病，迁移为变，交友为助。' +
+      '官禄为业，田宅为基，福德为福，父母为源。' +
+      '十二宫各有其主，合而观之，方知命途全貌。');
+    
+    // 从十二宫数据中提取关键信息
+    if(gongs.length) {
+      var keyGongs = [];
+      for(var gi=0; gi<gongs.length; gi++) {
+        var g = gongs[gi];
+        if(g.stars && g.stars.length) {
+          keyGongs.push(g.name + '（' + g.zhi + '）：' + g.stars.join('、'));
+        }
+      }
+      if(keyGongs.length) {
+        lines.push(p + '细观各宫：');
+        for(var ki=0; ki<Math.min(keyGongs.length, 6); ki++) {
+          lines.push(p + '· ' + keyGongs[ki]);
+        }
+      }
+    }
+
+    if(r.总体运势) {
+      lines.push('');
+      lines.push('【总体运势】');
+      lines.push(p + r.总体运势);
+    }
+
+    if(r.interpretation) {
+      lines.push('');
+      lines.push('【紫微断语】');
+      lines.push(p + '以紫微斗数推之：' + r.interpretation);
+    }
+    return lines;
+  }
+
+  // 紫微主星解读
+  function getZiweiStarDesc(star) {
+    var map = {
+      '紫微': '帝星也，主贵气，掌权柄，性高傲而有领导力，得辅弼则大贵',
+      '天机': '智星也，主谋略，善策划，心思缜密，但多思多虑，易变动',
+      '太阳': '贵星也，主光明，热情慷慨，博爱无私，但过于外放则耗神',
+      '武曲': '财星也，主刚毅，果断决绝，理财有方，但过于刚硬则寡和',
+      '天同': '福星也，主温和，性情温顺，知足常乐，但过于安逸则懒散',
+      '廉贞': '囚星也，主执着，刚烈好胜，亦主桃花，善恶性情并存',
+      '天府': '库星也，主包容，稳重厚道，善于管理，但过于保守则错失良机',
+      '太阴': '阴星也，主柔美，温婉细腻，情感丰富，亦主财富积蓄',
+      '贪狼': '桃花星也，主欲望，多才多艺，交际广泛，但需防贪多嚼不烂',
+      '巨门': '暗星也，主口舌，善于分析，洞察力强，但易招惹是非',
+      '天相': '印星也，主辅佐，忠厚老实，善于协调，但缺乏主见',
+      '天梁': '荫星也，主长寿，正直无私，有长者之风，但过于严肃则孤高',
+      '七杀': '将星也，主刚猛，勇往直前，胆识过人，但过于冲动则易折',
+      '破军': '耗星也，主破旧立新，敢于变革，但起伏不定，大起大落'
+    };
+    return map[star] || '星曜之力，各有其用，观其组合方知其详';
+  }
+
+  function getOppositeGong(mingGong) {
+    var map = {'子':'午','午':'子','丑':'未','未':'丑','寅':'申','申':'寅','卯':'酉','酉':'卯','辰':'戌','戌':'辰','巳':'亥','亥':'巳'};
+    return map[mingGong] || '对宫';
+  }
+
+  function getSihuaDesc(star, hua) {
+    var map = {
+      '禄': '财禄亨通，机缘自来',
+      '权': '权势在握，掌控有力',
+      '科': '名声远播，贵人相助',
+      '忌': '波折横生，需防阻滞'
+    };
+    return (map[hua] || '') + '于' + star;
+  }
+
+  function analyzeFengshuiMaster(r, p, m) {
+    var lines = [];
+    lines.push('【宅运总览】');
+    lines.push(p + '观此宅：' + (r.sitting||'') + '山' + (r.facing||'') + '向，' +
+      '建于' + (r.buildYear||'') + '年，属' + (r.periodNum||'') + '运。' +
+      '当前' + (r.currentYear||'') + '年，综合评分' + (r.overallScore||'') + '分，' + (r.overallLevel||'') + '。');
+    
+    lines.push('');
+    lines.push('【玄空飞星】');
+    lines.push(p + '以玄空飞星之法推之，九宫飞星，年年流转。' +
+      '山星管人丁，向星管财运，运星管时运，年星管当年。' +
+      '四星汇聚，吉凶自现。');
+
+    if(r.bestPalace) {
+      lines.push('');
+      lines.push('【吉位利用】');
+      lines.push(p + '最佳方位为' + r.bestPalace.name + '（评分' + r.bestPalace.score + '分），' +
+        '宜设主卧、书房或客厅，以纳旺气。');
+    }
+    if(r.worstPalace) {
+      lines.push(p + '最差方位为' + r.worstPalace.name + '（评分' + r.worstPalace.score + '分），' +
+        '宜设储物间、卫生间，或以金属风水物化解。');
+    }
+
+    if(r.palaces && r.palaces.length) {
+      lines.push('');
+      lines.push('【九宫详析】');
+      for(var pi=0; pi<r.palaces.length; pi++) {
+        var pal = r.palaces[pi];
+        lines.push(p + pal.name + '：' + (pal.notes||'') + (pal.warnings ? '，注意：' + pal.warnings : ''));
+      }
+    }
+    return lines;
+  }
+
+  // ---- 辅助解读函数 ----
+  function getShouDesc(shou) {
+    var map = {'青龙':'主喜庆之事','朱雀':'主口舌是非','勾陈':'主牵连拖延','腾蛇':'主虚惊怪异','白虎':'主凶伤孝服','玄武':'主盗贼暗昧'};
+    return map[shou] || '';
+  }
+
+  function getShengKeDesc(sk, ti, yong, p) {
+    if(sk.indexOf('体生用')>=0) return p + '断之：体生用，汝之气泄于所问之事，付出多而回报少，需量力而行。';
+    if(sk.indexOf('用生体')>=0) return p + '断之：用生体，所问之事生助汝身，大吉之象，事半功倍。';
+    if(sk.indexOf('体克用')>=0) return p + '断之：体克用，汝能克制所问之事，虽吉但需努力，不可懈怠。';
+    if(sk.indexOf('用克体')>=0) return p + '断之：用克体，所问之事克制汝身，大凶之象，需谨慎行事。';
+    if(sk.indexOf('比和')>=0) return p + '断之：体用比和，汝与所问之事相合，顺其自然即可。';
+    return p + '体用生克已明，吉凶自现。';
+  }
+
+  function analyzeBaziWithMaster(result, master) {
+    // 使用 MastersEngine.analyze 进行八字分析
+    var baziInfo = {
+      year_pillar: result.年柱,
+      month_pillar: result.月柱,
+      day_pillar: result.日柱,
+      hour_pillar: result.时柱,
+      ri_zhu: result.日主,
+      ri_zhu_wuxing: result.日主五行,
+      gender: 'male',
+      bazi_str: result.年柱 + ' ' + result.月柱 + ' ' + result.日柱 + ' ' + result.时柱
+    };
+    try {
+      var analysis = MastersEngine.analyze(master.id, 'full', baziInfo, 'male');
+      if(analysis) {
+        return '【开场】\n' + analysis.opening + '\n\n【总论】\n' + analysis.overview + '\n\n【专论】\n' + analysis.specialty + '\n\n【经典引用】\n' + analysis.quote + '\n\n【结语】\n' + analysis.closing;
+      }
+    } catch(e) {
+      // 降级处理
+    }
+    return master.pronouns + '观此命造，' + result.日主 + '为' + (result.日主五行||'') + '，日主居' + result.日柱 + '，当以子平之法细论之。';
+  }
+
+  // ========== 追问功能 ==========
+  function generateFollowupResponse(eng, result, master, question) {
+    var p = master.pronouns;
+    var lines = [];
+    
+    lines.push(p + '闻汝之问，再以' + master.phrase + '之法，为汝细解：');
+    lines.push('');
+
+    // 根据引擎类型生成针对性回答
+    switch(eng.id) {
+      case 'bazi':
+        lines = lines.concat(followupBazi(result, p, question));
+        break;
+      case 'liuyao':
+        lines = lines.concat(followupLiuyao(result, p, question));
+        break;
+      case 'meihua':
+        lines = lines.concat(followupMeihua(result, p, question));
+        break;
+      case 'qimen':
+        lines = lines.concat(followupQimen(result, p, question));
+        break;
+      case 'taiyi':
+        lines = lines.concat(followupTaiyi(result, p, question));
+        break;
+      case 'zhuge':
+        lines = lines.concat(followupZhuge(result, p, question));
+        break;
+      case 'zhougong':
+        lines = lines.concat(followupZhougong(result, p, question));
+        break;
+      case 'daliuren':
+        lines = lines.concat(followupDaliuren(result, p, question));
+        break;
+      case 'ziwei':
+        lines = lines.concat(followupZiwei(result, p, question));
+        break;
+      case 'fengshui':
+        lines = lines.concat(followupFengshui(result, p, question));
+        break;
+      default:
+        lines.push(p + '汝所问"' + question + '"，' + '天地之道，阴阳五行，万物皆在其中。汝之所问，亦不出此理。');
+    }
+
+    lines.push('');
+    lines.push(p + '总而言之，' + master.phrase + '。命理不外乎人情，天道不离乎人事。汝当以平常心待之，顺势而为，则吉无不利。');
+
+    return lines.join('\n');
+  }
+
+  // ---- 各引擎追问函数 ----
+  function followupBazi(r, p, q) {
+    var lines = [];
+    var nianZhu = r.年柱 || '';
+    var yueZhu = r.月柱 || '';
+    var riZhu = r.日柱 || '';
+    var shiZhu = r.时柱 || '';
+    var riZhuWx = r.日主五行 || '';
+    var riZhuGan = r.日主 || '';
+    var riZhi = r.日支 || '';
+    var shengXiao = r.生肖 || '';
+    
+    lines.push(p + '前已推汝八字：' + nianZhu + '年 ' + yueZhu + '月 ' + riZhu + '日 ' + shiZhu + '时，' +
+      '日主' + riZhuGan + '属' + riZhuWx + '，生肖' + shengXiao + '。');
+
+    if(q.indexOf('财运')>=0 || q.indexOf('财')>=0 || q.indexOf('钱')>=0) {
+      lines.push(p + '● 论汝财运：' + riZhuWx + '日主，我克者为财。');
+      lines.push(p + '财为养命之源，亦为驱使之物。' + riZhuWx + '日主之财星为' + (riZhuWx==='木'?'土':riZhuWx==='火'?'金':riZhuWx==='土'?'水':riZhuWx==='金'?'木':'火') + '，');
+      lines.push(p + '观四柱之中，' + nianZhu + '纳音' + (r.年柱纳音||'') + '，' + yueZhu + '纳音' + (r.月柱纳音||'') + '，' + riZhu + '纳音' + (r.日柱纳音||'') + '，' + shiZhu + '纳音' + (r.时柱纳音||'') + '。');
+      lines.push(p + '纳音之中，亦有财库。若财星为用神，宜在财旺之年大胆进取，投资置业皆可；' +
+        '若财星为忌神，则需以稳健为主，不可贪多冒进。' +
+        '日支' + riZhi + '为夫妻宫，亦主内在根基，' +
+        '夫妻宫若藏财星，则配偶有助财之能。');
+    } else if(q.indexOf('事业')>=0 || q.indexOf('工作')>=0 || q.indexOf('升职')>=0) {
+      lines.push(p + '● 论汝事业：' + riZhuWx + '日主，克我者为官杀，主事业与责任。');
+      lines.push(p + '日柱' + riZhu + '为汝自身，日支' + riZhi + '为夫妻宫，亦主内在根基。');
+      lines.push(p + '官杀有力则事业有成，可担重任，领导之才；' +
+        '官杀过重则压力大，需以印星化解，宜寻贵人或长辈提携。' +
+        '择业方向，宜选与用神五行相符之行业：' +
+        (riZhuWx==='木'?'木主文教、医药、环保；' : '') +
+        (riZhuWx==='火'?'火主能源、餐饮、文化；' : '') +
+        (riZhuWx==='土'?'土主地产、建筑、农业；' : '') +
+        (riZhuWx==='金'?'金主金融、法律、机械；' : '') +
+        (riZhuWx==='水'?'水主物流、贸易、传媒。' : '') +
+        '月柱' + yueZhu + '为提纲，代表青年运势，' +
+        '月令之旺衰，决定了事业起步之难易。');
+    } else if(q.indexOf('感情')>=0 || q.indexOf('婚姻')>=0 || q.indexOf('姻缘')>=0 || q.indexOf('正缘')>=0) {
+      lines.push(p + '● 论汝姻缘：日支' + riZhi + '为夫妻宫，乃婚姻之根基。');
+      lines.push(p + '夫妻宫之五行与日主之关系，决定了婚姻之质量。');
+      lines.push(p + '日主' + riZhuGan + '属' + riZhuWx + '，日支' + riZhi + '，' +
+        '二者相生则和睦恩爱，相克则有摩擦需以包容化解。' +
+        '男命以财星为妻，女命以官星为夫。' + riZhuWx + '日主，' +
+        '财星/官星在四柱中之力，决定了姻缘之早晚与配偶之品质。' +
+        '时柱' + shiZhu + '主晚年，亦主子女，' +
+        '时柱与夫妻宫的关系，反映了晚年婚姻之状态。');
+    } else if(q.indexOf('健康')>=0 || q.indexOf('身体')>=0) {
+      lines.push(p + '● 论汝健康：' + riZhuWx + '日主，五行平衡则身体健康。');
+      lines.push(p + '年柱' + nianZhu + '、月柱' + yueZhu + '、日柱' + riZhu + '、时柱' + shiZhu + '，四柱之中，五行分布决定体质。');
+      lines.push(p + '木主肝胆，火主心脏，土主脾胃，金主肺肠，水主肾脏。' +
+        '某行过旺或过弱，则对应脏腑需多加注意。' +
+        '日主' + riZhuWx + '，若被克制太过，则' + (riZhuWx==='木'?'肝胆':riZhuWx==='火'?'心脏':riZhuWx==='土'?'脾胃':riZhuWx==='金'?'肺肠':'肾脏') + '方面需多加保养。');
+    } else if(q.indexOf('今年')>=0 || q.indexOf('运势')>=0 || q.indexOf('流年')>=0) {
+      lines.push(p + '● 论汝今年运势：当前为2026丙午年，流年丙午，丙火坐午火，火势极旺。');
+      lines.push(p + riZhuWx + '日主逢之，' +
+        (riZhuWx === '火' ? '比劫旺盛，需防破财与人际纷争，但亦得朋友之助，适合与人合作。' :
+         riZhuWx === '木' ? '食伤泄秀，才华得展，创意迸发，但需注意精力消耗，劳逸结合。' :
+         riZhuWx === '水' ? '财星旺盛，求财有望，但火旺水干，需量力而行，不可贪多。' :
+         riZhuWx === '金' ? '官杀克身，压力较大，需注意健康与情绪管理，宜低调行事。' :
+         '印星生身，贵人相助，学习进修之良机，宜多读书多请教。'));
+      lines.push(p + '丙午年与八字' + nianZhu + ' ' + yueZhu + ' ' + riZhu + ' ' + shiZhu + '之关系，' +
+        '需结合大运流年合参，方能准确判断。');
+    } else {
+      lines.push(p + '汝所问"' + q + '"，关乎' + riZhuWx + '日主之命途。');
+      lines.push(p + '八字' + nianZhu + ' ' + yueZhu + ' ' + riZhu + ' ' + shiZhu + '，' +
+        '四柱八字，各有其用：年柱为根，月柱为苗，日柱为花，时柱为果。' +
+        '知命而用命，方能趋吉避凶。' + riZhuWx + '日主之人，' +
+        '当以' + (riZhuWx==='木'?'仁':riZhuWx==='火'?'礼':riZhuWx==='土'?'信':riZhuWx==='金'?'义':'智') + '为先，顺势而为。');
+    }
+    return lines;
+  }
+
+  function followupLiuyao(r, p, q) {
+    var lines = [];
+    var guaName = r.gua_name || '此卦';
+    var origGua = r.original_gua || {};
+    var dongYao = r.dong_yao;
+    var changedGua = r.changed_gua;
+    var liuQin = r.liu_qin || [];
+    var liuShou = r.liu_shou || [];
+    var shiYao = r.shi_yao;
+    var yingYao = r.ying_yao;
+    
+    lines.push(p + '前已起得' + guaName + '，' + 
+      (origGua.gong ? '属' + origGua.gong + '宫，上卦' + origGua.upper + '为天，下卦' + origGua.lower + '为地。' : '') +
+      (dongYao ? '动爻在第' + dongYao + '位。' : '静卦也，事态稳定。'));
+
+    if(q.indexOf('动爻')>=0 || q.indexOf('变卦')>=0 || q.indexOf('变化')>=0) {
+      lines.push(p + '● 动爻精解：动爻为变之机，卦中之关键。');
+      if(dongYao) {
+        lines.push(p + '第' + dongYao + '爻发动，' +
+          (liuQin[dongYao-1] ? '六亲为' + liuQin[dongYao-1] + '，' : '') +
+          (liuShou[dongYao-1] ? '临' + liuShou[dongYao-1] + '，' + getShouDesc(liuShou[dongYao-1]) + '。' : '') +
+          (changedGua ? '变而为' + changedGua.name + '，此乃事态发展之走向。' : ''));
+        lines.push(p + '动爻之位，决定了事态转变之关键节点。' +
+          '爻动则变，变则有机。' + (liuQin[dongYao-1] ? liuQin[dongYao-1] + '发动，其力倍增，' : '') +
+          '若为吉爻发动，则好事将近；若为凶爻发动，则需谨慎应对。');
+      } else {
+        lines.push(p + '此卦无动爻，为静卦。静则不变，事态稳定，短期内不会有大变化。' +
+          '然静卦亦有其意，观其六亲六兽之分布，可知当前之状态。');
+      }
+    } else if(q.indexOf('世爻')>=0 || q.indexOf('应爻')>=0 || q.indexOf('世应')>=0) {
+      lines.push(p + '● 世应分析：世爻为汝自身，应爻为所问之事。');
+      lines.push(p + '世爻在' + (shiYao||'?') + '位' + (liuQin[shiYao-1] ? '（六亲：' + liuQin[shiYao-1] + '）' : '') + '，' +
+        '应爻在' + (yingYao||'?') + '位' + (liuQin[yingYao-1] ? '（六亲：' + liuQin[yingYao-1] + '）' : '') + '。');
+      lines.push(p + '世应相生则吉，所问之事与汝相合；' +
+        '世应相克则凶，所问之事与汝相冲。' +
+        '世应之位已定，观其六亲属性，可知汝与所问之事之互动关系。' +
+        '若世爻旺相，则汝自身状态佳；若世爻休囚，则需先调整自身。');
+    } else if(q.indexOf('六亲')>=0 || q.indexOf('六兽')>=0) {
+      lines.push(p + '● 六亲六兽详解：');
+      lines.push(p + '六亲者：' + (liuQin.length ? liuQin.join('、') : '未定') + '。' +
+        '父母主文书长辈与庇护，兄弟主朋友同辈与竞争，妻财主财物妻妾与资源，' +
+        '官鬼主事业官非与压力，子孙主晚辈福泽与解忧。');
+      lines.push(p + '六兽者：' + (liuShou.length ? liuShou.join('、') : '未定') + '。' +
+        '青龙主喜事与贵人，朱雀主口舌与文书，勾陈主牵连与拖延，' +
+        '腾蛇主虚惊与怪异，白虎主凶伤与权威，玄武主盗贼与暗昧。' +
+        '六亲六兽各居其爻，合而观之，可知吉凶之所在。');
+    } else {
+      lines.push(p + '以' + guaName + '之象推之，汝问"' + q + '"，卦中自有答案。' +
+        (changedGua ? '本卦' + guaName + '变' + changedGua.name + '，阴阳消长，' : '') +
+        '吉凶之机，已在其中。' +
+        (dongYao ? '动爻所在，即为关键；' : '静卦无变，观其本象即可。') +
+        '易者变也，穷则变，变则通，通则久。');
+    }
+    return lines;
+  }
+
+  function followupMeihua(r, p, q) {
+    var lines = [];
+    var origGua = r.original_gua || '本卦';
+    var huGua = r.hu_gua || '';
+    var changedGua = r.changed_gua || '';
+    var tiGua = r.ti_gua || '';
+    var yongGua = r.yong_gua || '';
+    var sk = r.sheng_ke || '';
+    
+    lines.push(p + '前以' + origGua + '推之，' +
+      '体卦' + tiGua + '为汝自身，用卦' + yongGua + '为所问之事，' + sk + '。');
+
+    if(q.indexOf('体用')>=0 || q.indexOf('生克')>=0) {
+      lines.push(p + '● 体用生克乃梅花易数之核心。');
+      lines.push(p + '体卦' + tiGua + '代表汝之本体，用卦' + yongGua + '代表所问之事。');
+      lines.push(p + '体用关系：' + sk + '。' + getShengKeDesc(sk, tiGua, yongGua, p));
+      lines.push(p + '互卦' + huGua + '为过程之中局，变卦' + changedGua + '为最终之结局。' +
+        '三卦合参，可知事之始、中、终三阶段。' +
+        '体用生克定吉凶，互卦变卦定过程。');
+    } else if(q.indexOf('互卦')>=0) {
+      lines.push(p + '● 互卦' + huGua + '乃本卦之中爻所成，代表事态发展之中间过程。');
+      lines.push(p + '互卦揭示的是隐藏的因素与中间环节。' +
+        '本卦' + origGua + '为表象，互卦' + huGua + '为内因，' +
+        '变卦' + changedGua + '为结果。三卦层层递进，如剥洋葱，层层深入。');
+    } else if(q.indexOf('变卦')>=0 || q.indexOf('结局')>=0) {
+      lines.push(p + '● 变卦' + changedGua + '乃本卦' + origGua + '之动爻所变，代表事态之最终走向。');
+      lines.push(p + '变卦为事之终，观变卦可知结局。' +
+        '若变卦生体卦，则结局有利；若变卦克体卦，则结局不利。' +
+        '然变卦非定数，人之选择可改变卦象，此乃易之精髓——变易也。');
+    } else {
+      lines.push(p + '汝问"' + q + '"，以象数推之：万物皆数，数中有象，象中有理。' +
+        '本卦' + origGua + '、互卦' + huGua + '、变卦' + changedGua + '，' +
+        '三卦合参，可知事之始末。体卦' + tiGua + '与用卦' + yongGua + '之' + sk + '，' +
+        '已明示吉凶方向。');
+    }
+    return lines;
+  }
+
+  function followupQimen(r, p, q) {
+    var lines = [];
+    lines.push(p + '前已推' + (r.ju||'此局') + '，' + (r.jieqi||'') + '节气，' +
+      '日干支' + (r.day_gz||'') + '，时干支' + (r.time_gz||'') + '。');
+
+    if(q.indexOf('吉门')>=0 || q.indexOf('八门')>=0) {
+      lines.push(p + '● 八门乃奇门遁甲之核心，吉门宜趋，凶门宜避。');
+      lines.push(p + '休门主休养，生门主生机，伤门主伤害，杜门主阻滞，' +
+        '景门主虚华，死门主终结，惊门主惊恐，开门主开创。' +
+        '择吉门而行，事半功倍；踏凶门而入，徒增波折。' +
+        '八门之吉凶，还需结合九星与八神合参，不可孤立而断。');
+    } else if(q.indexOf('九星')>=0) {
+      lines.push(p + '● 九星者：天蓬、天芮、天冲、天辅、天禽、天心、天柱、天任、天英。');
+      lines.push(p + '天蓬主大凶，天芮主病灾，天冲主冲动，天辅主文教，' +
+        '天禽主中和，天心主谋划，天柱主破败，天任主稳重，天英主火光。' +
+        '九星各有其性，吉星当值则吉，凶星当值则凶。' +
+        '临吉星则事成，临凶星则需谨慎。');
+    } else if(q.indexOf('吉时')>=0 || q.indexOf('时辰')>=0) {
+      lines.push(p + '● 择吉时之法：以时干落宫为主，兼看八门与九星。');
+      lines.push(p + '时干落宫得吉门吉星，且与日干相生，则为吉时。' +
+        '时干落宫得凶门凶星，或与日干相克，则为凶时。' +
+        '奇门择时，需结合具体事项而定——求财看生门，出行看开门，' +
+        '谈判看休门，诉讼看惊门。不可一概而论。');
+    } else {
+      lines.push(p + '汝问"' + q + '"，奇门遁甲之道，' +
+        '择吉门而趋，避凶门而遁。' + (r.cells && r.cells.length ? '九宫之中，各有格局，须细察之。' : '') +
+        '天时、地利、人和，三者缺一不可。' +
+        '奇门之术，帝王之学，用之得当，可趋吉避凶。');
+    }
+    return lines;
+  }
+
+  function followupTaiyi(r, p, q) {
+    var lines = [];
+    lines.push(p + '前以太乙神数推之，' + (r.epoch||'') + '，' +
+      '太乙入' + (r.taiyi_position||'') + '，积年' + (r.ji_nian||'') + '。');
+
+    if(q.indexOf('五福')>=0) {
+      lines.push(p + '● 五福者：福、禄、寿、喜、财也。' +
+        (r.wufu ? '五福临' + r.wufu.position + '，' + r.wufu.position + '宫得五福照临，' +
+        '主该方位/领域大吉，宜善加利用。' : ''));
+      lines.push(p + '五福临宫则吉，所临之宫位，百事皆宜，' +
+        '宜在此方位办公、居住或进行重要活动。');
+    } else if(q.indexOf('三基')>=0) {
+      lines.push(p + '● 三基者：君基、臣基、民基也。' +
+        (r.sanji ? '三基在' + r.sanji.position + '，' : ''));
+      lines.push(p + '君基主国家大事，臣基主官场仕途，民基主百姓民生。' +
+        '三基得位则天下安，三基失位则天下乱。' +
+        '以太乙神数推之，三基所在，关乎大局之安危。');
+    } else {
+      lines.push(p + '汝问"' + q + '"，太乙之数，穷极天地。' +
+        '五福三基，各有其位。' + (r.wufu ? '五福在' + r.wufu.position + '，' : '') +
+        '吉凶祸福，皆在数中。太乙神数，上古帝王之术，' +
+        '推演天地运行之规律，以测人事之吉凶。');
+    }
+    return lines;
+  }
+
+  function followupZhuge(r, p, q) {
+    var lines = [];
+    lines.push(p + '前得第' + (r.number||'') + '签，' + (r.level||'') + '。');
+    
+    lines.push(p + '● 签文解读：');
+    if(r.poem) lines.push(p + '签诗曰："' + r.poem + '"——此乃诸葛武侯之神机妙算。');
+    if(r.interpretation) lines.push(p + '解签：' + r.interpretation);
+    if(r.verdict) lines.push(p + '判断：' + r.verdict + '。');
+    lines.push(p + '汝问"' + q + '"，诸葛神数，以签示兆。' +
+      '签中之意，需细细品味，方能领悟其中玄机。' +
+      '三百八十四签，各有其应，非偶然所得。');
+    return lines;
+  }
+
+  function followupZhougong(r, p, q) {
+    var lines = [];
+    lines.push(p + '前解汝梦"' + (r.input||'') + '"，' + (r.domain ? '属' + r.domain.name + '之梦，' : '') +
+      (r.ji ? '此梦' + r.ji + '。' : ''));
+    lines.push(p + '● 梦象解读：梦者，魂之游也；象者，事之兆也。');
+    lines.push(p + '日有所思，夜有所梦。梦境虽虚幻，而其象可推人事之变。' +
+      '汝梦"' + (r.input||'') + '"，' + (r.domain ? '属' + r.domain.name + '之梦，' + r.domain.name + '之事，' : '') +
+      '当以平常心观之，不可过度解读，亦不可全然忽视。' +
+      '梦之吉凶，在于现实之应对，而非梦象本身。');
+    return lines;
+  }
+
+  function followupDaliuren(r, p, q) {
+    var lines = [];
+    var riGan = r.ri_gan || '';
+    var riZhi = r.ri_zhi || '';
+    var keName = r.ke_name || '';
+    var chuan = r.chuan || '';
+    var yueJiang = r.yue_jiang_name || r.yue_jiang || '';
+    
+    lines.push(p + '前以六壬推之，' + riGan + riZhi + '日，' +
+      '课体' + keName + '，三传' + chuan + '，月将' + yueJiang + '。');
+
+    if(q.indexOf('三传')>=0 || q.indexOf('初传')>=0 || q.indexOf('中传')>=0 || q.indexOf('末传')>=0) {
+      lines.push(p + '● 三传推演：三传者，初传、中传、末传也。');
+      lines.push(p + '三传' + chuan + '，初传为事之始，中传为事之中，末传为事之终。');
+      lines.push(p + '三传递进，如流水之不息，事态之发展尽在其中。' +
+        '初传吉则事始顺利，中传吉则过程通达，末传吉则结局圆满。' +
+        '若三传皆吉，则百事亨通；若三传皆凶，则需谨慎行事。' +
+        '三传之中，末传最为关键，决定了最终之结果。');
+    } else if(q.indexOf('课体')>=0) {
+      lines.push(p + '● 课体精解：' + keName + '之课，乃天地盘交合之象。');
+      lines.push(p + '六壬课体有六十四种，各有其名，各有其应。' +
+        keName + '之课，' + (keName.indexOf('元首')>=0 ? '元首课为课中之王，主万事亨通。' :
+        keName.indexOf('重审')>=0 ? '重审课需反复斟酌，不可轻率。' :
+        keName.indexOf('知一')>=0 ? '知一课主信息明确，方向清晰。' :
+        keName.indexOf('涉害')>=0 ? '涉害课主波折，需谨慎应对。' :
+        keName.indexOf('遥克')>=0 ? '遥克课主远距离之影响，需关注远方之事。' :
+        keName.indexOf('昴星')>=0 ? '昴星课主暗中有变，需细心观察。' :
+        '课体为纲，三传为目，纲举目张，万事可明。'));
+    } else {
+      lines.push(p + '汝问"' + q + '"，六壬之道，以天地盘为基，四课三传为用。' +
+        '课体' + keName + '，三传' + chuan + '，' +
+        '观三传之生克，可知事之吉凶。' +
+        '六壬之术，与太乙、奇门并称三式，乃术数之巅峰。');
+    }
+    return lines;
+  }
+
+  function followupZiwei(r, p, q) {
+    var lines = [];
+    var mingGong = r.命宫 || '';
+    var zhuXing = r.命宫主星 || '';
+    var shenGong = r.身宫 || '';
+    var wuxingJu = r.五行局 || '';
+    var gongs = r.十二宫 || [];
+    var sihua = r.四化 || {};
+    
+    lines.push(p + '前推汝紫微命盘：' + mingGong + '为命宫，' +
+      '主星' + (zhuXing || '无主星') + '。' +
+      shenGong + '为身宫，得' + wuxingJu + '，紫微星落' + (r.紫微星落||'') + '宫。');
+
+    if(q.indexOf('事业')>=0 || q.indexOf('官禄')>=0 || q.indexOf('工作')>=0) {
+      lines.push(p + '官禄宫乃事业之宫，观其星曜组合，可知事业方向与成就。');
+      // 从十二宫中找到官禄宫
+      for(var gi=0; gi<gongs.length; gi++) {
+        if(gongs[gi].name === '官禄') {
+          lines.push(p + '汝官禄宫在' + gongs[gi].zhi + '，' +
+            (gongs[gi].stars && gongs[gi].stars.length ? '有' + gongs[gi].stars.join('、') + '坐守。' : '无主星。'));
+        }
+      }
+      lines.push(p + '命宫主星' + zhuXing + '决定了汝之天赋与职业倾向。' +
+        '官禄宫之星曜配合命宫，方能确定事业之方向。' +
+        '若官禄宫吉星汇聚，事业顺遂；若有煞星冲破，则需以勤补拙。');
+    } else if(q.indexOf('财')>=0 || q.indexOf('财帛')>=0) {
+      lines.push(p + '财帛宫乃财运之宫，观其星曜，可知求财之难易与财富之格局。');
+      for(var gi=0; gi<gongs.length; gi++) {
+        if(gongs[gi].name === '财帛') {
+          lines.push(p + '汝财帛宫在' + gongs[gi].zhi + '，' +
+            (gongs[gi].stars && gongs[gi].stars.length ? '有' + gongs[gi].stars.join('、') + '坐守。' : '无主星。'));
+        }
+      }
+      lines.push(p + '财帛宫之吉凶，需结合命宫与福德宫合参。' +
+        '命宫主星' + zhuXing + '，' + wuxingJu + '，' +
+        '财星旺则求财易，财星弱则需勤勉。' +
+        '四化之中，化禄入财帛则财源广进，化忌入财帛则需谨慎理财。');
+    } else if(q.indexOf('感情')>=0 || q.indexOf('夫妻')>=0 || q.indexOf('婚姻')>=0) {
+      lines.push(p + '夫妻宫乃姻缘之宫，观其星曜，可知婚姻质量与配偶特征。');
+      for(var gi=0; gi<gongs.length; gi++) {
+        if(gongs[gi].name === '夫妻') {
+          lines.push(p + '汝夫妻宫在' + gongs[gi].zhi + '，' +
+            (gongs[gi].stars && gongs[gi].stars.length ? '有' + gongs[gi].stars.join('、') + '坐守。' : '无主星。'));
+        }
+      }
+      lines.push(p + '夫妻宫与命宫之关系，决定了姻缘之路。' +
+        '命宫' + mingGong + '与夫妻宫之生克，关乎婚姻之和谐。' +
+        '若夫妻宫有桃花星，异性缘佳但需防烂桃花；' +
+        '若夫妻宫有煞星，则需以包容之心化解矛盾。');
+    } else if(q.indexOf('健康')>=0 || q.indexOf('疾厄')>=0) {
+      lines.push(p + '疾厄宫乃健康之宫，观其星曜，可知体质强弱与易患之疾。');
+      for(var gi=0; gi<gongs.length; gi++) {
+        if(gongs[gi].name === '疾厄') {
+          lines.push(p + '汝疾厄宫在' + gongs[gi].zhi + '，' +
+            (gongs[gi].stars && gongs[gi].stars.length ? '有' + gongs[gi].stars.join('、') + '坐守。' : '无主星。'));
+        }
+      }
+      lines.push(p + '命宫' + mingGong + '，' + wuxingJu + '，' +
+        '五行之平衡关乎健康。' +
+        '疾厄宫有吉星则体质强健，有煞星则需注意对应脏腑之保养。');
+    } else {
+      lines.push(p + '紫微斗数，十二宫各有其主，十四主星各有所司。' +
+        '汝问"' + q + '"，需观对应宫位之星曜组合方知。' +
+        '命宫' + mingGong + '为根，' + shenGong + '为干，' +
+        '其余十宫为枝叶，合而观之，方知命途全貌。');
+    }
+    return lines;
+  }
+
+  function followupFengshui(r, p, q) {
+    var lines = [];
+    lines.push(p + '前已推' + (r.sitting||'') + '山' + (r.facing||'') + '向，' +
+      (r.periodNum||'') + '运之宅，综合评分' + (r.overallScore||'') + '分。');
+
+    if(q.indexOf('财位')>=0 || q.indexOf('财运')>=0) {
+      lines.push(p + '财位之寻，以向星为主。' + (r.palaces && r.palaces.length ? '纵观九宫：' +
+        (function(){
+          var cai = [];
+          for(var i=0;i<r.palaces.length;i++){
+            if(r.palaces[i].facingStar===8||r.palaces[i].facingStar===1||r.palaces[i].facingStar===6||r.palaces[i].facingStar===9)
+              cai.push(r.palaces[i].name);
+          }
+          return cai.length ? cai.join('、') + '为财位。' : '需结合具体飞星确定。';
+        })() : ''));
+    } else if(q.indexOf('化解')>=0 || q.indexOf('凶位')>=0) {
+      lines.push(p + '凶位之化解，以五行生克为法。' + (r.worstPalace ? 
+        '最凶之' + r.worstPalace.name + '（评分' + r.worstPalace.score + '），' +
+        '可以金器、铜铃等金属风水物化解，或以白色、金色布置。' : ''));
+    } else if(q.indexOf('健康')>=0) {
+      lines.push(p + '健康与山星相关。' + (r.palaces && r.palaces.length ? 
+        '九宫之中，山星吉者宜居，山星凶者宜避。' : '') +
+        '卧室宜设在山星吉位，以保健康平安。');
+    } else {
+      lines.push(p + '风水之道，首重峦头理气。' +
+        (r.bestPalace ? '最佳方位' + r.bestPalace.name + '宜善加利用，' : '') +
+        (r.worstPalace ? '最差方位' + r.worstPalace.name + '需谨慎处理。' : '') +
+        '九宫飞星，年年流转，须因时制宜。');
+    }
+    return lines;
+  }
+
+  // ========== 构建侧边栏 ==========
+  var sidebar = document.getElementById('sidebar');
+  for(var ei=0; ei<ENGINES.length; ei++) {
+    (function(eng){
+      var btn = document.createElement('button');
+      btn.className = 'engine-btn';
+      btn.innerHTML = eng.icon + ' ' + eng.name + ' <span style="color:#6a6556;font-size:0.7rem">(' + eng.masters.length + '位)</span>';
+      btn.addEventListener('click', function(){ selectEngine(eng.id); });
+      sidebar.appendChild(btn);
+    })(ENGINES[ei]);
+  }
+
+  function selectEngine(id) {
+    currentEngineId = id;
+    currentResult = null;
+    currentMasterId = null;
+    followupHistory = [];
+
+    var btns = sidebar.querySelectorAll('.engine-btn');
+    for(var bi=0; bi<btns.length; bi++) {
+      btns[bi].classList.toggle('active', ENGINES[bi] && ENGINES[bi].id === id);
+    }
+    renderEngine(id);
+  }
+
+  function findEngine(id) {
+    for(var ei=0; ei<ENGINES.length; ei++) {
+      if(ENGINES[ei].id === id) return ENGINES[ei];
+    }
+    return null;
+  }
+
+  function renderEngine(id) {
+    var eng = findEngine(id);
+    if(!eng) return;
+    var content = document.getElementById('content');
+
+    var result = eng.fn();
+    currentResult = result;
+    // 默认选第一个大师
+    if(eng.masters.length > 0) currentMasterId = eng.masters[0].id;
+
+    var formatted = eng.format(result);
+    var html = '';
+
+    // 引擎头部
+    html += '<div class="eng-header">';
+    html += '<h3>' + eng.icon + ' ' + eng.name + '</h3>';
+    html += '<div class="info">流派：' + eng.category + ' | 专属大师：' + eng.masters.length + '位 | <span style="color:#8a8576">点击大师标签切换解读</span></div>';
+    html += '<div class="masters-list" id="mastersTags">';
+    for(var mi=0; mi<eng.masters.length; mi++) {
+      var m = eng.masters[mi];
+      html += '<span class="master-tag' + (m.id === currentMasterId ? ' selected' : '') + '" data-master-id="' + m.id + '">' + m.name + '</span>';
+    }
+    html += '</div>';
+    html += '<button class="btn" style="margin-top:8px" onclick="window._rerunTest()">重新排盘</button>';
+    html += '</div>';
+
+    // 引擎原始输出
+    html += '<div class="card">';
+    html += '<div class="card-hd"><span class="title">引擎原始输出</span><span class="meta">' + eng.name + '</span></div>';
+    html += '<div class="card-bd"><span class="stat">字数：' + formatted.replace(/[^\u4e00-\u9fa5]/g,'').length + '字</span><pre>' + escapeHtml(formatted) + '</pre></div>';
+    html += '</div>';
+
+    // 大师解读
+    if(currentMasterId && eng.masters.length > 0) {
+      var master = MastersEngine.MASTERS[currentMasterId];
+      if(master) {
+        var analysis = generateMasterAnalysis(eng, result, master);
+        html += '<div class="card" id="masterAnalysisCard">';
+        html += '<div class="card-hd"><span class="title">大师解读 · ' + master.name + '</span><span class="meta">' + master.era + ' · ' + master.title + '</span></div>';
+        html += '<div class="card-bd"><div class="analysis-text">' + formatAnalysisText(analysis) + '</div></div>';
+        html += '</div>';
+      }
+    }
+
+    // 追问区域
+    html += '<div class="followup-box">';
+    html += '<h4>追问大师 — 对此次排盘结果进行深入追问</h4>';
+    html += '<div class="quick-questions" id="quickQuestions"></div>';
+    html += '<div class="followup-input-row">';
+    html += '<input type="text" id="followupInput" placeholder="输入你想追问的问题，如：我的财运何时好转？...">';
+    html += '<button class="btn-send" id="followupSend">追问</button>';
+    html += '</div>';
+    html += '<div class="followup-history" id="followupHistory"></div>';
+    html += '</div>';
+
+    content.innerHTML = html;
+
+    // 绑定大师标签点击
+    bindMasterTags(eng);
+    // 绑定追问
+    bindFollowup(eng);
+    // 生成快捷追问
+    generateQuickQuestions(eng);
+  }
+
+  function bindMasterTags(eng) {
+    var tags = document.querySelectorAll('.master-tag');
+    for(var ti=0; ti<tags.length; ti++) {
+      tags[ti].addEventListener('click', function(){
+        var mid = this.dataset.masterId;
+        currentMasterId = mid;
+        // 更新选中状态
+        var allTags = document.querySelectorAll('.master-tag');
+        for(var ai=0; ai<allTags.length; ai++) {
+          allTags[ai].classList.toggle('selected', allTags[ai].dataset.masterId === mid);
+        }
+        // 更新大师解读
+        var master = MastersEngine.MASTERS[mid];
+        if(master && currentResult) {
+          var analysis = generateMasterAnalysis(eng, currentResult, master);
+          var card = document.getElementById('masterAnalysisCard');
+          if(card) {
+            card.querySelector('.card-hd').innerHTML = '<span class="title">大师解读 · ' + master.name + '</span><span class="meta">' + master.era + ' · ' + master.title + '</span>';
+            card.querySelector('.analysis-text').innerHTML = formatAnalysisText(analysis);
+          }
+        }
+      });
+    }
+  }
+
+  function bindFollowup(eng) {
+    var input = document.getElementById('followupInput');
+    var sendBtn = document.getElementById('followupSend');
+    var history = document.getElementById('followupHistory');
+
+    function doSend() {
+      var q = input.value.trim();
+      if(!q) return;
+      if(!currentMasterId || !currentResult) return;
+
+      var master = MastersEngine.MASTERS[currentMasterId];
+      if(!master) return;
+
+      // 添加问题
+      followupHistory.push({type:'question', text:q});
+      
+      // 生成回答
+      var answer = generateFollowupResponse(eng, currentResult, master, q);
+      followupHistory.push({type:'answer', text:answer, master:master.name});
+
+      renderFollowupHistory();
+      input.value = '';
+      input.focus();
+    }
+
+    sendBtn.addEventListener('click', doSend);
+    input.addEventListener('keydown', function(e){
+      if(e.key === 'Enter') doSend();
+    });
+  }
+
+  function renderFollowupHistory() {
+    var el = document.getElementById('followupHistory');
+    if(!el) return;
+    var html = '';
+    for(var i=0; i<followupHistory.length; i++) {
+      var msg = followupHistory[i];
+      if(msg.type === 'question') {
+        html += '<div class="followup-msg question"><div class="msg-label">你的追问</div>' + escapeHtml(msg.text) + '</div>';
+      } else {
+        html += '<div class="followup-msg answer"><div class="msg-label"><span class="msg-master">' + msg.master + '</span> 的回答</div>' + formatAnalysisText(msg.text) + '</div>';
+      }
+    }
+    el.innerHTML = html;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function generateQuickQuestions(eng) {
+    var el = document.getElementById('quickQuestions');
+    if(!el) return;
+    var questions = [];
+    if(eng.id === 'bazi') {
+      questions = ['我的财运何时有转机？正财偏财哪个更旺？', '事业方向应该如何选择？何时有升职机会？', '婚姻感情运势如何？正缘在哪个大运出现？', '今年丙午流年对我有何影响？需要注意什么？', '五行是否平衡？健康方面需要关注什么？'];
+    } else if(eng.id === 'liuyao') {
+      questions = ['此卦动爻如何解读？变卦预示什么走向？', '世爻与应爻的关系如何？吉凶倾向怎样？', '六亲中哪个最关键？六兽各有什么含义？', '此卦对事业/财运的启示是什么？', '变卦与原卦的吉凶对比如何？'];
+    } else if(eng.id === 'meihua') {
+      questions = ['体用生克关系如何？吉凶倾向怎样？', '互卦揭示了什么隐藏因素？', '变卦预示什么最终结局？如何趋吉避凶？', '本卦、互卦、变卦三卦如何合参？', '万物类象如何应用到具体问题中？'];
+    } else if(eng.id === 'qimen') {
+      questions = ['哪个宫位最吉利？八门中哪个门适合我？', '九星对我的影响如何？哪个星最有利？', '如何选择最佳时辰？什么时辰该做什么事？', '天时地利人和，当前哪方面最有利？', '此局对事业/财运/健康有何启示？'];
+    } else if(eng.id === 'taiyi') {
+      questions = ['太乙入宫的含义是什么？对大局有何影响？', '五福临门如何解读？应在哪个领域？', '三基的作用是什么？君基臣基民基各主什么？', '积年之数如何推算？有何历史依据？', '太乙神数与奇门遁甲、大六壬有何异同？'];
+    } else if(eng.id === 'zhuge') {
+      questions = ['此签的深层含义是什么？如何理解签中隐喻？', '签诗每句如何解读？有什么典故？', '此签对当前处境的启示是什么？', '历史上类似签文应验的案例有哪些？', '签中的吉凶判断有何依据？'];
+    } else if(eng.id === 'zhougong') {
+      questions = ['这个梦有什么深层征兆？预示着什么？', '梦中的象征物如何解读？各有什么寓意？', '这个梦对应现实中的哪些方面？', '如何化解噩梦？有哪些安神的方法？', '重复出现的梦境意味着什么？'];
+    } else if(eng.id === 'daliuren') {
+      questions = ['课体' + (currentResult && currentResult.ke_name ? currentResult.ke_name : '') + '如何详细解读？', '三传预示什么？初传中传末传各主什么？', '月将的作用是什么？与课体有何关系？', '四课三传如何合参？吉凶如何判断？', '六壬与其他术数相比有何独特之处？'];
+    } else if(eng.id === 'ziwei') {
+      questions = ['命宫主星如何详细解读？各星曜有何特性？', '事业宫（官禄宫）有什么星曜？适合什么职业？', '财帛宫情况如何？正财运和偏财运怎样？', '夫妻宫如何？正缘何时出现？配偶特征如何？', '四化飞星（禄权科忌）对我的影响是什么？'];
+    } else if(eng.id === 'fengshui') {
+      questions = ['财位在哪个方位？如何布置才能旺财？', '凶位如何化解？有哪些具体的风水调整方法？', '健康方面需要注意哪些方位？', '最佳方位如何利用？宜做什么用途？', '九宫飞星详解？今年年星飞布情况如何？'];
+    } else {
+      questions = ['这个结果如何详细解读？有哪些深层含义？', '有什么需要注意的风险和机遇？', '吉凶如何判断？有何依据？', '能再详细解释一下背后的原理吗？'];
+    }
+    var html = '';
+    for(var qi=0; qi<questions.length; qi++) {
+      html += '<button class="qq">' + questions[qi] + '</button>';
+    }
+    el.innerHTML = html;
+
+    var btns = el.querySelectorAll('.qq');
+    var input = document.getElementById('followupInput');
+    for(var bi=0; bi<btns.length; bi++) {
+      btns[bi].addEventListener('click', function(){
+        if(input) {
+          input.value = this.textContent;
+          input.focus();
+        }
+      });
+    }
+  }
+
+  function formatAnalysisText(text) {
+    return escapeHtml(text)
+      .replace(/【(\w+)】/g, '<strong>【$1】</strong>')
+      .replace(/\n/g, '<br>');
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // 暴露到全局
+  window._rerunTest = function(){
+    if(currentEngineId) renderEngine(currentEngineId);
+  };
+
+  // 默认选中第一个
+  if(ENGINES.length > 0) selectEngine(ENGINES[0].id);
+
+})();
+</script>
+</body>
+</html>
