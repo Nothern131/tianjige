@@ -57,7 +57,7 @@ function renderMastersPanel(container, options) {
     html += '<div class="master-avatar">' + (m.avatar || '⭐') + '</div>';
     html += '<div class="master-name">' + m.name + '</div>';
     html += '<div class="master-title">' + (m.title || '') + '</div>';
-    html += '<div class="master-era">' + (m.era || '') + '</div>';
+    html += '<div class="master-era">' + (m.era || '') + (m.style ? ' · ' + (m.style.split('，')[0] || m.style.split('，')[0]) : '') + '</div>';
     html += '</div>';
   }
   html += '</div>';
