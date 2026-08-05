@@ -241,6 +241,132 @@ body{min-height:100vh;user-select:none;-webkit-user-select:none}
 .sub-analysis p{text-indent:0!important;margin-bottom:4px}
 .analysis-note{font-size:0.78rem!important;color:var(--text3)!important;text-indent:0!important;margin-top:4px;padding-left:12px;border-left:2px solid var(--border-gold)}
 
+/* ===== Mobile Responsive ===== */
+@media(max-width:768px){
+  .wrap{padding:0 12px 60px}
+  .hero{padding:36px 0 20px}
+  .hero h1{font-size:clamp(1.6rem,8vw,2.2rem)}
+  .hero .subtitle{font-size:0.78rem}
+  .card{padding:16px 12px;margin-bottom:16px}
+  .glass-card{padding:16px 12px}
+  .section-title{font-size:1rem;margin-bottom:12px}
+  .form-row{grid-template-columns:repeat(2,1fr);gap:10px}
+  .btn{padding:10px 24px;font-size:0.82rem}
+  .btn-row{gap:8px}
+  .btn-row .btn{font-size:0.8rem;padding:10px 20px}
+  .pillars-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .pillar-card{padding:12px 8px}
+  .pillar-ganzhi{font-size:1.3rem}
+  .pillar-label{font-size:0.6rem}
+  .pillar-wuxing{font-size:0.65rem}
+  .pillar-nayin{font-size:0.6rem}
+  .pillar-shishen{font-size:0.62rem}
+  .day-master-card{padding:14px}
+  .day-master-gan{font-size:2rem}
+  .day-master-info{font-size:0.72rem}
+  .canggan-table{font-size:0.68rem}
+  .canggan-table th,.canggan-table td{padding:6px 5px}
+  .canggan-item{font-size:0.65rem;padding:1px 6px}
+  .canggan-item .cg-shishen{font-size:0.58rem}
+  .wuxing-bar-label{font-size:0.68rem;width:20px}
+  .wuxing-bar-track{height:6px}
+  .wuxing-bar-val{font-size:0.62rem;width:26px}
+  .dayun-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px}
+  .dayun-card{padding:8px 6px}
+  .dayun-age{font-size:0.58rem}
+  .dayun-ganzhi{font-size:0.78rem}
+  .dayun-nayin{font-size:0.55rem}
+  .overview{flex-direction:column;gap:10px;padding:10px 0}
+  .overview-score{padding:10px 14px;min-width:90px}
+  .overview-score-num{font-size:2.2rem}
+  .two-col{grid-template-columns:1fr;gap:10px}
+  .detail-table{font-size:0.68rem}
+  .detail-table th,.detail-table td{padding:7px 6px}
+  .analysis-block h4{font-size:0.85rem;margin:16px 0 10px}
+  .analysis-block p{font-size:0.78rem;text-indent:1.5em}
+  .bagua-ring{width:70px;height:70px}
+  .tabs{gap:0;margin-bottom:16px}
+  .tab-btn{padding:8px 14px;font-size:0.74rem}
+  .master-cat-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+  .master-card{padding:10px 6px}
+  .master-avatar{font-size:1.5rem}
+  .master-name{font-size:0.76rem}
+  .master-title{font-size:0.62rem;max-width:110px}
+  .master-era{font-size:0.58rem}
+  .master-result-header{flex-direction:column;text-align:center;gap:12px}
+  .master-result-name{justify-content:center}
+  .master-result-tags{justify-content:center}
+  .master-section-content{padding-left:0;font-size:0.78rem}
+  .master-section-content p{text-indent:1.5em}
+  .master-section-title{font-size:0.85rem}
+  .master-section-icon{width:28px;height:28px;font-size:0.9rem}
+  .master-result-footer{margin-top:16px;padding-top:12px}
+  .btn-gold{padding:8px 22px;font-size:0.78rem}
+  .btn-gold.lg{padding:10px 28px;font-size:0.85rem}
+  .footer{padding:30px 0 0}
+  .error-container{padding:24px 12px}
+  .error-container .error-icon{font-size:2rem}
+  .error-container .error-text{font-size:0.8rem}
+}
+
+@media(max-width:400px){
+  .wrap{padding:0 10px 50px}
+  .hero{padding:28px 0 16px}
+  .hero h1{font-size:1.4rem}
+  .hero .subtitle{font-size:0.7rem}
+  .hero .ep-tag{font-size:0.62rem;padding:3px 10px}
+  .card{padding:12px 10px}
+  .glass-card{padding:12px 10px}
+  .section-title{font-size:0.9rem}
+  .form-row{grid-template-columns:1fr;gap:8px}
+  .form-group label{font-size:0.66rem}
+  .form-group input,.form-group select{padding:9px 10px;font-size:0.8rem}
+  .btn{width:100%;justify-content:center}
+  .btn-row{flex-direction:column}
+  .btn-row .btn{width:100%}
+  .pillars-grid{grid-template-columns:repeat(2,1fr);gap:6px}
+  .pillar-card{padding:10px 6px}
+  .pillar-ganzhi{font-size:1.1rem}
+  .pillar-label{font-size:0.56rem}
+  .pillar-wuxing{font-size:0.6rem}
+  .pillar-shishen{font-size:0.58rem}
+  .day-master-card{padding:12px}
+  .day-master-gan{font-size:1.8rem}
+  .day-master-info{font-size:0.68rem}
+  .canggan-table{font-size:0.62rem}
+  .canggan-table th,.canggan-table td{padding:4px 3px}
+  .canggan-item{font-size:0.6rem;padding:1px 4px}
+  .canggan-item .cg-shishen{font-size:0.54rem}
+  .wuxing-bar-label{font-size:0.62rem}
+  .wuxing-bar-val{font-size:0.58rem}
+  .dayun-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:4px}
+  .dayun-card{padding:6px 4px}
+  .dayun-age{font-size:0.54rem}
+  .dayun-ganzhi{font-size:0.7rem}
+  .dayun-nayin{font-size:0.5rem}
+  .overview-score-num{font-size:1.8rem}
+  .overview-score-label{font-size:0.68rem}
+  .detail-table{font-size:0.6rem}
+  .detail-table th,.detail-table td{padding:5px 3px}
+  .analysis-block h4{font-size:0.78rem}
+  .analysis-block p{font-size:0.74rem}
+  .tabs{overflow-x:auto;flex-wrap:nowrap}
+  .tab-btn{padding:7px 10px;font-size:0.68rem}
+  .master-cat-grid{grid-template-columns:1fr;gap:6px}
+  .master-card{flex-direction:row;gap:8px;padding:10px;justify-content:flex-start}
+  .master-avatar{font-size:1.3rem}
+  .master-era{margin-left:auto}
+  .master-title{font-size:0.6rem;max-width:none}
+  .master-result-section{padding:14px 0}
+  .master-section-content{font-size:0.74rem}
+  .master-section-title{font-size:0.78rem}
+  .master-footer-note{font-size:0.62rem}
+  .btn-gold{width:100%;justify-content:center}
+  .btn-gold.lg{width:100%;justify-content:center}
+  .bagua-ring{width:60px;height:60px}
+  .footer{font-size:0.62rem}
+  .error-container .error-text{font-size:0.74rem}
+}
 </style>
 </head>
 <body>

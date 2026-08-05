@@ -283,11 +283,13 @@ body{min-height:100vh;user-select:none;-webkit-user-select:none}
   .floor-plan-controls input[type=range]{width:80px}
 }
 @media(max-width:400px){
-  .palace-grid{grid-template-columns:repeat(3,1fr);gap:4px}
-  .palace-cell{padding:8px 4px;min-height:85px}
-  .palace-cell-name{font-size:0.65rem}
-  .palace-cell-star{font-size:0.5rem;padding:1px 4px}
-  .palace-cell-level{font-size:0.6rem}
+  .palace-grid{grid-template-columns:repeat(3,1fr);gap:5px;max-width:100%}
+  .palace-cell{padding:10px 5px;min-height:80px;border-radius:6px}
+  .palace-cell-name{font-size:0.62rem;margin-bottom:4px}
+  .palace-cell-star{font-size:0.48rem;padding:2px 5px;margin-bottom:2px}
+  .palace-cell-level{font-size:0.58rem;margin-top:1px}
+  .palace-cell-notes{font-size:0.5rem;max-height:24px}
+  .palace-cell-stars{gap:3px;margin-bottom:4px}
   .master-grid{grid-template-columns:1fr;gap:6px}
   .master-card{flex-direction:row;gap:8px;padding:10px 12px;justify-content:flex-start}
   .master-avatar{font-size:1.4rem}
@@ -300,6 +302,15 @@ body{min-height:100vh;user-select:none;-webkit-user-select:none}
   .wrap{padding:0 10px 50px}
   .card{padding:14px 10px}
   .grid-size-btn{padding:2px 5px;font-size:0.6rem}
+  .section-title{font-size:0.92rem}
+  .score-breakdown{gap:6px}
+  .score-item{padding:10px}
+  .score-item-label{font-size:0.68rem}
+  .score-item-detail{font-size:0.6rem}
+  .analysis-block{padding:12px 10px}
+  .analysis-block p{font-size:0.74rem}
+  .detail-table{font-size:0.62rem}
+  .detail-table th,.detail-table td{padding:5px 4px}
 }
 </style>
 </head>
