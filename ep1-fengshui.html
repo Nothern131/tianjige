@@ -60,7 +60,7 @@ body{min-height:100vh;user-select:none;-webkit-user-select:none}
 .tab-btn-switch:hover{color:var(--text)}
 .builder-wrap{display:flex;flex-direction:column;gap:16px}
 .builder-main{display:flex;gap:16px;align-items:flex-start}
-@media(max-width:768px){.builder-main{flex-direction:column}}
+@media(max-width:768px){.builder-main{flex-direction:row;gap:10px;align-items:center}.room-palette{min-width:60px;gap:4px}.room-btn{font-size:0;padding:6px;gap:0;justify-content:center;width:100%}.room-btn .room-icon{font-size:1.1rem;margin:0}.room-btn .room-name{display:none}.room-btn-erase{font-size:0.65rem;padding:4px 6px}.room-btn-erase .room-name{display:inline}.room-palette-label{font-size:0.55rem;text-align:center}}
 .room-palette{display:flex;flex-direction:column;gap:6px;min-width:100px}
 .room-palette-label{font-size:0.65rem;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px}
 .room-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);font-size:0.78rem;cursor:pointer;transition:all 0.25s;font-family:var(--font-sans);text-align:left;white-space:nowrap}
