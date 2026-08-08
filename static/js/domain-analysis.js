@@ -8,15 +8,279 @@
 
   /* ========== 一、事域体系 ========== */
   var DOMAINS = {
-    career:   { key: 'career',   name: '事业前程', desc: '事业运', icon: '💼', keywords: ['事业', '工作', '职场', '升职', '跳槽', '创业', '生意', '老板', '同事', '项目', '前途', '职业', '公司', '企业', '单位', '面试', '求职', '转行', '晋升', '公务员', '考公', '体制', '编制', '铁饭碗', '互联网', '大厂', 'IT', '行业', '上班', '辞职', '离职', '招聘', '应聘', '加班', '薪资', '待遇', '家族企业', '继承家业'] },
-    love:     { key: 'love',     name: '感情姻缘', desc: '感情运', icon: '💕', keywords: ['感情', '爱情', '婚姻', '恋爱', '分手', '复合', '对象', '伴侣', '表白', '暗恋', '相亲', '单身', '脱单', '出轨', '暧昧', '缘分', '正缘', '桃花', '离婚', '结婚', '夫妻', '未婚', '已婚', '分居', '复婚', '再婚', '姻缘', '老公', '老婆', '吵架', '冷战', '配偶', '二婚', '头婚', '再嫁', '续弦', '改嫁', '娶媳', '嫁人'] },
-    wealth:   { key: 'wealth',   name: '财运财富', desc: '财运',   icon: '💰', keywords: ['财运', '钱', '财富', '投资', '理财', '股票', '基金', '收入', '债务', '亏损', '赚钱', '偏财', '正财', '花销', '贷款', '买房', '买车'] },
-    health:   { key: 'health',   name: '健康平安', desc: '健康运', icon: '🏥', keywords: ['健康', '身体', '疾病', '生病', '康复', '手术', '体检', '失眠', '头痛', '疼痛', '养生', '锻炼', '减肥', '怀孕', '平安'] },
-    study:    { key: 'study',    name: '学业考试', desc: '学业运', icon: '📚', keywords: ['学业', '考试', '学习', '成绩', '高考', '考研', '考证', '升学', '毕业', '论文', '学校', '专业', '录取', '分数', '挂科', '读书', '备考', '复习', '科目'] },
-    family:   { key: 'family',   name: '家庭关系', desc: '家庭运', icon: '🏠', keywords: ['家庭', '家人', '父母', '子女', '孩子', '亲情', '婆媳', '婆媳矛盾', '亲戚', '长辈', '兄弟姐妹', '公公', '婆婆', '岳父', '岳母', '继母', '继父', '养父', '养母', '独生子', '独生女', '亲家', '后代', '生育', '代沟', '家教', '家风', '祖孙', '传宗', '香火', '过继', '领养', '原生家庭', '家庭矛盾', '父母婚姻', '子女婚姻', '子女的婚姻', '孩子婚姻', '孩子的婚姻'] },
-    social:   { key: 'social',   name: '人际关系', desc: '人际运', icon: '🤝', keywords: ['朋友', '社交', '人际', '合伙', '小人', '贵人', '人脉', '客户', '和解', '背叛'] },
-    travel:   { key: 'travel',   name: '出行迁移', desc: '出行运', icon: '✈️', keywords: ['出行', '旅游', '出国', '移民', '远行', '搬家', '出差', '旅行', '签证', '留学', '航班', '旅途', '异地'] },
-    general:  { key: 'general',  name: '综合运势', desc: '综合运', icon: '🌟', keywords: ['运势', '命运', '运气', '前程', '整体', '综合', '人生', '未来', '怎么样', '如何', '好不好', '顺利', '吉凶', '好坏', '走向', '趋势', '近况', '前路', '前景', '天命', '命数', '造化'] }
+    career: {
+      key: 'career',
+      name: '事业前程',
+      desc: '事业运',
+      icon: '💼',
+      keywords: [
+        '事业',
+        '工作',
+        '职场',
+        '升职',
+        '跳槽',
+        '创业',
+        '生意',
+        '老板',
+        '同事',
+        '项目',
+        '前途',
+        '职业',
+        '公司',
+        '企业',
+        '单位',
+        '面试',
+        '求职',
+        '转行',
+        '晋升',
+        '公务员',
+        '考公',
+        '体制',
+        '编制',
+        '铁饭碗',
+        '互联网',
+        '大厂',
+        'IT',
+        '行业',
+        '上班',
+        '辞职',
+        '离职',
+        '招聘',
+        '应聘',
+        '加班',
+        '薪资',
+        '待遇',
+        '家族企业',
+        '继承家业',
+      ],
+    },
+    love: {
+      key: 'love',
+      name: '感情姻缘',
+      desc: '感情运',
+      icon: '💕',
+      keywords: [
+        '感情',
+        '爱情',
+        '婚姻',
+        '恋爱',
+        '分手',
+        '复合',
+        '对象',
+        '伴侣',
+        '表白',
+        '暗恋',
+        '相亲',
+        '单身',
+        '脱单',
+        '出轨',
+        '暧昧',
+        '缘分',
+        '正缘',
+        '桃花',
+        '离婚',
+        '结婚',
+        '夫妻',
+        '未婚',
+        '已婚',
+        '分居',
+        '复婚',
+        '再婚',
+        '姻缘',
+        '老公',
+        '老婆',
+        '吵架',
+        '冷战',
+        '配偶',
+        '二婚',
+        '头婚',
+        '再嫁',
+        '续弦',
+        '改嫁',
+        '娶媳',
+        '嫁人',
+      ],
+    },
+    wealth: {
+      key: 'wealth',
+      name: '财运财富',
+      desc: '财运',
+      icon: '💰',
+      keywords: [
+        '财运',
+        '钱',
+        '财富',
+        '投资',
+        '理财',
+        '股票',
+        '基金',
+        '收入',
+        '债务',
+        '亏损',
+        '赚钱',
+        '偏财',
+        '正财',
+        '花销',
+        '贷款',
+        '买房',
+        '买车',
+      ],
+    },
+    health: {
+      key: 'health',
+      name: '健康平安',
+      desc: '健康运',
+      icon: '🏥',
+      keywords: [
+        '健康',
+        '身体',
+        '疾病',
+        '生病',
+        '康复',
+        '手术',
+        '体检',
+        '失眠',
+        '头痛',
+        '疼痛',
+        '养生',
+        '锻炼',
+        '减肥',
+        '怀孕',
+        '平安',
+      ],
+    },
+    study: {
+      key: 'study',
+      name: '学业考试',
+      desc: '学业运',
+      icon: '📚',
+      keywords: [
+        '学业',
+        '考试',
+        '学习',
+        '成绩',
+        '高考',
+        '考研',
+        '考证',
+        '升学',
+        '毕业',
+        '论文',
+        '学校',
+        '专业',
+        '录取',
+        '分数',
+        '挂科',
+        '读书',
+        '备考',
+        '复习',
+        '科目',
+      ],
+    },
+    family: {
+      key: 'family',
+      name: '家庭关系',
+      desc: '家庭运',
+      icon: '🏠',
+      keywords: [
+        '家庭',
+        '家人',
+        '父母',
+        '子女',
+        '孩子',
+        '亲情',
+        '婆媳',
+        '婆媳矛盾',
+        '亲戚',
+        '长辈',
+        '兄弟姐妹',
+        '公公',
+        '婆婆',
+        '岳父',
+        '岳母',
+        '继母',
+        '继父',
+        '养父',
+        '养母',
+        '独生子',
+        '独生女',
+        '亲家',
+        '后代',
+        '生育',
+        '代沟',
+        '家教',
+        '家风',
+        '祖孙',
+        '传宗',
+        '香火',
+        '过继',
+        '领养',
+        '原生家庭',
+        '家庭矛盾',
+        '父母婚姻',
+        '子女婚姻',
+        '子女的婚姻',
+        '孩子婚姻',
+        '孩子的婚姻',
+      ],
+    },
+    social: {
+      key: 'social',
+      name: '人际关系',
+      desc: '人际运',
+      icon: '🤝',
+      keywords: ['朋友', '社交', '人际', '合伙', '小人', '贵人', '人脉', '客户', '和解', '背叛'],
+    },
+    travel: {
+      key: 'travel',
+      name: '出行迁移',
+      desc: '出行运',
+      icon: '✈️',
+      keywords: [
+        '出行',
+        '旅游',
+        '出国',
+        '移民',
+        '远行',
+        '搬家',
+        '出差',
+        '旅行',
+        '签证',
+        '留学',
+        '航班',
+        '旅途',
+        '异地',
+      ],
+    },
+    general: {
+      key: 'general',
+      name: '综合运势',
+      desc: '综合运',
+      icon: '🌟',
+      keywords: [
+        '运势',
+        '命运',
+        '运气',
+        '前程',
+        '整体',
+        '综合',
+        '人生',
+        '未来',
+        '怎么样',
+        '如何',
+        '好不好',
+        '顺利',
+        '吉凶',
+        '好坏',
+        '走向',
+        '趋势',
+        '近况',
+        '前路',
+        '前景',
+        '天命',
+        '命数',
+        '造化',
+      ],
+    },
   };
 
   var DOMAIN_LIST = ['career', 'love', 'wealth', 'health', 'study', 'social', 'family', 'travel', 'general'];
@@ -25,7 +289,8 @@
   function detectDomain(question) {
     if (!question || !question.trim()) return null;
     var q = question;
-    var best = null, bestScore = 0;
+    var best = null,
+      bestScore = 0;
     for (var i = 0; i < DOMAIN_LIST.length; i++) {
       var dk = DOMAIN_LIST[i];
       // > 如果已有非general领域匹配，跳过general（通用词不应覆盖明确领域）
@@ -36,21 +301,40 @@
         if (q.indexOf(dm.keywords[j]) !== -1) score += dm.keywords[j].length;
       }
       // > 确保先匹配的领域优先（love 在 family 之前，感情相关优先归入感情）
-      if (score > bestScore && score > 0) { bestScore = score; best = dk; }
+      if (score > bestScore && score > 0) {
+        bestScore = score;
+        best = dk;
+      }
     }
     // 兜底：如果关键词没匹配到，尝试模糊匹配
     // 注意：模糊匹配使用多字符词组，避免单字符过于宽泛导致误匹配
     if (!best) {
       var fuzzyMap = [
-        { regex: /感情|爱情|恋爱|婚姻|分手|复合|对象|伴侣|表白|暗恋|相亲|单身|脱单|出轨|暧昧|缘分|正缘|桃花|姻缘|离婚|结婚|夫妻|未婚|已婚|分居|复婚|再婚|老公|老婆|吵架|冷战|配偶|二婚|嫁人|娶媳/, domain: 'love' },
+        {
+          regex:
+            /感情|爱情|恋爱|婚姻|分手|复合|对象|伴侣|表白|暗恋|相亲|单身|脱单|出轨|暧昧|缘分|正缘|桃花|姻缘|离婚|结婚|夫妻|未婚|已婚|分居|复婚|再婚|老公|老婆|吵架|冷战|配偶|二婚|嫁人|娶媳/,
+          domain: 'love',
+        },
         { regex: /财运|财富|钱|投资|理财|股票|基金|收入|债务|亏损|赚钱|花销|贷款|买房|买车/, domain: 'wealth' },
         { regex: /健康|身体|疾病|生病|康复|手术|体检|失眠|头痛|养生|减肥|怀孕|平安/, domain: 'health' },
         { regex: /学业|考试|学习|成绩|高考|考研|考证|升学|毕业|论文|学校|专业|录取|分数|挂科|读书/, domain: 'study' },
-        { regex: /家庭|家人|亲情|父母|子女|孩子|婆媳|亲戚|长辈|兄弟姐妹|公公|婆婆|岳父|岳母|继母|继父|养父|养母|独生子|独生女|亲家|后代|生育|代沟|家教|家风|祖孙|传宗|香火|过继|领养|原生家庭|家庭矛盾|父母婚姻|子女婚姻/, domain: 'family' },
+        {
+          regex:
+            /家庭|家人|亲情|父母|子女|孩子|婆媳|亲戚|长辈|兄弟姐妹|公公|婆婆|岳父|岳母|继母|继父|养父|养母|独生子|独生女|亲家|后代|生育|代沟|家教|家风|祖孙|传宗|香火|过继|领养|原生家庭|家庭矛盾|父母婚姻|子女婚姻/,
+          domain: 'family',
+        },
         { regex: /朋友|社交|人际|合作|合伙|纠纷|小人|贵人|人脉|客户|竞争|对手|和解|背叛/, domain: 'social' },
         { regex: /出行|旅游|出国|移民|远行|搬家|出差|旅行|签证|留学|航班|旅途|异地/, domain: 'travel' },
-        { regex: /工作|职场|升职|跳槽|创业|生意|老板|同事|项目|前途|职业|公司|企业|单位|面试|求职|转行|晋升|公务员|考公|体制|行业|发展|上班|辞职|离职|招聘|应聘|加班|薪资|待遇|家族企业|继承家业/, domain: 'career' },
-        { regex: /运势|命运|运气|前程|整体|综合|人生|未来|怎么样|如何|好不好|顺利|吉凶|好坏|走向|趋势|近况|前路|前景|天命|命数|造化/, domain: 'general' }
+        {
+          regex:
+            /工作|职场|升职|跳槽|创业|生意|老板|同事|项目|前途|职业|公司|企业|单位|面试|求职|转行|晋升|公务员|考公|体制|行业|发展|上班|辞职|离职|招聘|应聘|加班|薪资|待遇|家族企业|继承家业/,
+          domain: 'career',
+        },
+        {
+          regex:
+            /运势|命运|运气|前程|整体|综合|人生|未来|怎么样|如何|好不好|顺利|吉凶|好坏|走向|趋势|近况|前路|前景|天命|命数|造化/,
+          domain: 'general',
+        },
       ];
       for (var fi = 0; fi < fuzzyMap.length; fi++) {
         if (fuzzyMap[fi].regex.test(q)) {
@@ -65,26 +349,45 @@
   /* ========== 三、各术数的事域解读模板 ========== */
 
   // 五行映射
-  var GAN_WX = {甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
-  var ZHI_WX = {子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'};
-  var WX_SHENG = {木:'水',火:'木',土:'火',金:'土',水:'金'};
-  var WX_KE = {木:'金',火:'水',土:'木',金:'火',水:'土'};
-  var WX_SHENG_BY = {木:'火',火:'土',土:'金',金:'水',水:'木'};
-  var WX_KE_BY = {木:'土',火:'金',土:'水',金:'木',水:'火'};
+  var GAN_WX = { 甲: '木', 乙: '木', 丙: '火', 丁: '火', 戊: '土', 己: '土', 庚: '金', 辛: '金', 壬: '水', 癸: '水' };
+  var ZHI_WX = {
+    子: '水',
+    丑: '土',
+    寅: '木',
+    卯: '木',
+    辰: '土',
+    巳: '火',
+    午: '火',
+    未: '土',
+    申: '金',
+    酉: '金',
+    戌: '土',
+    亥: '水',
+  };
+  var WX_SHENG = { 木: '水', 火: '木', 土: '火', 金: '土', 水: '金' };
+  var WX_KE = { 木: '金', 火: '水', 土: '木', 金: '火', 水: '土' };
+  var WX_SHENG_BY = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
+  var WX_KE_BY = { 木: '土', 火: '金', 土: '水', 金: '木', 水: '火' };
 
   /** 从八字结果计算十神信息 */
   function calcBaziShiShen(bazi) {
     bazi = bazi || {};
     var dm = bazi.日主 || '甲';
     var dwx = bazi.日主五行 || '木';
-    var pillars = {年柱: bazi.年柱 || '甲子', 月柱: bazi.月柱 || '甲子', 日柱: bazi.日柱 || '甲子', 时柱: bazi.时柱 || '甲子'};
-    var keys = ['年柱','月柱','日柱','时柱'];
+    var pillars = {
+      年柱: bazi.年柱 || '甲子',
+      月柱: bazi.月柱 || '甲子',
+      日柱: bazi.日柱 || '甲子',
+      时柱: bazi.时柱 || '甲子',
+    };
+    var keys = ['年柱', '月柱', '日柱', '时柱'];
     var result = {};
 
     // 十神判定规则
     function getShiShen(dayGan, otherGan) {
-      var dw = GAN_WX[dayGan], ow = GAN_WX[otherGan];
-      if (dw === ow) return (GAN_WX[dayGan + '阳'] === GAN_WX[otherGan + '阳']) ? '比肩' : '劫财';
+      var dw = GAN_WX[dayGan],
+        ow = GAN_WX[otherGan];
+      if (dw === ow) return GAN_WX[dayGan + '阳'] === GAN_WX[otherGan + '阳'] ? '比肩' : '劫财';
       if (WX_SHENG[dw] === ow) return '正印';
       if (WX_SHENG_BY[dw] === ow) return '食神';
       if (WX_KE[dw] === ow) return '正官';
@@ -93,14 +396,15 @@
     }
 
     // 统计各十神出现次数
-    var counts = {正官:0,七杀:0,正印:0,偏印:0,比肩:0,劫财:0,食神:0,伤官:0,正财:0,偏财:0};
+    var counts = { 正官: 0, 七杀: 0, 正印: 0, 偏印: 0, 比肩: 0, 劫财: 0, 食神: 0, 伤官: 0, 正财: 0, 偏财: 0 };
     var details = [];
     for (var i = 0; i < keys.length; i++) {
       var gz = pillars[keys[i]];
-      var gan = gz[0], zhi = gz[1];
+      var gan = gz[0],
+        zhi = gz[1];
       var ss = getShiShen(dm, gan);
       counts[ss] = (counts[ss] || 0) + 1;
-      details.push({ pillar: keys[i], gan: gan, zhi: zhi, shiShen: ss, ganWx: GAN_WX[gan], zhiWx: ZHI_WX[zhi]});
+      details.push({ pillar: keys[i], gan: gan, zhi: zhi, shiShen: ss, ganWx: GAN_WX[gan], zhiWx: ZHI_WX[zhi] });
     }
 
     // 日支十神
@@ -122,7 +426,7 @@
   function analyzeBazi(result, question, domainKey) {
     result = result || {};
     var dm = DOMAINS[domainKey];
-    var dayMaster = (result.日柱 && result.日柱.length > 0) ? result.日柱[0] : '?';
+    var dayMaster = result.日柱 && result.日柱.length > 0 ? result.日柱[0] : '?';
     var dayWx = result.日主五行 || '';
     var dayZhi = result.日支 || '';
     var shiShen = calcBaziShiShen(result);
@@ -133,8 +437,21 @@
     lines.push('');
 
     // 命盘概况
-    var pillars = (result.年柱||'?') + ' ' + (result.月柱||'?') + ' ' + (result.日柱||'?') + ' ' + (result.时柱||'?');
-    lines.push('命盘：' + pillars + '  |  日主' + dayMaster + '（五行' + dayWx + '）|  日支' + dayZhi + '（' + shiShen.dayZhiSS + '）');
+    var pillars =
+      (result.年柱 || '?') + ' ' + (result.月柱 || '?') + ' ' + (result.日柱 || '?') + ' ' + (result.时柱 || '?');
+    lines.push(
+      '命盘：' +
+        pillars +
+        '  |  日主' +
+        dayMaster +
+        '（五行' +
+        dayWx +
+        '）|  日支' +
+        dayZhi +
+        '（' +
+        shiShen.dayZhiSS +
+        '）'
+    );
     lines.push('');
 
     // 基于各柱十神做具体分析
@@ -159,9 +476,11 @@
     // 行动建议
     lines.push('【行动建议】');
     var advices = DOMAIN_ADVICES[domainKey] || DOMAIN_ADVICES['career'];
-    var shuffled = advices.slice().sort(function() { return Math.random() - 0.5; });
+    var shuffled = advices.slice().sort(function () {
+      return Math.random() - 0.5;
+    });
     for (var i = 0; i < 3; i++) {
-      lines.push((i + 1) + '. ' + shuffled[i]);
+      lines.push(i + 1 + '. ' + shuffled[i]);
     }
 
     return lines.join('\n');
@@ -192,7 +511,9 @@
               guanPillars.push(ss.details[i].pillar + '临' + ss.details[i].shiShen);
             }
           }
-          lines.push('√ 您的命盘中' + guanPillars.join('、') + '，说明事业方面有官星照临，天生具备管理能力和职场竞争力。');
+          lines.push(
+            '√ 您的命盘中' + guanPillars.join('、') + '，说明事业方面有官星照临，天生具备管理能力和职场竞争力。'
+          );
           if (yueSS === '正官' || yueSS === '七杀') {
             lines.push('  月柱为事业宫，' + yueSS + '坐月令，主中年事业有成，35-45岁是职业黄金期。');
           }
@@ -211,18 +532,28 @@
         lines.push('【五行-行业匹配】');
         lines.push('您的日主五行属' + dwx + '，以下是五行与职业的对应关系：');
         var wxIndustry = {
-          '木': '五行属木，主生发、条达。适合行业：教育、文化传媒、出版、医疗健康、环保、园林、设计、咨询。木主"仁"，宜从事与人打交道、帮助他人成长的工作。',
-          '火': '五行属火，主炎上、光明。适合行业：互联网科技、能源、餐饮、娱乐、传媒、美容、电力、照明。火主"礼"，宜从事需要热情和创意的工作。',
-          '土': '五行属土，主承载、厚重。适合行业：房地产、建筑、金融、农业、矿产、仓储、保险、公务员。土主"信"，宜从事需要稳定性和责任心的工作。',
-          '金': '五行属金，主变革、锋利。适合行业：金融投资、法律、机械制造、珠宝、军警、审计、精密仪器。金主"义"，宜从事需要决断力和规则感的工作。',
-          '水': '五行属水，主润下、智慧。适合行业：物流贸易、旅游、渔业、水利、销售、公关、心理咨询、自由职业。水主"智"，宜从事需要灵活应变和沟通能力的工作。'
+          木: '五行属木，主生发、条达。适合行业：教育、文化传媒、出版、医疗健康、环保、园林、设计、咨询。木主"仁"，宜从事与人打交道、帮助他人成长的工作。',
+          火: '五行属火，主炎上、光明。适合行业：互联网科技、能源、餐饮、娱乐、传媒、美容、电力、照明。火主"礼"，宜从事需要热情和创意的工作。',
+          土: '五行属土，主承载、厚重。适合行业：房地产、建筑、金融、农业、矿产、仓储、保险、公务员。土主"信"，宜从事需要稳定性和责任心的工作。',
+          金: '五行属金，主变革、锋利。适合行业：金融投资、法律、机械制造、珠宝、军警、审计、精密仪器。金主"义"，宜从事需要决断力和规则感的工作。',
+          水: '五行属水，主润下、智慧。适合行业：物流贸易、旅游、渔业、水利、销售、公关、心理咨询、自由职业。水主"智"，宜从事需要灵活应变和沟通能力的工作。',
         };
         lines.push(wxIndustry[dwx] || '');
         // 五行相生行业拓展
         var shengWx = WX_SHENG_BY[dwx];
-        var shengExpand = {木:'火',火:'土',土:'金',金:'水',水:'木'};
+        var shengExpand = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
         var expandWx = shengExpand[dwx];
-        lines.push('日主' + dwx + '生' + shengWx + '，' + shengWx + '行业可作为第二选择（如' + (wxIndustry[shengWx] || '').substring(0, 30) + '...）。');
+        lines.push(
+          '日主' +
+            dwx +
+            '生' +
+            shengWx +
+            '，' +
+            shengWx +
+            '行业可作为第二选择（如' +
+            (wxIndustry[shengWx] || '').substring(0, 30) +
+            '...）。'
+        );
 
         // 职业路径对比
         lines.push('');
@@ -282,7 +613,7 @@
         } else {
           lines.push('→ 配偶宫坐比劫，主感情中竞争意识强，需注意第三方干扰，加强信任建设。');
         }
-        if (hasCai && dm === '男' || hasGuan && dm === '女') {
+        if ((hasCai && dm === '男') || (hasGuan && dm === '女')) {
           lines.push('√ 命局中配偶星（男看财/女看官）得位，正缘运佳。');
         }
         if (dayZhi === '子' || dayZhi === '午' || dayZhi === '卯' || dayZhi === '酉') {
@@ -308,9 +639,13 @@
         }
         // 财库检查
         var caiWx = WX_KE_BY[dwx];
-        var kuMap = {木:'未',火:'戌',土:'辰',金:'丑',水:'辰'};
+        var kuMap = { 木: '未', 火: '戌', 土: '辰', 金: '丑', 水: '辰' };
         var caiKu = kuMap[caiWx];
-        var hasKu = bazi.年柱.indexOf(caiKu) >= 0 || bazi.月柱.indexOf(caiKu) >= 0 || bazi.日柱.indexOf(caiKu) >= 0 || bazi.时柱.indexOf(caiKu) >= 0;
+        var hasKu =
+          bazi.年柱.indexOf(caiKu) >= 0 ||
+          bazi.月柱.indexOf(caiKu) >= 0 ||
+          bazi.日柱.indexOf(caiKu) >= 0 ||
+          bazi.时柱.indexOf(caiKu) >= 0;
         if (hasKu) {
           lines.push('√ 命局带财库（' + caiKu + '），主有积蓄能力，财来能聚。');
         }
@@ -320,7 +655,7 @@
         break;
 
       case 'health':
-        var wxBody = {木:'肝胆',火:'心血管',土:'脾胃',金:'肺与呼吸系统',水:'肾脏与泌尿系统'};
+        var wxBody = { 木: '肝胆', 火: '心血管', 土: '脾胃', 金: '肺与呼吸系统', 水: '肾脏与泌尿系统' };
         var keWx = WX_KE[dwx];
         lines.push('健康看五行平衡和日主强弱。');
         lines.push('日主' + dm + '五行属' + dwx + '，对应身体部位：' + (wxBody[dwx] || '全身') + '。');
@@ -334,7 +669,17 @@
           if (ss.details[i].zhiWx === keWx) keCount++;
         }
         if (keCount >= 3) {
-          lines.push('⚠ ' + keWx + '在命局中偏旺（出现' + keCount + '次），克制日主' + dwx + '，需重点关注' + (wxBody[dwx] || '') + '健康。');
+          lines.push(
+            '⚠ ' +
+              keWx +
+              '在命局中偏旺（出现' +
+              keCount +
+              '次），克制日主' +
+              dwx +
+              '，需重点关注' +
+              (wxBody[dwx] || '') +
+              '健康。'
+          );
         }
         lines.push('→ 建议：每季度体检一次，重点关注' + (wxBody[dwx] || '') + '指标。');
         break;
@@ -342,13 +687,17 @@
       case 'study':
         lines.push('学业看印星（正印/偏印）和食伤（食神/伤官）。');
         if (hasYin) {
-          lines.push('√ 印星' + (ss.counts.正印 + ss.counts.偏印) + '个，主学习能力强、记忆力好，适合系统性的学术研究。');
+          lines.push(
+            '√ 印星' + (ss.counts.正印 + ss.counts.偏印) + '个，主学习能力强、记忆力好，适合系统性的学术研究。'
+          );
           if (yueSS === '正印' || yueSS === '偏印') {
             lines.push('  月柱为学业宫，印星坐月令，青少年时期学业运势佳，考试运强。');
           }
         }
         if (hasShiShang) {
-          lines.push('√ 食伤' + (ss.counts.食神 + ss.counts.伤官) + '个，主创造力强、思维活跃，适合需要创新思维的学科。');
+          lines.push(
+            '√ 食伤' + (ss.counts.食神 + ss.counts.伤官) + '个，主创造力强、思维活跃，适合需要创新思维的学科。'
+          );
         }
         if (!hasYin && !hasShiShang) {
           lines.push('→ 印星食伤不显，学习需付出更多努力，但扎实程度反而更高，适合实践型学习。');
@@ -411,7 +760,8 @@
         }
         // 日主强弱综合判断
         var strongCount = ss.counts.正印 + ss.counts.偏印 + ss.counts.比肩 + ss.counts.劫财;
-        var weakCount = ss.counts.正官 + ss.counts.七杀 + ss.counts.食神 + ss.counts.伤官 + ss.counts.正财 + ss.counts.偏财;
+        var weakCount =
+          ss.counts.正官 + ss.counts.七杀 + ss.counts.食神 + ss.counts.伤官 + ss.counts.正财 + ss.counts.偏财;
         if (strongCount >= 3) {
           lines.push('→ 命局中印比之力充足（' + strongCount + '个），日主偏强，整体运势以稳健为主，守成优于开拓。');
         } else if (weakCount >= 3) {
@@ -420,7 +770,7 @@
           lines.push('→ 命局五行相对均衡，运势起伏平稳，宜顺势而为，不过分强求。');
         }
         // 五行均衡分析
-        var wxCount = {木:0,火:0,土:0,金:0,水:0};
+        var wxCount = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 };
         for (var i = 0; i < ss.details.length; i++) {
           wxCount[ss.details[i].ganWx] = (wxCount[ss.details[i].ganWx] || 0) + 1;
           wxCount[ss.details[i].zhiWx] = (wxCount[ss.details[i].zhiWx] || 0) + 1;
@@ -432,13 +782,27 @@
         if (missingWx.length > 0) {
           lines.push('△ 命局五行缺' + missingWx.join('、') + '，对应领域可能成为人生的短板，需有意识补足。');
         }
-        var wxBody = {木:'肝胆与决策力',火:'心血管与热情',土:'脾胃与诚信',金:'呼吸系统与决断力',水:'肾脏与智慧'};
+        var wxBody = {
+          木: '肝胆与决策力',
+          火: '心血管与热情',
+          土: '脾胃与诚信',
+          金: '呼吸系统与决断力',
+          水: '肾脏与智慧',
+        };
         var weakWx = [];
         for (var wk in wxCount) {
           if (wxCount[wk] === 1) weakWx.push(wk);
         }
         if (weakWx.length > 0) {
-          lines.push('→ 五行偏弱领域：' + weakWx.map(function(w) { return w + '（' + (wxBody[w] || '') + '）'; }).join('、') + '，需重点养护。');
+          lines.push(
+            '→ 五行偏弱领域：' +
+              weakWx
+                .map(function (w) {
+                  return w + '（' + (wxBody[w] || '') + '）';
+                })
+                .join('、') +
+              '，需重点养护。'
+          );
         }
         break;
     }
@@ -467,17 +831,38 @@
       var cause = d.pillar + '天干' + d.gan + '（' + d.ganWx + '）为日主' + dm + '之' + d.shiShen;
       var effect = '';
       switch (d.shiShen) {
-        case '正官': effect = '→ 正官主事业、纪律、责任，此生事业运有基础支撑，宜走正规职业路径'; break;
-        case '七杀': effect = '→ 七杀主压力、竞争、突破，此生需经历挑战方能成就，宜在高压环境中成长'; break;
-        case '正印': effect = '→ 正印主学识、贵人、庇护，学习能力和贵人运是核心优势'; break;
-        case '偏印': effect = '→ 偏印主特殊才能、偏门学问，适合在细分领域深耕'; break;
-        case '正财': effect = '→ 正财主稳定收入、积蓄能力，正职收入是财富基石'; break;
-        case '偏财': effect = '→ 偏财主意外之财、投资运，但需注意风险控制'; break;
-        case '食神': effect = '→ 食神主创造力、享受、表达，天赋在创意和沟通领域'; break;
-        case '伤官': effect = '→ 伤官主才华外露、不拘一格，但需注意锋芒太露'; break;
-        case '比肩': effect = '→ 比肩主自我、独立、竞争，宜独立发展不依赖他人'; break;
-        case '劫财': effect = '→ 劫财主社交、合作、分享，但需注意利益分配'; break;
-        default: effect = '';
+        case '正官':
+          effect = '→ 正官主事业、纪律、责任，此生事业运有基础支撑，宜走正规职业路径';
+          break;
+        case '七杀':
+          effect = '→ 七杀主压力、竞争、突破，此生需经历挑战方能成就，宜在高压环境中成长';
+          break;
+        case '正印':
+          effect = '→ 正印主学识、贵人、庇护，学习能力和贵人运是核心优势';
+          break;
+        case '偏印':
+          effect = '→ 偏印主特殊才能、偏门学问，适合在细分领域深耕';
+          break;
+        case '正财':
+          effect = '→ 正财主稳定收入、积蓄能力，正职收入是财富基石';
+          break;
+        case '偏财':
+          effect = '→ 偏财主意外之财、投资运，但需注意风险控制';
+          break;
+        case '食神':
+          effect = '→ 食神主创造力、享受、表达，天赋在创意和沟通领域';
+          break;
+        case '伤官':
+          effect = '→ 伤官主才华外露、不拘一格，但需注意锋芒太露';
+          break;
+        case '比肩':
+          effect = '→ 比肩主自我、独立、竞争，宜独立发展不依赖他人';
+          break;
+        case '劫财':
+          effect = '→ 劫财主社交、合作、分享，但需注意利益分配';
+          break;
+        default:
+          effect = '';
       }
       lines.push(cause + ' ' + effect);
     }
@@ -486,11 +871,21 @@
     lines.push('');
     lines.push('日支' + ss.details[2].zhi + '为配偶宫兼自身根基，属' + ss.dayZhiSS + '，这意味着：');
     switch (ss.dayZhiSS) {
-      case '财星': lines.push('→ 您的内在驱动力与经济利益相关，对物质安全感有天然需求'); break;
-      case '官杀': lines.push('→ 您的内在驱动力与社会地位相关，对成就感和认可有天然需求'); break;
-      case '印星': lines.push('→ 您的内在驱动力与知识和安全感相关，对学习和稳定有天然需求'); break;
-      case '食伤': lines.push('→ 您的内在驱动力与自我表达相关，对创造和自由有天然需求'); break;
-      case '比劫': lines.push('→ 您的内在驱动力与自我实现相关，对独立和掌控有天然需求'); break;
+      case '财星':
+        lines.push('→ 您的内在驱动力与经济利益相关，对物质安全感有天然需求');
+        break;
+      case '官杀':
+        lines.push('→ 您的内在驱动力与社会地位相关，对成就感和认可有天然需求');
+        break;
+      case '印星':
+        lines.push('→ 您的内在驱动力与知识和安全感相关，对学习和稳定有天然需求');
+        break;
+      case '食伤':
+        lines.push('→ 您的内在驱动力与自我表达相关，对创造和自由有天然需求');
+        break;
+      case '比劫':
+        lines.push('→ 您的内在驱动力与自我实现相关，对独立和掌控有天然需求');
+        break;
     }
 
     return lines.join('\n');
@@ -502,7 +897,7 @@
   function analyzeLiuyao(result, question, domainKey) {
     var dm = DOMAINS[domainKey];
     var guaName = result.gua_name || '未知卦';
-    var changedName = (result.changed_gua && result.changed_gua.name) ? result.changed_gua.name : '';
+    var changedName = result.changed_gua && result.changed_gua.name ? result.changed_gua.name : '';
     var shiYao = result.shi_yao || 0;
     var yingYao = result.ying_yao || 0;
     var dongYao = result.dong_yao || [];
@@ -545,7 +940,13 @@
     if (liuQin.length >= Math.max(shiYao, yingYao)) {
       var shiQin = liuQin[shiYao - 1] || '?';
       var yingQin = liuQin[yingYao - 1] || '?';
-      var qinMap = {父母:'文书/长辈/庇佑',兄弟:'同辈/竞争/分担',子孙:'福气/晚辈/解忧',妻财:'财运/伴侣/资源',官鬼:'事业/官非/压力'};
+      var qinMap = {
+        父母: '文书/长辈/庇佑',
+        兄弟: '同辈/竞争/分担',
+        子孙: '福气/晚辈/解忧',
+        妻财: '财运/伴侣/资源',
+        官鬼: '事业/官非/压力',
+      };
       lines.push('世爻临【' + shiQin + '】（' + (qinMap[shiQin] || '') + '）——这是您当前面对此事的内在状态。');
       lines.push('应爻临【' + yingQin + '】（' + (qinMap[yingQin] || '') + '）——这是所问之事呈现出的外部面貌。');
     }
@@ -592,13 +993,17 @@
       if (qi + 1 === shiYao) marker = ' ← 世爻（您）';
       if (qi + 1 === yingYao) marker = ' ← 应爻（事）';
       if (dongYao.indexOf(qi + 1) >= 0) marker += ' ⚡动爻';
-      lines.push(yaoLabels[qi] + '：' + qin + (shou ? '·' + shou : '') + (na.gan ? '·' + na.gan + na.zhi : '') + marker);
+      lines.push(
+        yaoLabels[qi] + '：' + qin + (shou ? '·' + shou : '') + (na.gan ? '·' + na.gan + na.zhi : '') + marker
+      );
     }
     lines.push('');
 
     // 事域专项研判
     lines.push('【' + dm.name + '专项研判——基于以上卦象数据】');
-    lines.push(buildLiuyaoDomainAnalysis(guaName, changedName, shiYao, yingYao, dongYao, liuQin, liuShou, najia, domainKey));
+    lines.push(
+      buildLiuyaoDomainAnalysis(guaName, changedName, shiYao, yingYao, dongYao, liuQin, liuShou, najia, domainKey)
+    );
     lines.push('');
 
     // 因果链
@@ -614,9 +1019,11 @@
     // 行动建议
     lines.push('【行动建议】');
     var advices = DOMAIN_ADVICES[domainKey] || DOMAIN_ADVICES['career'];
-    var shuffled = advices.slice().sort(function() { return Math.random() - 0.5; });
+    var shuffled = advices.slice().sort(function () {
+      return Math.random() - 0.5;
+    });
     for (var i = 0; i < 3; i++) {
-      lines.push((i + 1) + '. ' + shuffled[i]);
+      lines.push(i + 1 + '. ' + shuffled[i]);
     }
     return lines.join('\n');
   }
@@ -698,12 +1105,24 @@
           out.push('');
           out.push('【行业方向提示（六兽）】');
           switch (shiShouCareer) {
-            case '青龙': out.push('世爻临青龙→宜从事管理、政府关系、品牌公关、高端服务业。'); break;
-            case '朱雀': out.push('世爻临朱雀→宜从事传媒、教育、咨询、法律、演讲培训。'); break;
-            case '勾陈': out.push('世爻临勾陈→宜从事地产、基建、农业、传统制造业、行政管理。'); break;
-            case '螣蛇': out.push('世爻临螣蛇→宜从事IT技术、科研、心理、创意设计、精密工艺。'); break;
-            case '白虎': out.push('世爻临白虎→宜从事军警、医疗、金融风控、竞技体育、机械工程。'); break;
-            case '玄武': out.push('世爻临玄武→宜从事水利、物流、贸易、数据分析、网络安全。'); break;
+            case '青龙':
+              out.push('世爻临青龙→宜从事管理、政府关系、品牌公关、高端服务业。');
+              break;
+            case '朱雀':
+              out.push('世爻临朱雀→宜从事传媒、教育、咨询、法律、演讲培训。');
+              break;
+            case '勾陈':
+              out.push('世爻临勾陈→宜从事地产、基建、农业、传统制造业、行政管理。');
+              break;
+            case '螣蛇':
+              out.push('世爻临螣蛇→宜从事IT技术、科研、心理、创意设计、精密工艺。');
+              break;
+            case '白虎':
+              out.push('世爻临白虎→宜从事军警、医疗、金融风控、竞技体育、机械工程。');
+              break;
+            case '玄武':
+              out.push('世爻临玄武→宜从事水利、物流、贸易、数据分析、网络安全。');
+              break;
           }
         }
         break;
@@ -734,7 +1153,11 @@
           out.push('√ 妻财爻出现在第' + caiWealthPos.join('、') + '爻。');
           if (caiWealthPos.indexOf(shi) >= 0) out.push('  财临世爻——财运与您自身紧密相关，赚钱能力在线。');
           if (caiWealthPos.indexOf(ying) >= 0) out.push('  财临应爻——外部有赚钱机会，但需主动争取。');
-          if (dong.some(function(d) { return caiWealthPos.indexOf(d) >= 0; })) {
+          if (
+            dong.some(function (d) {
+              return caiWealthPos.indexOf(d) >= 0;
+            })
+          ) {
             out.push('  ★ 财爻发动——财运将有变动，可能是收入增加或意外支出。');
           }
         } else {
@@ -754,7 +1177,12 @@
           out.push('⚠ 世爻临官鬼（病符），需重点关注健康，建议近期体检。');
         }
         var guanHealthPos = qinPositions['官鬼'] || [];
-        if (guanHealthPos.length > 0 && dong.some(function(d) { return guanHealthPos.indexOf(d) >= 0; })) {
+        if (
+          guanHealthPos.length > 0 &&
+          dong.some(function (d) {
+            return guanHealthPos.indexOf(d) >= 0;
+          })
+        ) {
           out.push('⚠ 官鬼爻动——健康方面有潜在问题需关注，不可掉以轻心。');
         }
         break;
@@ -786,7 +1214,11 @@
         var xiongSocPos = qinPositions['兄弟'] || [];
         if (xiongSocPos.length > 0) {
           out.push('√ 兄弟爻在第' + xiongSocPos.join('、') + '爻，社交运有基础。');
-          if (dong.some(function(d) { return xiongSocPos.indexOf(d) >= 0; })) {
+          if (
+            dong.some(function (d) {
+              return xiongSocPos.indexOf(d) >= 0;
+            })
+          ) {
             out.push('  兄弟爻动——人际关系将有变动，可能结识新朋友或与旧友产生摩擦。');
           }
         }
@@ -818,7 +1250,13 @@
     out.push('');
 
     // 步骤1：卦名含义
-    out.push('1. 卦名「' + guaName + '」本身已蕴含此事的基本性质。六十四卦每卦皆有特定卦德，' + guaName + '之卦德决定了此事的基调。');
+    out.push(
+      '1. 卦名「' +
+        guaName +
+        '」本身已蕴含此事的基本性质。六十四卦每卦皆有特定卦德，' +
+        guaName +
+        '之卦德决定了此事的基调。'
+    );
 
     // 步骤2：世应关系
     out.push('2. 世爻（第' + shi + '爻）与应爻（第' + ying + '爻）的关系是卦象的核心判断依据。');
@@ -834,11 +1272,21 @@
     out.push('3. 世爻临' + (liuQin[shi - 1] || '?') + '，这是您面对此事的内在状态。');
     var shiQin = liuQin[shi - 1] || '';
     switch (shiQin) {
-      case '官鬼': out.push('   官鬼主压力和责任——您在此事上感受到较大压力，但压力也是动力。'); break;
-      case '妻财': out.push('   妻财主资源和利益——您对此事有明确的利益诉求，驱动力来自实际收益。'); break;
-      case '子孙': out.push('   子孙主福气和创造力——您以轻松心态面对此事，反而容易有意外收获。'); break;
-      case '父母': out.push('   父母主庇佑和学习——您在此事上有贵人相助或知识储备作为支撑。'); break;
-      case '兄弟': out.push('   兄弟主竞争和分担——您在此事上需要与他人合作或竞争，不宜单打独斗。'); break;
+      case '官鬼':
+        out.push('   官鬼主压力和责任——您在此事上感受到较大压力，但压力也是动力。');
+        break;
+      case '妻财':
+        out.push('   妻财主资源和利益——您对此事有明确的利益诉求，驱动力来自实际收益。');
+        break;
+      case '子孙':
+        out.push('   子孙主福气和创造力——您以轻松心态面对此事，反而容易有意外收获。');
+        break;
+      case '父母':
+        out.push('   父母主庇佑和学习——您在此事上有贵人相助或知识储备作为支撑。');
+        break;
+      case '兄弟':
+        out.push('   兄弟主竞争和分担——您在此事上需要与他人合作或竞争，不宜单打独斗。');
+        break;
     }
 
     // 步骤4：动爻影响
@@ -917,13 +1365,39 @@
       case 'career':
         out.push('');
         out.push('事业趋吉：专注自身优势领域，在' + shiQin + '所示的方面发力。');
-        out.push('事业避凶：避免' + (shiQin === '官鬼' ? '过度承担压力、卷入办公室政治' : shiQin === '兄弟' ? '与同事正面竞争、利益分配不清' : '急功近利、忽视长期规划') + '。');
-        out.push('关键：事业不是百米冲刺而是马拉松——' + (dongCount > 0 ? '变动时期保持灵活' : '稳定时期深耕积累') + '。');
+        out.push(
+          '事业避凶：避免' +
+            (shiQin === '官鬼'
+              ? '过度承担压力、卷入办公室政治'
+              : shiQin === '兄弟'
+                ? '与同事正面竞争、利益分配不清'
+                : '急功近利、忽视长期规划') +
+            '。'
+        );
+        out.push(
+          '关键：事业不是百米冲刺而是马拉松——' + (dongCount > 0 ? '变动时期保持灵活' : '稳定时期深耕积累') + '。'
+        );
         break;
       case 'love':
         out.push('');
-        out.push('感情趋吉：' + (shiQin === '妻财' ? '积极表达，把握缘分' : shiQin === '子孙' ? '保持轻松心态，不急于求成' : '真诚沟通，建立信任') + '。');
-        out.push('感情避凶：避免' + (shiQin === '兄弟' ? '因朋友介入而影响感情' : shiQin === '官鬼' ? '因工作压力忽视对方' : '因猜疑和不信任破坏关系') + '。');
+        out.push(
+          '感情趋吉：' +
+            (shiQin === '妻财'
+              ? '积极表达，把握缘分'
+              : shiQin === '子孙'
+                ? '保持轻松心态，不急于求成'
+                : '真诚沟通，建立信任') +
+            '。'
+        );
+        out.push(
+          '感情避凶：避免' +
+            (shiQin === '兄弟'
+              ? '因朋友介入而影响感情'
+              : shiQin === '官鬼'
+                ? '因工作压力忽视对方'
+                : '因猜疑和不信任破坏关系') +
+            '。'
+        );
         out.push('关键：感情中"好"与"不好"往往只在一念之间，经营比选择更重要。');
         break;
       case 'wealth':
@@ -940,7 +1414,9 @@
         break;
       case 'study':
         out.push('');
-        out.push('学业趋吉：' + (shiQin === '父母' ? '利考试、文书、进修——把握学习机会' : '保持专注，按计划推进') + '。');
+        out.push(
+          '学业趋吉：' + (shiQin === '父母' ? '利考试、文书、进修——把握学习机会' : '保持专注，按计划推进') + '。'
+        );
         out.push('学业避凶：避免' + (dongCount >= 2 ? '同时推进太多学习目标' : '临阵磨枪、临时抱佛脚') + '。');
         out.push('关键：学业靠积累而非突击，扎实的基础比天赋更重要。');
         break;
@@ -973,12 +1449,22 @@
 
     // 卦象概览
     lines.push('──────────────────────────────');
-    lines.push('本卦：' + (originalGua.name || '?') + '（' + (originalGua.upper || '') + '上' + (originalGua.lower || '') + '下）');
+    lines.push(
+      '本卦：' +
+        (originalGua.name || '?') +
+        '（' +
+        (originalGua.upper || '') +
+        '上' +
+        (originalGua.lower || '') +
+        '下）'
+    );
     if (mutualGua.name) {
       lines.push('互卦：' + mutualGua.name + '（' + (mutualGua.upper || '') + '上' + (mutualGua.lower || '') + '下）');
     }
     if (changedGua.name) {
-      lines.push('变卦：' + changedGua.name + '（' + (changedGua.upper || '') + '上' + (changedGua.lower || '') + '下）');
+      lines.push(
+        '变卦：' + changedGua.name + '（' + (changedGua.upper || '') + '上' + (changedGua.lower || '') + '下）'
+      );
     }
     lines.push('──────────────────────────────');
     lines.push('');
@@ -1037,9 +1523,11 @@
     // 行动建议
     lines.push('【行动建议】');
     var advices = DOMAIN_ADVICES[domainKey] || DOMAIN_ADVICES['career'];
-    var shuffled = advices.slice().sort(function() { return Math.random() - 0.5; });
+    var shuffled = advices.slice().sort(function () {
+      return Math.random() - 0.5;
+    });
     for (var i = 0; i < 3; i++) {
-      lines.push((i + 1) + '. ' + shuffled[i]);
+      lines.push(i + 1 + '. ' + shuffled[i]);
     }
     return lines.join('\n');
   }
@@ -1048,16 +1536,18 @@
   function buildMeihuaDomainAnalysis(originalGua, mutualGua, changedGua, tiYong, domainKey) {
     var out = [];
     var rel = tiYong.relation || '';
-    var isGood = (rel === '用生体' || rel === '体用比和');
-    var isBad = (rel === '用克体');
-    var isNeutral = (!isGood && !isBad);
+    var isGood = rel === '用生体' || rel === '体用比和';
+    var isBad = rel === '用克体';
+    var isNeutral = !isGood && !isBad;
     var origName = originalGua.name || '';
     var mutName = mutualGua.name || '';
     var chgName = changedGua.name || '';
     var tiWx = (tiYong.ti && tiYong.ti.element) || '';
     var yongWx = (tiYong.yong && tiYong.yong.element) || '';
 
-    out.push('本卦「' + origName + '」体现当前状态，互卦「' + mutName + '」揭示内在过程，变卦「' + chgName + '」指向最终结果。');
+    out.push(
+      '本卦「' + origName + '」体现当前状态，互卦「' + mutName + '」揭示内在过程，变卦「' + chgName + '」指向最终结果。'
+    );
 
     switch (domainKey) {
       case 'career':
@@ -1079,11 +1569,11 @@
         out.push('');
         out.push('【五行-行业方向】');
         var wxIndustryMH = {
-          '木': '体卦' + tiWx + '→适合教育、文化传媒、医疗、环保、咨询等与人相关的行业。',
-          '火': '体卦' + tiWx + '→适合互联网、能源、娱乐、餐饮、传媒等需要创意的行业。',
-          '土': '体卦' + tiWx + '→适合房地产、建筑、金融、农业、公务员等注重稳定的行业。',
-          '金': '体卦' + tiWx + '→适合金融、法律、机械、军警、审计等需要规则的行业。',
-          '水': '体卦' + tiWx + '→适合物流、贸易、旅游、销售、咨询等需要灵活的行业。'
+          木: '体卦' + tiWx + '→适合教育、文化传媒、医疗、环保、咨询等与人相关的行业。',
+          火: '体卦' + tiWx + '→适合互联网、能源、娱乐、餐饮、传媒等需要创意的行业。',
+          土: '体卦' + tiWx + '→适合房地产、建筑、金融、农业、公务员等注重稳定的行业。',
+          金: '体卦' + tiWx + '→适合金融、法律、机械、军警、审计等需要规则的行业。',
+          水: '体卦' + tiWx + '→适合物流、贸易、旅游、销售、咨询等需要灵活的行业。',
         };
         out.push(wxIndustryMH[tiWx] || '体卦' + tiWx + '→请结合自身特长选择行业方向。');
 
@@ -1093,7 +1583,13 @@
         if (isGood) {
           out.push('路径A：体制内（公务员/事业单位/国企）');
           if (rel === '用生体') {
-            out.push('  √ 用生体，外部环境有利，考公/晋升有贵人相助。体卦' + tiWx + '得' + yongWx + '生，说明体制环境对您友好。');
+            out.push(
+              '  √ 用生体，外部环境有利，考公/晋升有贵人相助。体卦' +
+                tiWx +
+                '得' +
+                yongWx +
+                '生，说明体制环境对您友好。'
+            );
           } else {
             out.push('  → 体用比和，体制内可稳步发展，但缺乏爆发力，适合长期规划。');
           }
@@ -1146,7 +1642,7 @@
         out.push('健康看体卦是否被克。');
         if (isBad) {
           out.push('⚠ 用卦' + yongWx + '克体卦' + tiWx + '，需关注' + tiWx + '对应身体部位的健康。');
-          var wxBody = {木:'肝胆',火:'心血管',土:'脾胃',金:'肺与呼吸系统',水:'肾脏与泌尿系统'};
+          var wxBody = { 木: '肝胆', 火: '心血管', 土: '脾胃', 金: '肺与呼吸系统', 水: '肾脏与泌尿系统' };
           out.push('  ' + tiWx + '对应' + (wxBody[tiWx] || '全身') + '，建议重点检查。');
         } else {
           out.push('√ 体用关系不克，健康状态稳定。');
@@ -1216,12 +1712,30 @@
     var tiWx = (tiYong.ti && tiYong.ti.element) || '?';
     var yongWx = (tiYong.yong && tiYong.yong.element) || '?';
 
-    out.push('1. 本卦「' + origName + '」由' + tiName + '（体卦，' + tiWx + '）和' + yongName + '（用卦，' + yongWx + '）组成。');
+    out.push(
+      '1. 本卦「' +
+        origName +
+        '」由' +
+        tiName +
+        '（体卦，' +
+        tiWx +
+        '）和' +
+        yongName +
+        '（用卦，' +
+        yongWx +
+        '）组成。'
+    );
     out.push('   体卦代表您自身，用卦代表所问之事。这是梅花易数最基础的判断框架。');
     out.push('');
 
     out.push('2. 体用五行生克——' + tiWx + '与' + yongWx + '的关系为「' + (tiYong.relation || '?') + '」。');
-    var wxCycle = {木:'木生火→火生土→土生金→金生水→水生木',火:'火生土→土生金→金生水→水生木→木生火',土:'土生金→金生水→水生木→木生火→火生土',金:'金生水→水生木→木生火→火生土→土生金',水:'水生木→木生火→火生土→土生金→金生水'};
+    var wxCycle = {
+      木: '木生火→火生土→土生金→金生水→水生木',
+      火: '火生土→土生金→金生水→水生木→木生火',
+      土: '土生金→金生水→水生木→木生火→火生土',
+      金: '金生水→水生木→木生火→火生土→土生金',
+      水: '水生木→木生火→火生土→土生金→金生水',
+    };
     out.push('   五行流转：' + (wxCycle[tiWx] || '') + '。');
     out.push('   在此五行链中，' + tiWx + '与' + yongWx + '的关系决定了吉凶基调。');
     out.push('');
@@ -1301,20 +1815,56 @@
     switch (domainKey) {
       case 'career':
         out.push('');
-        out.push('事业趋吉：' + (rel === '用生体' ? '把握良机，积极进取，所求之事多有成望' : rel === '体用比和' ? '主动出击，在和谐中寻找突破口' : rel === '体生用' ? '先付出后收获，放长线钓大鱼' : '以守为攻，积蓄力量等待时机') + '。');
-        out.push('事业避凶：避免' + (rel === '用克体' ? '正面冲突、硬碰硬，宜迂回前进' : rel === '体克用' ? '过度消耗、用力过猛，需量力而行' : '急功近利、盲目扩张，需稳扎稳打') + '。');
+        out.push(
+          '事业趋吉：' +
+            (rel === '用生体'
+              ? '把握良机，积极进取，所求之事多有成望'
+              : rel === '体用比和'
+                ? '主动出击，在和谐中寻找突破口'
+                : rel === '体生用'
+                  ? '先付出后收获，放长线钓大鱼'
+                  : '以守为攻，积蓄力量等待时机') +
+            '。'
+        );
+        out.push(
+          '事业避凶：避免' +
+            (rel === '用克体'
+              ? '正面冲突、硬碰硬，宜迂回前进'
+              : rel === '体克用'
+                ? '过度消耗、用力过猛，需量力而行'
+                : '急功近利、盲目扩张，需稳扎稳打') +
+            '。'
+        );
         if (chgName) {
           out.push('变卦提示：最终走向' + chgName + '卦德，提前了解并做好准备。');
         }
         break;
       case 'love':
         out.push('');
-        out.push('感情趋吉：' + (rel === '用生体' || rel === '体用比和' ? '双方气场和谐，感情运势上升，宜真诚相待' : '虽有不顺，但坚持真诚沟通可化解矛盾') + '。');
-        out.push('感情避凶：避免' + (rel === '用克体' ? '因外部压力影响感情，需保护二人世界' : '因猜疑和不信任破坏关系，坦诚是感情的基石') + '。');
+        out.push(
+          '感情趋吉：' +
+            (rel === '用生体' || rel === '体用比和'
+              ? '双方气场和谐，感情运势上升，宜真诚相待'
+              : '虽有不顺，但坚持真诚沟通可化解矛盾') +
+            '。'
+        );
+        out.push(
+          '感情避凶：避免' +
+            (rel === '用克体' ? '因外部压力影响感情，需保护二人世界' : '因猜疑和不信任破坏关系，坦诚是感情的基石') +
+            '。'
+        );
         break;
       case 'wealth':
         out.push('');
-        out.push('财运趋吉：' + (rel === '用生体' ? '财源有流入之势，宜积极经营' : rel === '体生用' ? '先投入后回报，长期投资可期' : '稳扎稳打，以专业能力积累财富') + '。');
+        out.push(
+          '财运趋吉：' +
+            (rel === '用生体'
+              ? '财源有流入之势，宜积极经营'
+              : rel === '体生用'
+                ? '先投入后回报，长期投资可期'
+                : '稳扎稳打，以专业能力积累财富') +
+            '。'
+        );
         out.push('财运避凶：避免' + (rel === '用克体' ? '高风险投资、冲动消费' : '贪心冒进、不设止损') + '。');
         break;
       case 'health':
@@ -1324,7 +1874,9 @@
         break;
       case 'study':
         out.push('');
-        out.push('学业趋吉：' + (rel === '用生体' ? '学习环境有利，考试运势佳' : '扎实积累比天赋更重要，坚持就是胜利') + '。');
+        out.push(
+          '学业趋吉：' + (rel === '用生体' ? '学习环境有利，考试运势佳' : '扎实积累比天赋更重要，坚持就是胜利') + '。'
+        );
         out.push('学业避凶：避免临时抱佛脚，学习靠日积月累。');
         break;
       default:
@@ -1334,7 +1886,15 @@
     }
 
     out.push('');
-    out.push('关键：吉凶转换往往在一念之间——' + (rel === '用生体' ? '在顺境中保持谦逊，为将来做准备' : rel === '用克体' ? '逆境是最快的成长时期，低谷正是积蓄力量之时' : '在变动中保持清醒，在稳定中保持进取') + '。');
+    out.push(
+      '关键：吉凶转换往往在一念之间——' +
+        (rel === '用生体'
+          ? '在顺境中保持谦逊，为将来做准备'
+          : rel === '用克体'
+            ? '逆境是最快的成长时期，低谷正是积蓄力量之时'
+            : '在变动中保持清醒，在稳定中保持进取') +
+        '。'
+    );
 
     return out.join('\n');
   }
@@ -1358,14 +1918,26 @@
     // 局象概览
     lines.push('──────────────────────────────');
     lines.push('奇门局数：第' + juShu + '局（' + isYang + '）');
-    lines.push(isYang ? '阳遁顺布六仪，逆布三奇——阳气上升，宜主动出击。' : '阴遁逆布六仪，顺布三奇——阴气下沉，宜以静制动。');
+    lines.push(
+      isYang ? '阳遁顺布六仪，逆布三奇——阳气上升，宜主动出击。' : '阴遁逆布六仪，顺布三奇——阴气下沉，宜以静制动。'
+    );
     lines.push('──────────────────────────────');
     lines.push('');
 
     // 九宫分析
     if (palaces.length > 0) {
       lines.push('【九宫落位——逐宫分析】');
-      var palaceNames = ['坎一宫(北)', '坤二宫(西南)', '震三宫(东)', '巽四宫(东南)', '中五宫', '乾六宫(西北)', '兑七宫(西)', '艮八宫(东北)', '离九宫(南)'];
+      var palaceNames = [
+        '坎一宫(北)',
+        '坤二宫(西南)',
+        '震三宫(东)',
+        '巽四宫(东南)',
+        '中五宫',
+        '乾六宫(西北)',
+        '兑七宫(西)',
+        '艮八宫(东北)',
+        '离九宫(南)',
+      ];
       for (var pi = 0; pi < Math.min(palaces.length, 9); pi++) {
         var p = palaces[pi] || {};
         var pn = palaceNames[pi] || '第' + (pi + 1) + '宫';
@@ -1394,9 +1966,11 @@
     // 行动建议
     lines.push('【行动建议】');
     var advices = DOMAIN_ADVICES[domainKey] || DOMAIN_ADVICES['career'];
-    var shuffled = advices.slice().sort(function() { return Math.random() - 0.5; });
+    var shuffled = advices.slice().sort(function () {
+      return Math.random() - 0.5;
+    });
     for (var i = 0; i < 3; i++) {
-      lines.push((i + 1) + '. ' + shuffled[i]);
+      lines.push(i + 1 + '. ' + shuffled[i]);
     }
     return lines.join('\n');
   }
@@ -1413,7 +1987,7 @@
       study: '天辅星（文曲星）和丁奇（文书星）的落宫状态。',
       family: '值使门和太岁（年干）的落宫状态。',
       social: '六合（和合神）和天乙（贵神）的落宫状态。',
-      travel: '马星（寅申巳亥）和伤门（车船门）的落宫状态。'
+      travel: '马星（寅申巳亥）和伤门（车船门）的落宫状态。',
     };
     out.push(domainFocus[domainKey] || domainFocus['career']);
 
@@ -1449,7 +2023,8 @@
       out.push('【职业路径对比】');
       out.push('路径A：体制内（公务员/事业单位/国企）');
       out.push('  - 奇门看开门（事业门）和值符（首领星）的落宫。');
-      var hasOpenDoor = false, hasShengDoor = false;
+      var hasOpenDoor = false,
+        hasShengDoor = false;
       for (var pi = 0; pi < palaces.length; pi++) {
         if (palaces[pi].door === '开门') hasOpenDoor = true;
         if (palaces[pi].door === '生门') hasShengDoor = true;
@@ -1466,7 +2041,14 @@
       } else {
         out.push('  → 生门未显，体制外发展需先积累资源，不宜贸然创业。');
       }
-      out.push('结合奇门' + juShu + '局' + (isYang ? '阳遁' : '阴遁') + '：' + (isYang ? '宜主动出击，抢占先机。' : '宜以静制动，等待时机成熟。'));
+      out.push(
+        '结合奇门' +
+          juShu +
+          '局' +
+          (isYang ? '阳遁' : '阴遁') +
+          '：' +
+          (isYang ? '宜主动出击，抢占先机。' : '宜以静制动，等待时机成熟。')
+      );
     }
 
     return out.join('\n');
@@ -1544,9 +2126,11 @@
     // 行动建议
     lines.push('【行动建议】');
     var advices = DOMAIN_ADVICES[domainKey] || DOMAIN_ADVICES['career'];
-    var shuffled = advices.slice().sort(function() { return Math.random() - 0.5; });
+    var shuffled = advices.slice().sort(function () {
+      return Math.random() - 0.5;
+    });
     for (var i = 0; i < 3; i++) {
-      lines.push((i + 1) + '. ' + shuffled[i]);
+      lines.push(i + 1 + '. ' + shuffled[i]);
     }
     return lines.join('\n');
   }
@@ -1563,7 +2147,7 @@
       study: '文昌（主文曲）和君基（主根基）的态势。',
       family: '臣基（主臣属）和民基（主百姓）的态势。',
       social: '合神（主和合）和太乙的态势。',
-      travel: '小游（主出行）和太乙的态势。'
+      travel: '小游（主出行）和太乙的态势。',
     };
     out.push(domainFocus[domainKey] || domainFocus['career']);
 
@@ -1587,7 +2171,7 @@
         study: ['文昌', '君基', '太乙'],
         family: ['臣基', '民基', '太乙'],
         social: ['合神', '太乙', '始击'],
-        travel: ['小游', '太乙', '文昌']
+        travel: ['小游', '太乙', '文昌'],
       };
       var relevantGods = keyGods[domainKey] || keyGods['career'];
       for (var i = 0; i < gods.length; i++) {
@@ -1631,7 +2215,11 @@
     out.push('1. 太乙积年' + jiNian + '是推算起点。太乙神数以天体运行周期为框架，积年数决定了当前所处的宇宙"时刻"。');
     out.push('');
 
-    out.push('2. ' + (epoch || '?') + '元是更大的周期背景。太乙分五元（上元、中元、下元等），每元72年，不同元有不同的能量基调。');
+    out.push(
+      '2. ' +
+        (epoch || '?') +
+        '元是更大的周期背景。太乙分五元（上元、中元、下元等），每元72年，不同元有不同的能量基调。'
+    );
     out.push('');
 
     out.push('3. 太乙十六神各归其位，形成完整的"能量地图"。' + dm.name + '相关的神煞落位直接决定了此事的吉凶。');
@@ -1692,9 +2280,11 @@
     // 行动建议
     lines.push('【行动建议】');
     var advices = DOMAIN_ADVICES[domainKey] || DOMAIN_ADVICES['career'];
-    var shuffled = advices.slice().sort(function() { return Math.random() - 0.5; });
+    var shuffled = advices.slice().sort(function () {
+      return Math.random() - 0.5;
+    });
     for (var i = 0; i < 3; i++) {
-      lines.push((i + 1) + '. ' + shuffled[i]);
+      lines.push(i + 1 + '. ' + shuffled[i]);
     }
     return lines.join('\n');
   }
@@ -1703,32 +2293,32 @@
   function interpretPoemLine(line, domainKey) {
     var interpretations = {
       career: {
-        '龙': '龙为贵人之象，事业上有贵人相助或升迁之机。',
-        '虎': '虎为威猛之象，事业上需展现魄力，但不可过于强势。',
-        '水': '水主流动和智慧，事业上宜灵活应变，顺势而为。',
-        '山': '山主稳固，事业根基扎实，但需防固步自封。',
-        '风': '风主变动，事业上可能有变化，宜随机应变。',
-        '云': '云主遮蔽，事业上可能有不确定因素，需耐心等待云开。',
-        '日': '日主光明，事业前景明朗，宜积极进取。',
-        '月': '月主阴柔，事业上宜以柔克刚，不宜强攻。',
-        '花': '花主繁荣，但花开花落有时，事业需把握时机。',
-        '春': '春主新生，事业有新的开始或转机。',
-        '秋': '秋主收获，事业成果即将显现，但需防得意忘形。'
+        龙: '龙为贵人之象，事业上有贵人相助或升迁之机。',
+        虎: '虎为威猛之象，事业上需展现魄力，但不可过于强势。',
+        水: '水主流动和智慧，事业上宜灵活应变，顺势而为。',
+        山: '山主稳固，事业根基扎实，但需防固步自封。',
+        风: '风主变动，事业上可能有变化，宜随机应变。',
+        云: '云主遮蔽，事业上可能有不确定因素，需耐心等待云开。',
+        日: '日主光明，事业前景明朗，宜积极进取。',
+        月: '月主阴柔，事业上宜以柔克刚，不宜强攻。',
+        花: '花主繁荣，但花开花落有时，事业需把握时机。',
+        春: '春主新生，事业有新的开始或转机。',
+        秋: '秋主收获，事业成果即将显现，但需防得意忘形。',
       },
       love: {
-        '龙': '龙为贵人之象，感情中可能有贵人引荐或缘分降临。',
-        '凤': '凤为良缘之象，单身者桃花运旺，有伴者感情升温。',
-        '水': '水主柔情，感情中需多些温柔包容，顺其自然。',
-        '花': '花主桃花，但需分辨是正缘还是烂桃花。',
-        '月': '月主阴晴圆缺，感情中需接受不完美，珍惜当下。',
-        '春': '春主萌动，感情有新的开始，宜主动表达。'
+        龙: '龙为贵人之象，感情中可能有贵人引荐或缘分降临。',
+        凤: '凤为良缘之象，单身者桃花运旺，有伴者感情升温。',
+        水: '水主柔情，感情中需多些温柔包容，顺其自然。',
+        花: '花主桃花，但需分辨是正缘还是烂桃花。',
+        月: '月主阴晴圆缺，感情中需接受不完美，珍惜当下。',
+        春: '春主萌动，感情有新的开始，宜主动表达。',
       },
       wealth: {
-        '金': '金主财富，财运上升，但需防贪多嚼不烂。',
-        '水': '水主流动，钱财来去较快，需做好理财规划。',
-        '山': '山主积蓄，财运稳健，适合长期投资。',
-        '秋': '秋主收获，之前的投资或努力将有回报。'
-      }
+        金: '金主财富，财运上升，但需防贪多嚼不烂。',
+        水: '水主流动，钱财来去较快，需做好理财规划。',
+        山: '山主积蓄，财运稳健，适合长期投资。',
+        秋: '秋主收获，之前的投资或努力将有回报。',
+      },
     };
     var domainInterp = interpretations[domainKey] || interpretations['career'];
     for (var key in domainInterp) {
@@ -1862,9 +2452,11 @@
     // 行动建议
     lines.push('【行动建议】');
     var advices = DOMAIN_ADVICES[domainKey] || DOMAIN_ADVICES['career'];
-    var shuffled = advices.slice().sort(function() { return Math.random() - 0.5; });
+    var shuffled = advices.slice().sort(function () {
+      return Math.random() - 0.5;
+    });
     for (var i = 0; i < 3; i++) {
-      lines.push((i + 1) + '. ' + shuffled[i]);
+      lines.push(i + 1 + '. ' + shuffled[i]);
     }
     return lines.join('\n');
   }
@@ -1882,7 +2474,15 @@
         out.push('事业看三传中的官鬼爻和日干旺衰。');
         if (isJi) {
           out.push('√ 课体' + keName + '，' + level + '，事业方面有贵人相助之象，宜积极进取。');
-          out.push('  三传' + (sanChuan.chu || '') + '→' + (sanChuan.zhong || '') + '→' + (sanChuan.mo || '') + '显示事业发展的三个阶段。');
+          out.push(
+            '  三传' +
+              (sanChuan.chu || '') +
+              '→' +
+              (sanChuan.zhong || '') +
+              '→' +
+              (sanChuan.mo || '') +
+              '显示事业发展的三个阶段。'
+          );
         } else if (isXiong) {
           out.push('⚠ 课体' + keName + '，' + level + '，事业方面需谨慎行事，不宜冒进。');
         } else {
@@ -1903,7 +2503,15 @@
           }
           out.push('');
           out.push('路径B：互联网/私企/创业（体制外）');
-          out.push('  → 课体吉利，体制外同样有发展空间。三传' + (sanChuan.chu || '') + '→' + (sanChuan.zhong || '') + '→' + (sanChuan.mo || '') + '提示事业发展的节奏。');
+          out.push(
+            '  → 课体吉利，体制外同样有发展空间。三传' +
+              (sanChuan.chu || '') +
+              '→' +
+              (sanChuan.zhong || '') +
+              '→' +
+              (sanChuan.mo || '') +
+              '提示事业发展的节奏。'
+          );
         } else if (isXiong) {
           out.push('路径A：体制内（公务员/事业单位/国企）');
           out.push('  ⚠ 课体' + level + '，考公/晋升可能遇阻。');
@@ -1911,7 +2519,15 @@
           out.push('  → 凶课体时，体制外灵活性更高，可以避开部分不利因素。');
         } else {
           out.push('→ 课体' + level + '，无论体制内外，都需稳扎稳打。');
-          out.push('  初传' + (sanChuan.chu || '?') + '决定事业开端，中传' + (sanChuan.zhong || '?') + '决定中期发展，末传' + (sanChuan.mo || '?') + '决定最终结果。');
+          out.push(
+            '  初传' +
+              (sanChuan.chu || '?') +
+              '决定事业开端，中传' +
+              (sanChuan.zhong || '?') +
+              '决定中期发展，末传' +
+              (sanChuan.mo || '?') +
+              '决定最终结果。'
+          );
         }
         break;
       case 'love':
@@ -1989,18 +2605,30 @@
     var out = [];
     out.push('以下是从六壬课体到结论的完整因果链条：');
     out.push('');
-    out.push('1. 六壬起课以月将加占时，布成天地盘。这是六壬最基础的时空框架，天地盘一经确定，万事万物的变化规律便在其中。');
+    out.push(
+      '1. 六壬起课以月将加占时，布成天地盘。这是六壬最基础的时空框架，天地盘一经确定，万事万物的变化规律便在其中。'
+    );
     out.push('');
     out.push('2. 四课由日干日支各取两课而成，四课反映的是当前所问之事的"全息影像"。');
     out.push('   日干' + riGan + '代表您自身，日支' + riZhi + '代表外部环境。四课的关系决定了吉凶基调。');
     out.push('');
     out.push('3. 三传由四课中的贼克/比用/涉害等法则推演而出，是课体的"核心变化线"。');
-    out.push('   初传' + (sanChuan.chu || '?') + '→中传' + (sanChuan.zhong || '?') + '→末传' + (sanChuan.mo || '?') + '，三传递进，揭示事态从开始到结果的完整演变。');
+    out.push(
+      '   初传' +
+        (sanChuan.chu || '?') +
+        '→中传' +
+        (sanChuan.zhong || '?') +
+        '→末传' +
+        (sanChuan.mo || '?') +
+        '，三传递进，揭示事态从开始到结果的完整演变。'
+    );
     out.push('');
     out.push('4. 课体「' + keName + '」是六壬判断的总纲。六壬共有64课体，每种课体都有特定的吉凶属性和适用场景。');
     out.push('   课体一经确定，此事的基本性质便已明了。');
     out.push('');
-    out.push('5. 十二天将（贵人、螣蛇、朱雀、六合、勾陈、青龙、天空、白虎、太常、玄武、太阴、天后）各有所主，临于课传之上，提供额外信息。');
+    out.push(
+      '5. 十二天将（贵人、螣蛇、朱雀、六合、勾陈、青龙、天空、白虎、太常、玄武、太阴、天后）各有所主，临于课传之上，提供额外信息。'
+    );
     out.push('   综合课体、四课、三传、天将四者，得出的结论具有高度可信性。');
 
     return out.join('\n');
@@ -2026,7 +2654,18 @@
     lines.push('命宫：' + mingGongZhi + '（主星：' + mingGongZhuXing + '）');
     lines.push('身宫：' + shenGongZhi + '  |  五行局：' + wuxingJu);
     lines.push('紫微落：' + ziWeiZhi + '宫');
-    if (siHua.化禄) lines.push('四化：化禄[' + siHua.化禄 + '] 化权[' + (siHua.化权 || '—') + '] 化科[' + (siHua.化科 || '—') + '] 化忌[' + (siHua.化忌 || '—') + ']');
+    if (siHua.化禄)
+      lines.push(
+        '四化：化禄[' +
+          siHua.化禄 +
+          '] 化权[' +
+          (siHua.化权 || '—') +
+          '] 化科[' +
+          (siHua.化科 || '—') +
+          '] 化忌[' +
+          (siHua.化忌 || '—') +
+          ']'
+      );
     lines.push('──────────────────────────────');
     lines.push('');
 
@@ -2036,7 +2675,7 @@
       for (var gi = 0; gi < Math.min(gongs.length, 12); gi++) {
         var g = gongs[gi] || {};
         var gName = GONG_NAMES[gi] || '宫' + (gi + 1);
-        var stars = (g.stars && g.stars.length > 0) ? g.stars.join('、') : '无主星';
+        var stars = g.stars && g.stars.length > 0 ? g.stars.join('、') : '无主星';
         lines.push(gName + '（' + (g.zhi || '?') + '）：' + stars);
       }
       lines.push('');
@@ -2055,9 +2694,11 @@
     // 行动建议
     lines.push('【行动建议】');
     var advices = DOMAIN_ADVICES[domainKey] || DOMAIN_ADVICES['career'];
-    var shuffled = advices.slice().sort(function() { return Math.random() - 0.5; });
+    var shuffled = advices.slice().sort(function () {
+      return Math.random() - 0.5;
+    });
     for (var i = 0; i < 3; i++) {
-      lines.push((i + 1) + '. ' + shuffled[i]);
+      lines.push(i + 1 + '. ' + shuffled[i]);
     }
     return lines.join('\n');
   }
@@ -2068,14 +2709,14 @@
 
     // 找出与事域相关的宫位
     var domainGongMap = {
-      career: 8,    // 官禄宫 (index 8)
-      love: 2,      // 夫妻宫 (index 2)
-      wealth: 4,    // 财帛宫 (index 4)
-      health: 5,    // 疾厄宫 (index 5)
-      study: 8,     // 官禄宫也管学业
-      family: 6,    // 迁移宫 — 不对，家庭应该是田宅宫 index 9, 父母宫 index 11
-      social: 7,    // 交友宫 (index 7)
-      travel: 6     // 迁移宫 (index 6)
+      career: 8, // 官禄宫 (index 8)
+      love: 2, // 夫妻宫 (index 2)
+      wealth: 4, // 财帛宫 (index 4)
+      health: 5, // 疾厄宫 (index 5)
+      study: 8, // 官禄宫也管学业
+      family: 6, // 迁移宫 — 不对，家庭应该是田宅宫 index 9, 父母宫 index 11
+      social: 7, // 交友宫 (index 7)
+      travel: 6, // 迁移宫 (index 6)
     };
 
     var gongIdx = domainGongMap[domainKey];
@@ -2084,8 +2725,10 @@
     if (gongIdx !== undefined && gongs[gongIdx]) {
       var g = gongs[gongIdx];
       var gongName = GONG_NAMES[gongIdx];
-      var stars = (g.stars && g.stars.length > 0) ? g.stars.join('、') : '无主星';
-      out.push(gongName + '（' + (g.zhi || '?') + '）星曜：' + stars + '——这是' + DOMAINS[domainKey].name + '的命理根基。');
+      var stars = g.stars && g.stars.length > 0 ? g.stars.join('、') : '无主星';
+      out.push(
+        gongName + '（' + (g.zhi || '?') + '）星曜：' + stars + '——这是' + DOMAINS[domainKey].name + '的命理根基。'
+      );
     }
 
     // 四化分析
@@ -2106,7 +2749,8 @@
     var mingStars = mingGongZhuXing.split('、');
     for (var ms = 0; ms < mingStars.length; ms++) {
       var star = mingStars[ms].trim();
-      if (star === '紫微') out.push('√ 命宫紫微坐守，天生具备领导力和格局，' + DOMAINS[domainKey].name + '方面有先天优势。');
+      if (star === '紫微')
+        out.push('√ 命宫紫微坐守，天生具备领导力和格局，' + DOMAINS[domainKey].name + '方面有先天优势。');
       if (star === '天府') out.push('√ 命宫天府坐守，稳重踏实，' + DOMAINS[domainKey].name + '方面宜稳健发展。');
       if (star === '天相') out.push('→ 命宫天相坐守，善于协调，' + DOMAINS[domainKey].name + '方面宜借力而行。');
       if (star === '七杀') out.push('→ 命宫七杀坐守，敢闯敢拼，' + DOMAINS[domainKey].name + '方面宜主动出击。');
@@ -2131,7 +2775,9 @@
         var hasTianxiang = guanLuStars.indexOf('天相') >= 0;
         var hasTaiyang = guanLuStars.indexOf('太阳') >= 0;
         if (hasZiwei || hasTianfu || hasTianxiang) {
-          out.push('  √ 官禄宫有' + (hasZiwei ? '紫微' : hasTianfu ? '天府' : '天相') + '坐守，天生适合体制内管理岗位。');
+          out.push(
+            '  √ 官禄宫有' + (hasZiwei ? '紫微' : hasTianfu ? '天府' : '天相') + '坐守，天生适合体制内管理岗位。'
+          );
         } else if (hasTaiyang) {
           out.push('  → 官禄宫太阳坐守，适合体制内需展现领导力的岗位，但需注意锋芒太露。');
         } else {
@@ -2144,7 +2790,11 @@
         var hasTanlang = guanLuStars.indexOf('贪狼') >= 0;
         var hasTianji = guanLuStars.indexOf('天机') >= 0;
         if (hasQisha || hasPojun || hasTanlang) {
-          out.push('  √ 官禄宫' + (hasQisha ? '七杀' : hasPojun ? '破军' : '贪狼') + '坐守，敢闯敢拼，天生适合体制外创业/互联网行业。');
+          out.push(
+            '  √ 官禄宫' +
+              (hasQisha ? '七杀' : hasPojun ? '破军' : '贪狼') +
+              '坐守，敢闯敢拼，天生适合体制外创业/互联网行业。'
+          );
         } else if (hasTianji) {
           out.push('  → 官禄宫天机坐守，思维敏捷，适合互联网/科技行业的技术或策略岗位。');
         } else {
@@ -2167,11 +2817,21 @@
     var out = [];
     out.push('以下是从紫微斗数命盘到结论的完整因果链条：');
     out.push('');
-    out.push('1. 紫微斗数以命宫' + mingGongZhi + '为起点，安十二宫，定十四主星。命宫是十二宫之首，代表一个人的先天格局和性格底色。');
+    out.push(
+      '1. 紫微斗数以命宫' +
+        mingGongZhi +
+        '为起点，安十二宫，定十四主星。命宫是十二宫之首，代表一个人的先天格局和性格底色。'
+    );
     out.push('');
-    out.push('2. 命宫主星「' + mingGongZhuXing + '」决定了命主的基本特质。每颗主星都有其独特的性格和运势特征，主星之间的组合会产生化学反应。');
+    out.push(
+      '2. 命宫主星「' +
+        mingGongZhuXing +
+        '」决定了命主的基本特质。每颗主星都有其独特的性格和运势特征，主星之间的组合会产生化学反应。'
+    );
     out.push('');
-    out.push('3. 十二宫各有其掌管领域。' + DOMAINS[domainKey].name + '对应的宫位星曜分布，直接决定了此领域的先天运势。');
+    out.push(
+      '3. 十二宫各有其掌管领域。' + DOMAINS[domainKey].name + '对应的宫位星曜分布，直接决定了此领域的先天运势。'
+    );
     out.push('   三方四正（本宫的对宫、三合宫）的星曜也会对此领域产生影响。');
     out.push('');
     out.push('4. 四化（化禄、化权、化科、化忌）是紫微斗数中最重要的动态因素。');
@@ -2185,15 +2845,61 @@
 
   /* ========== 四、各事域通用行动建议 ========== */
   var DOMAIN_ADVICES = {
-    career: ['近期宜主动展示能力，让上级看到你的价值。', '避免卷入办公室政治，专注于业务本身。', '如有跳槽或转岗的念头，可开始准备，但不宜操之过急。', '多与行业前辈交流，贵人可能就在身边。'],
-    love: ['单身者宜多参加社交活动，扩大交际圈。', '有伴侣者需加强沟通，避免小事积累成大矛盾。', '信任是感情的基石，不要因猜疑而破坏关系。', '感情之事，顺其自然比强求更有福报。'],
-    wealth: ['正财稳定，但偏财需谨慎，不宜轻信高回报承诺。', '近期适合做长期理财规划，而非短期投机。', '控制不必要的开支，积少成多。', '如有投资计划，建议多方咨询后再做决定。'],
-    health: ['建议近期安排一次全面体检，防患于未然。', '调整作息，保证充足睡眠，避免过度劳累。', '适当运动有助于身心平衡，推荐散步或瑜伽。', '饮食清淡，少食辛辣油腻，多喝水。'],
-    study: ['制定合理的学习计划，避免临时抱佛脚。', '找到适合自己的学习方法，效率比时长更重要。', '遇到难题多向老师或同学请教，不要独自硬扛。', '考试前保持良好心态，过度紧张反而影响发挥。'],
-    family: ['多花时间陪伴家人，沟通比物质更重要。', '家庭矛盾宜冷处理，不要在情绪激动时做决定。', '如有长辈身体不适，及时就医，不可拖延。', '家和万事兴，家庭和睦是最大的福气。'],
-    social: ['谨言慎行，避免在背后议论他人。', '真诚待人，但也要保持适当的边界感。', '如有人际矛盾，宜主动沟通化解，不宜冷战。', '拓展人脉的同时，也要维护好现有的核心关系。'],
-    travel: ['出行前做好充分准备，检查证件和行程安排。', '长途旅行宜结伴而行，注意安全。', '如有重要行程，建议预留充足的缓冲时间。', '旅途中保持开放心态，可能会有意外收获。'],
-    general: ['近期宜稳扎稳打，不宜冒进，等待时机成熟再行动。', '多关注自身内心感受，倾听直觉的声音。', '人生如棋，落子无悔，每一步都是修行。', '运势如潮汐，有起有落，低谷时更要沉住气。', '顺势而为，不逆天而行，是最大的智慧。']
+    career: [
+      '近期宜主动展示能力，让上级看到你的价值。',
+      '避免卷入办公室政治，专注于业务本身。',
+      '如有跳槽或转岗的念头，可开始准备，但不宜操之过急。',
+      '多与行业前辈交流，贵人可能就在身边。',
+    ],
+    love: [
+      '单身者宜多参加社交活动，扩大交际圈。',
+      '有伴侣者需加强沟通，避免小事积累成大矛盾。',
+      '信任是感情的基石，不要因猜疑而破坏关系。',
+      '感情之事，顺其自然比强求更有福报。',
+    ],
+    wealth: [
+      '正财稳定，但偏财需谨慎，不宜轻信高回报承诺。',
+      '近期适合做长期理财规划，而非短期投机。',
+      '控制不必要的开支，积少成多。',
+      '如有投资计划，建议多方咨询后再做决定。',
+    ],
+    health: [
+      '建议近期安排一次全面体检，防患于未然。',
+      '调整作息，保证充足睡眠，避免过度劳累。',
+      '适当运动有助于身心平衡，推荐散步或瑜伽。',
+      '饮食清淡，少食辛辣油腻，多喝水。',
+    ],
+    study: [
+      '制定合理的学习计划，避免临时抱佛脚。',
+      '找到适合自己的学习方法，效率比时长更重要。',
+      '遇到难题多向老师或同学请教，不要独自硬扛。',
+      '考试前保持良好心态，过度紧张反而影响发挥。',
+    ],
+    family: [
+      '多花时间陪伴家人，沟通比物质更重要。',
+      '家庭矛盾宜冷处理，不要在情绪激动时做决定。',
+      '如有长辈身体不适，及时就医，不可拖延。',
+      '家和万事兴，家庭和睦是最大的福气。',
+    ],
+    social: [
+      '谨言慎行，避免在背后议论他人。',
+      '真诚待人，但也要保持适当的边界感。',
+      '如有人际矛盾，宜主动沟通化解，不宜冷战。',
+      '拓展人脉的同时，也要维护好现有的核心关系。',
+    ],
+    travel: [
+      '出行前做好充分准备，检查证件和行程安排。',
+      '长途旅行宜结伴而行，注意安全。',
+      '如有重要行程，建议预留充足的缓冲时间。',
+      '旅途中保持开放心态，可能会有意外收获。',
+    ],
+    general: [
+      '近期宜稳扎稳打，不宜冒进，等待时机成熟再行动。',
+      '多关注自身内心感受，倾听直觉的声音。',
+      '人生如棋，落子无悔，每一步都是修行。',
+      '运势如潮汐，有起有落，低谷时更要沉住气。',
+      '顺势而为，不逆天而行，是最大的智慧。',
+    ],
   };
 
   /* ========== 五、公开 API ========== */
@@ -2217,12 +2923,24 @@
       var analysis = '';
 
       switch (method) {
-        case 'bazi':   analysis = analyzeBazi(result, question, domainKey); break;
-        case 'liuyao': analysis = analyzeLiuyao(result, question, domainKey); break;
-        case 'meihua': analysis = analyzeMeihua(result, question, domainKey); break;
-        case 'qimen':  analysis = analyzeQimen(result, question, domainKey); break;
-        case 'taiyi':  analysis = analyzeTaiyi(result, question, domainKey); break;
-        case 'zhuge':  analysis = analyzeZhuge(result, question, domainKey); break;
+        case 'bazi':
+          analysis = analyzeBazi(result, question, domainKey);
+          break;
+        case 'liuyao':
+          analysis = analyzeLiuyao(result, question, domainKey);
+          break;
+        case 'meihua':
+          analysis = analyzeMeihua(result, question, domainKey);
+          break;
+        case 'qimen':
+          analysis = analyzeQimen(result, question, domainKey);
+          break;
+        case 'taiyi':
+          analysis = analyzeTaiyi(result, question, domainKey);
+          break;
+        case 'zhuge':
+          analysis = analyzeZhuge(result, question, domainKey);
+          break;
         case 'zhougong':
           // 周公解梦复用诸葛神数的事域模板
           analysis = analyzeZhuge(result, question, domainKey);
@@ -2240,7 +2958,7 @@
 
       return {
         domain: { key: domainKey, name: domain.name, icon: domain.icon },
-        analysis: analysis
+        analysis: analysis,
       };
     },
 
@@ -2250,7 +2968,6 @@
         var d = DOMAINS[k];
         return { key: k, name: d.name, icon: d.icon };
       });
-    }
+    },
   };
-
 })(typeof window !== 'undefined' ? window : this);

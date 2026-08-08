@@ -8,10 +8,10 @@
 
   /* ========== 输入类型枚举 ========== */
   var INPUT_TYPE = {
-    BIRTH: 'birthchart',    // 命盘类：需要出生日期+时辰
-    INSTANT: 'instant',      // 即时类：无需额外参数，随机起卦
-    SPACETIME: 'spacetime',  // 时空类：需要日期+时辰
-    TEXT: 'text'             // 文本类：需要文本描述
+    BIRTH: 'birthchart', // 命盘类：需要出生日期+时辰
+    INSTANT: 'instant', // 即时类：无需额外参数，随机起卦
+    SPACETIME: 'spacetime', // 时空类：需要日期+时辰
+    TEXT: 'text', // 文本类：需要文本描述
   };
 
   /* ========== 引擎注册表 ========== */
@@ -138,12 +138,14 @@
    */
   function executeAll(keys, uiParams) {
     var promises = keys.map(function (key) {
-      return execute(key, uiParams).then(function (raw) {
-        return { key: key, raw: raw, config: REGISTRY[key] };
-      }).catch(function (err) {
-        console.warn('[Registry] 引擎 [' + key + '] 异常:', err);
-        return { key: key, raw: null, config: REGISTRY[key] };
-      });
+      return execute(key, uiParams)
+        .then(function (raw) {
+          return { key: key, raw: raw, config: REGISTRY[key] };
+        })
+        .catch(function (err) {
+          console.warn('[Registry] 引擎 [' + key + '] 异常:', err);
+          return { key: key, raw: null, config: REGISTRY[key] };
+        });
     });
     return Promise.all(promises);
   }
@@ -152,28 +154,50 @@
 
   // 1. 八字排盘 — 命盘类
   register('bazi', {
-    name: '八字排盘', icon: '📅',
+    name: '八字排盘',
+    icon: '📅',
     inputType: INPUT_TYPE.BIRTH,
-    engineName: 'BaziEngine', methodName: 'paipan',
+    engineName: 'BaziEngine',
+    methodName: 'paipan',
     weight: 1.0,
     uiFields: [
       { key: 'birthDate', label: '出生日期', type: 'date' },
-      { key: 'birthTime', label: '出生时辰', type: 'select', options: ['子时','丑时','寅时','卯时','辰时','巳时','午时','未时','申时','酉时','戌时','亥时'] },
-      { key: 'gender', label: '性别', type: 'select', options: ['男','女'] }
+      {
+        key: 'birthTime',
+        label: '出生时辰',
+        type: 'select',
+        options: ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'],
+      },
+      { key: 'gender', label: '性别', type: 'select', options: ['男', '女'] },
     ],
     buildParams: function (ui) {
       var dp = (ui.birthDate || '2000-01-01').split('-');
-      var hourMap = { '子时':0,'丑时':2,'寅时':4,'卯时':6,'辰时':8,'巳时':10,'午时':12,'未时':14,'申时':16,'酉时':18,'戌时':20,'亥时':22 };
+      var hourMap = {
+        子时: 0,
+        丑时: 2,
+        寅时: 4,
+        卯时: 6,
+        辰时: 8,
+        巳时: 10,
+        午时: 12,
+        未时: 14,
+        申时: 16,
+        酉时: 18,
+        戌时: 20,
+        亥时: 22,
+      };
       var hour = hourMap[ui.birthTime] || 0;
       return [parseInt(dp[0]) || 2000, parseInt(dp[1]) || 1, parseInt(dp[2]) || 1, hour];
-    }
+    },
   });
 
   // 2. 六爻占卜 — 即时类
   register('liuyao', {
-    name: '六爻占卜', icon: '🪙',
+    name: '六爻占卜',
+    icon: '🪙',
     inputType: INPUT_TYPE.INSTANT,
-    engineName: 'LiuyaoEngine', methodName: 'divine',
+    engineName: 'LiuyaoEngine',
+    methodName: 'divine',
     weight: 1.0,
     uiFields: [],
     buildParams: function () {
@@ -183,58 +207,76 @@
         lines.push({ type: total % 2 === 0 ? 'yin' : 'yang', changing: total === 6 || total === 9 });
       }
       return [lines];
-    }
+    },
   });
 
   // 3. 梅花易数 — 即时类
   register('meihua', {
-    name: '梅花易数', icon: '🌸',
+    name: '梅花易数',
+    icon: '🌸',
     inputType: INPUT_TYPE.INSTANT,
-    engineName: 'MeihuaEngine', methodName: 'divine',
+    engineName: 'MeihuaEngine',
+    methodName: 'divine',
     weight: 0.9,
     uiFields: [],
     buildParams: function () {
       return [{ method: 'random' }];
-    }
+    },
   });
 
   // 4. 奇门遁甲 — 时空类
   register('qimen', {
-    name: '奇门遁甲', icon: '☯️',
+    name: '奇门遁甲',
+    icon: '☯️',
     inputType: INPUT_TYPE.SPACETIME,
-    engineName: 'QimenEngine', methodName: 'divine',
+    engineName: 'QimenEngine',
+    methodName: 'divine',
     weight: 1.1,
     uiFields: [
       { key: 'date', label: '日期', type: 'date' },
-      { key: 'hour', label: '时辰', type: 'select', options: ['子时','丑时','寅时','卯时','辰时','巳时','午时','未时','申时','酉时','戌时','亥时'] }
+      {
+        key: 'hour',
+        label: '时辰',
+        type: 'select',
+        options: ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'],
+      },
     ],
     buildParams: function (ui) {
       var dateStr = ui.date || new Date().toISOString().slice(0, 10);
       return [dateStr, ui.hour || '子时', 'auto'];
-    }
+    },
   });
 
   // 5. 太乙神数 — 时空类
   register('taiyi', {
-    name: '太乙神数', icon: '🌌',
+    name: '太乙神数',
+    icon: '🌌',
     inputType: INPUT_TYPE.SPACETIME,
-    engineName: 'TaiyiEngine', methodName: 'divine',
+    engineName: 'TaiyiEngine',
+    methodName: 'divine',
     weight: 1.0,
     uiFields: [
       { key: 'date', label: '日期', type: 'date' },
-      { key: 'hour', label: '时辰', type: 'select', options: ['子时','丑时','寅时','卯时','辰时','巳时','午时','未时','申时','酉时','戌时','亥时'] }
+      {
+        key: 'hour',
+        label: '时辰',
+        type: 'select',
+        options: ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'],
+      },
     ],
     buildParams: function (ui) {
       var dateStr = ui.date || new Date().toISOString().slice(0, 10);
       return [dateStr, ui.hour || '子时'];
-    }
+    },
   });
 
   // 6. 诸葛神数 — 即时类
   register('zhuge', {
-    name: '诸葛神数', icon: '📜',
+    name: '诸葛神数',
+    icon: '📜',
     inputType: INPUT_TYPE.INSTANT,
-    engineName: 'ZhugeEngine', methodName: 'divine',
+    engineName: 'ZhugeEngine',
+    methodName: 'divine',
     weight: 0.85,
     uiFields: [],
     buildParams: function () {
@@ -242,50 +284,77 @@
       var n2 = Math.floor(Math.random() * 999) + 1;
       var n3 = Math.floor(Math.random() * 999) + 1;
       return [{ method: 'number', numbers: [n1, n2, n3] }];
-    }
+    },
   });
 
   // 7. 周公解梦 — 文本类
   register('zhougong', {
-    name: '周公解梦', icon: '🌙',
+    name: '周公解梦',
+    icon: '🌙',
     inputType: INPUT_TYPE.TEXT,
-    engineName: 'ZhougongEngine', methodName: 'divine',
+    engineName: 'ZhougongEngine',
+    methodName: 'divine',
     weight: 0.8,
-    uiFields: [
-      { key: 'dreamText', label: '梦境描述', type: 'textarea' }
-    ],
+    uiFields: [{ key: 'dreamText', label: '梦境描述', type: 'textarea' }],
     buildParams: function (ui) {
       return [ui.dreamText || '梦见龙飞翔', ui.question || ''];
-    }
+    },
   });
 
   // 8. 大六壬 — 时空类（新）
   register('daliuren', {
-    name: '大六壬', icon: '🌊',
+    name: '大六壬',
+    icon: '🌊',
     inputType: INPUT_TYPE.SPACETIME,
-    engineName: 'DaLiuRenEngine', methodName: 'divine',
+    engineName: 'DaLiuRenEngine',
+    methodName: 'divine',
     weight: 1.1,
     uiFields: [
       { key: 'date', label: '日期', type: 'date' },
-      { key: 'hour', label: '时辰', type: 'select', options: ['子时','丑时','寅时','卯时','辰时','巳时','午时','未时','申时','酉时','戌时','亥时'] }
+      {
+        key: 'hour',
+        label: '时辰',
+        type: 'select',
+        options: ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'],
+      },
     ],
     buildParams: function (ui) {
       var dateStr = ui.date || new Date().toISOString().slice(0, 10);
-      var hourMap = { '子时':0,'丑时':1,'寅时':2,'卯时':3,'辰时':4,'巳时':5,'午时':6,'未时':7,'申时':8,'酉时':9,'戌时':10,'亥时':11 };
+      var hourMap = {
+        子时: 0,
+        丑时: 1,
+        寅时: 2,
+        卯时: 3,
+        辰时: 4,
+        巳时: 5,
+        午时: 6,
+        未时: 7,
+        申时: 8,
+        酉时: 9,
+        戌时: 10,
+        亥时: 11,
+      };
       return [dateStr, hourMap[ui.hour] || 0];
-    }
+    },
   });
 
   // 9. 紫微斗数 — 命盘类（新）
   register('ziwei', {
-    name: '紫微斗数', icon: '🔮',
+    name: '紫微斗数',
+    icon: '🔮',
     inputType: INPUT_TYPE.BIRTH,
-    engineName: 'ZiWeiEngine', methodName: 'paipan',
+    engineName: 'ZiWeiEngine',
+    methodName: 'paipan',
     weight: 1.0,
     uiFields: [
       { key: 'birthDate', label: '出生日期', type: 'date' },
-      { key: 'birthTime', label: '出生时辰', type: 'select', options: ['子时','丑时','寅时','卯时','辰时','巳时','午时','未时','申时','酉时','戌时','亥时'] },
-      { key: 'gender', label: '性别', type: 'select', options: ['男','女'] }
+      {
+        key: 'birthTime',
+        label: '出生时辰',
+        type: 'select',
+        options: ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'],
+      },
+      { key: 'gender', label: '性别', type: 'select', options: ['男', '女'] },
     ],
     buildParams: function (ui) {
       var dp = (ui.birthDate || '2000-01-01').split('-');
@@ -295,25 +364,92 @@
         day: parseInt(dp[2]) || 1,
         hour: ui.birthTime || '子时',
         gender: ui.gender || '男',
-        isLunar: false
+        isLunar: false,
       };
-    }
+    },
   });
 
   // 10. 风水排盘 — 时空类（独立板块，不算在合参）
   register('fengshui', {
-    name: '风水格局', icon: '🏔️',
+    name: '风水格局',
+    icon: '🏔️',
     inputType: INPUT_TYPE.SPACETIME,
-    engineName: 'FengshuiEngine', methodName: 'divine',
+    engineName: 'FengshuiEngine',
+    methodName: 'divine',
     weight: 0,
     uiFields: [
-      { key: 'fengshuiSitting', label: '坐山', type: 'select', options: ['子','午','卯','酉','乾','坤','艮','巽','壬','癸','丑','寅','甲','乙','辰','巳','丙','丁','未','申','庚','辛','戌','亥'] },
-      { key: 'fengshuiFacing', label: '朝向', type: 'select', options: ['子','午','卯','酉','乾','坤','艮','巽','壬','癸','丑','寅','甲','乙','辰','巳','丙','丁','未','申','庚','辛','戌','亥'] },
-      { key: 'fengshuiBuildYear', label: '建房年份', type: 'number' }
+      {
+        key: 'fengshuiSitting',
+        label: '坐山',
+        type: 'select',
+        options: [
+          '子',
+          '午',
+          '卯',
+          '酉',
+          '乾',
+          '坤',
+          '艮',
+          '巽',
+          '壬',
+          '癸',
+          '丑',
+          '寅',
+          '甲',
+          '乙',
+          '辰',
+          '巳',
+          '丙',
+          '丁',
+          '未',
+          '申',
+          '庚',
+          '辛',
+          '戌',
+          '亥',
+        ],
+      },
+      {
+        key: 'fengshuiFacing',
+        label: '朝向',
+        type: 'select',
+        options: [
+          '子',
+          '午',
+          '卯',
+          '酉',
+          '乾',
+          '坤',
+          '艮',
+          '巽',
+          '壬',
+          '癸',
+          '丑',
+          '寅',
+          '甲',
+          '乙',
+          '辰',
+          '巳',
+          '丙',
+          '丁',
+          '未',
+          '申',
+          '庚',
+          '辛',
+          '戌',
+          '亥',
+        ],
+      },
+      { key: 'fengshuiBuildYear', label: '建房年份', type: 'number' },
     ],
     buildParams: function (ui) {
-      return { sitting: ui.fengshuiSitting || '子', facing: ui.fengshuiFacing || '午', buildYear: parseInt(ui.fengshuiBuildYear) || new Date().getFullYear(), currentYear: new Date().getFullYear() };
-    }
+      return {
+        sitting: ui.fengshuiSitting || '子',
+        facing: ui.fengshuiFacing || '午',
+        buildYear: parseInt(ui.fengshuiBuildYear) || new Date().getFullYear(),
+        currentYear: new Date().getFullYear(),
+      };
+    },
   });
 
   /* ========== 公开 API ========== */
@@ -327,7 +463,6 @@
     getInputTypesForKeys: getInputTypesForKeys,
     execute: execute,
     executeAll: executeAll,
-    REGISTRY: REGISTRY
+    REGISTRY: REGISTRY,
   };
-
 })(typeof window !== 'undefined' ? window : this);

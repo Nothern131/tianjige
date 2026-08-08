@@ -7,16 +7,24 @@
 (function () {
   'use strict';
 
-  var mouseX = 0, mouseY = 0;
+  var mouseX = 0,
+    mouseY = 0;
 
   /* ========== 星空 + 星云 + 星座连线 + 鼠标视差 ========== */
   function initStarfield() {
     var c = document.getElementById('starfield');
     if (!c) return;
     var ctx = c.getContext('2d');
-    var stars = [], anchors = [], w, h, t = 0;
+    var stars = [],
+      anchors = [],
+      w,
+      h,
+      t = 0;
     var shootingStar = null;
-    var offsetX = 0, offsetY = 0, targetX = 0, targetY = 0;
+    var offsetX = 0,
+      offsetY = 0,
+      targetX = 0,
+      targetY = 0;
 
     // 星云 — 随机分布的柔和光斑
     var nebulae = [];
@@ -43,7 +51,8 @@
       // 亮星（锚点星）
       for (var i = 0; i < 70; i++) {
         var s = {
-          x: Math.random() * w, y: Math.random() * h,
+          x: Math.random() * w,
+          y: Math.random() * h,
           r: Math.random() * 1.5 + 0.5,
           twinkleSpeed: Math.random() * 0.012 + 0.003,
           twinkleOffset: Math.random() * Math.PI * 2,
@@ -56,7 +65,8 @@
       // 暗星
       for (var j = 0; j < 120; j++) {
         stars.push({
-          x: Math.random() * w, y: Math.random() * h,
+          x: Math.random() * w,
+          y: Math.random() * h,
           r: Math.random() * 0.7 + 0.15,
           twinkleSpeed: Math.random() * 0.018 + 0.006,
           twinkleOffset: Math.random() * Math.PI * 2,
@@ -88,18 +98,27 @@
         var neb = nebulae[ni];
         var breathe = 1 + Math.sin(t * 0.003 + neb.phase) * 0.3;
         var grad = ctx.createRadialGradient(
-          neb.x + offsetX * 0.3, neb.y + offsetY * 0.3, 0,
-          neb.x + offsetX * 0.3, neb.y + offsetY * 0.3, neb.r * breathe
+          neb.x + offsetX * 0.3,
+          neb.y + offsetY * 0.3,
+          0,
+          neb.x + offsetX * 0.3,
+          neb.y + offsetY * 0.3,
+          neb.r * breathe
         );
         if (neb.hue > 100) {
-          grad.addColorStop(0, 'rgba(30,28,60,' + (neb.alpha * breathe) + ')');
+          grad.addColorStop(0, 'rgba(30,28,60,' + neb.alpha * breathe + ')');
           grad.addColorStop(1, 'rgba(30,28,60,0)');
         } else {
-          grad.addColorStop(0, 'rgba(60,40,20,' + (neb.alpha * breathe) + ')');
+          grad.addColorStop(0, 'rgba(60,40,20,' + neb.alpha * breathe + ')');
           grad.addColorStop(1, 'rgba(60,40,20,0)');
         }
         ctx.fillStyle = grad;
-        ctx.fillRect(neb.x - neb.r * breathe + offsetX * 0.3, neb.y - neb.r * breathe + offsetY * 0.3, neb.r * 2 * breathe, neb.r * 2 * breathe);
+        ctx.fillRect(
+          neb.x - neb.r * breathe + offsetX * 0.3,
+          neb.y - neb.r * breathe + offsetY * 0.3,
+          neb.r * 2 * breathe,
+          neb.r * 2 * breathe
+        );
       }
 
       // 星座连线
@@ -128,7 +147,7 @@
         ctx.arc(s.x + offsetX, s.y + offsetY, s.r, 0, Math.PI * 2);
         if (s.hue) {
           ctx.fillStyle = 'rgba(184,154,92,' + a + ')';
-          ctx.shadowColor = 'rgba(184,154,92,' + (a * 0.35) + ')';
+          ctx.shadowColor = 'rgba(184,154,92,' + a * 0.35 + ')';
           ctx.shadowBlur = s.r * 2.5;
         } else {
           ctx.fillStyle = 'rgba(200,200,215,' + a + ')';
@@ -153,8 +172,10 @@
       if (shootingStar) {
         var ss = shootingStar;
         var grad = ctx.createLinearGradient(
-          ss.x + offsetX, ss.y + offsetY,
-          ss.x + offsetX - ss.vx * ss.len * 0.05, ss.y + offsetY - ss.vy * ss.len * 0.05
+          ss.x + offsetX,
+          ss.y + offsetY,
+          ss.x + offsetX - ss.vx * ss.len * 0.05,
+          ss.y + offsetY - ss.vy * ss.len * 0.05
         );
         grad.addColorStop(0, 'rgba(255,255,255,' + ss.life + ')');
         grad.addColorStop(1, 'rgba(184,154,92,0)');
@@ -185,10 +206,10 @@
       var r = Math.random();
       p.className = r > 0.82 ? 'particle large' : r > 0.55 ? 'particle ring' : 'particle';
       p.style.left = Math.random() * 100 + '%';
-      p.style.setProperty('--pd', (9 + Math.random() * 15) + 's');
-      p.style.setProperty('--pdl', (Math.random() * 14) + 's');
-      p.style.setProperty('--pdx', ((Math.random() - 0.5) * 60) + 'px');
-      p.style.setProperty('--pdx2', ((Math.random() - 0.5) * 80) + 'px');
+      p.style.setProperty('--pd', 9 + Math.random() * 15 + 's');
+      p.style.setProperty('--pdl', Math.random() * 14 + 's');
+      p.style.setProperty('--pdx', (Math.random() - 0.5) * 60 + 'px');
+      p.style.setProperty('--pdx2', (Math.random() - 0.5) * 80 + 'px');
       f.appendChild(p);
     }
     container.appendChild(f);
@@ -201,9 +222,11 @@
       el.className = 'light-streak';
       el.style.left = Math.random() * 90 + '%';
       el.style.top = '-80px';
-      el.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+      el.style.animationDuration = 2.5 + Math.random() * 3 + 's';
       document.body.appendChild(el);
-      el.addEventListener('animationend', function () { el.remove(); });
+      el.addEventListener('animationend', function () {
+        el.remove();
+      });
     }
     // 偶尔创建光柱
     setInterval(function () {
@@ -222,26 +245,33 @@
       ripple.className = 'ripple';
       var size = Math.max(rect.width, rect.height);
       ripple.style.width = ripple.style.height = size + 'px';
-      ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
-      ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      ripple.style.left = e.clientX - rect.left - size / 2 + 'px';
+      ripple.style.top = e.clientY - rect.top - size / 2 + 'px';
       btn.appendChild(ripple);
-      ripple.addEventListener('animationend', function () { ripple.remove(); });
+      ripple.addEventListener('animationend', function () {
+        ripple.remove();
+      });
     });
   }
 
   /* ========== 滚动揭示 (IntersectionObserver) ========== */
   function initScrollReveal() {
     if (!('IntersectionObserver' in window)) return;
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          // 子元素也触发
-          var items = entry.target.querySelectorAll('.reveal-item');
-          items.forEach(function (item) { item.classList.add('visible'); });
-        }
-      });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            // 子元素也触发
+            var items = entry.target.querySelectorAll('.reveal-item');
+            items.forEach(function (item) {
+              item.classList.add('visible');
+            });
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
 
     // 观察所有 glass-card
     var observeCards = function () {
@@ -268,19 +298,45 @@
   var pageContainer = document.getElementById('page-container');
 
   var routes = {
-    home: function () { return null; },
-    bazi: function () { return renderBaziComponent({}); },
-    zhuge: function () { return renderZhugeComponent(); },
-    liuyao: function () { return renderLiuyaoComponent(); },
-    meihua: function () { return renderMeihuaComponent(); },
-    qimen: function () { return renderQimenComponent(); },
-    taiyi: function () { return renderTaiyiComponent(); },
-    masters: function () { return renderMastersComponent({ userInfo: {} }); },
-    composite: function () { return renderCompositeComponent(); },
-    zhougong: function () { return renderZhougongComponent(); },
-    daliuren: function () { return renderDaliurenComponent(); },
-    ziwei: function () { return renderZiweiComponent(); },
-    fengshui: function () { return renderFengshuiComponent(); },
+    home: function () {
+      return null;
+    },
+    bazi: function () {
+      return renderBaziComponent({});
+    },
+    zhuge: function () {
+      return renderZhugeComponent();
+    },
+    liuyao: function () {
+      return renderLiuyaoComponent();
+    },
+    meihua: function () {
+      return renderMeihuaComponent();
+    },
+    qimen: function () {
+      return renderQimenComponent();
+    },
+    taiyi: function () {
+      return renderTaiyiComponent();
+    },
+    masters: function () {
+      return renderMastersComponent({ userInfo: {} });
+    },
+    composite: function () {
+      return renderCompositeComponent();
+    },
+    zhougong: function () {
+      return renderZhougongComponent();
+    },
+    daliuren: function () {
+      return renderDaliurenComponent();
+    },
+    ziwei: function () {
+      return renderZiweiComponent();
+    },
+    fengshui: function () {
+      return renderFengshuiComponent();
+    },
   };
 
   function navigateTo(page) {
@@ -377,7 +433,9 @@
     t.className = 'toast';
     t.textContent = msg;
     document.body.appendChild(t);
-    setTimeout(function () { t.remove(); }, 3000);
+    setTimeout(function () {
+      t.remove();
+    }, 3000);
   };
 
   /* ========== 首页节点入场动画 ========== */
@@ -386,10 +444,13 @@
     for (var i = 0; i < nodes.length; i++) {
       (function (n, idx) {
         n.style.opacity = '0';
-        setTimeout(function () {
-          n.style.transition = 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-          n.style.opacity = '1';
-        }, 400 + idx * 100);
+        setTimeout(
+          function () {
+            n.style.transition = 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+            n.style.opacity = '1';
+          },
+          400 + idx * 100
+        );
       })(nodes[i], i);
     }
   }

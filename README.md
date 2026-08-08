@@ -101,50 +101,27 @@ class BaseEngine(ABC):
 
 ---
 
-## 快速开始
+## 启动方式
 
-### 环境要求
-
-- Python 3.11+
-- pip
-
-### 安装
+### 本地开发（纯前端，需 Node.js 20+）
 
 ```bash
-# 克隆项目
-git clone <repo-url>
-cd 天机阁
-
-# 创建虚拟环境
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
-
-# 安装依赖
-pip install -r requirements.txt
-
-# 可选：安装农历库（更精确的节气计算）
-pip install lunar-python
+npm install
+npm run dev       # 开发服务器 http://localhost:8889
+npm run build     # 构建到 dist/
+npm run preview   # 预览构建产物
 ```
 
-### 运行
+### 代码质量
 
 ```bash
-# 开发模式
-uvicorn app:app --host 0.0.0.0 --port 8889 --reload
-
-# 访问
-# 主页：http://localhost:8889/
+npm run lint      # ESLint 检查
+npm run format    # Prettier 格式化
 ```
 
-### Docker 部署
+### 一键部署
 
-```bash
-docker build -t tianjige .
-docker run -p 8889:8889 tianjige
-```
+直接推送到 `master` 分支，GitHub Actions 会自动构建并部署到 gh-pages。
 
 ---
 

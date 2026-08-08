@@ -24,9 +24,17 @@ function renderZhougongComponent() {
       <div class="form-group" style="margin-top:16px;">
         <label class="form-label">🔮 你所问之事（可选）—— 想通过此梦了解哪个方面的运势？</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="zhougong-domain-tags">
-          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行'].map(function(d) {
-            return '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' + d + '">' + d + '</button>';
-          }).join('')}
+          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行']
+            .map(function (d) {
+              return (
+                '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' +
+                d +
+                '">' +
+                d +
+                '</button>'
+              );
+            })
+            .join('')}
         </div>
         <input type="text" class="form-input" id="zhougong-question-text" placeholder="或输入你想问的具体问题，如：最近事业运如何？这段感情有结果吗？...">
       </div>
@@ -44,9 +52,17 @@ function renderZhougongComponent() {
       <div style="margin-top:16px;">
         <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;">常见梦境快速查询：</p>
         <div style="display:flex;flex-wrap:wrap;gap:6px;" id="zhougong-quick-tags">
-          ${['蛇', '鱼', '水', '火', '飞', '坠落', '牙齿', '考试', '死人', '棺材', '龙', '钱', '花', '树', '房子', '车'].map(function(k) {
-            return '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-keyword="' + k + '">' + k + '</button>';
-          }).join('')}
+          ${['蛇', '鱼', '水', '火', '飞', '坠落', '牙齿', '考试', '死人', '棺材', '龙', '钱', '花', '树', '房子', '车']
+            .map(function (k) {
+              return (
+                '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-keyword="' +
+                k +
+                '">' +
+                k +
+                '</button>'
+              );
+            })
+            .join('')}
         </div>
       </div>
     </div>
@@ -138,8 +154,8 @@ function handleZhougongSubmit(container) {
 
 /** 渲染解梦结果 */
 function renderZhougongResult(container, result) {
-  var jiClass = result.ji === '吉' ? 'auspicious' : (result.ji === '凶' ? 'inauspicious' : 'neutral');
-  var jiEmoji = result.ji === '吉' ? '🌟' : (result.ji === '凶' ? '⚠️' : '🔮');
+  var jiClass = result.ji === '吉' ? 'auspicious' : result.ji === '凶' ? 'inauspicious' : 'neutral';
+  var jiEmoji = result.ji === '吉' ? '🌟' : result.ji === '凶' ? '⚠️' : '🔮';
 
   var html = '<div class="fade-in">';
 
@@ -158,8 +174,26 @@ function renderZhougongResult(container, result) {
   if (result.results && result.results.length > 0) {
     html += '<div class="card-grid cols-2 mb-24">';
     result.results.forEach(function (item) {
-      var itemJiClass = item.ji === '吉' ? 'auspicious' : (item.ji === '凶' ? 'inauspicious' : 'neutral');
-      var catName = ({天象:'🌤️',地理:'⛰️',人物:'👤',身体:'🦴',动物:'🐾',植物:'🌿',建筑:'🏠',器物:'🔧',衣饰:'👗',饮食:'🍜',文书:'📜',交通:'🚗',水火:'💧🔥',佛道:'🛕',丧葬:'⚰️',其他:'🔮'})[item.cat] || '🔮';
+      var itemJiClass = item.ji === '吉' ? 'auspicious' : item.ji === '凶' ? 'inauspicious' : 'neutral';
+      var catName =
+        {
+          天象: '🌤️',
+          地理: '⛰️',
+          人物: '👤',
+          身体: '🦴',
+          动物: '🐾',
+          植物: '🌿',
+          建筑: '🏠',
+          器物: '🔧',
+          衣饰: '👗',
+          饮食: '🍜',
+          文书: '📜',
+          交通: '🚗',
+          水火: '💧🔥',
+          佛道: '🛕',
+          丧葬: '⚰️',
+          其他: '🔮',
+        }[item.cat] || '🔮';
       html += `
         <div class="glass-card" style="padding:14px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">

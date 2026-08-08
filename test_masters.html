@@ -1,156 +1,264 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<title>大师蒸馏引擎 · 输出测试</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#0a0806;color:#e0dcd0;font-family:'Microsoft YaHei',sans-serif;padding:20px;line-height:1.7}
-  h1{color:#b89a5c;text-align:center;margin:20px 0;font-size:1.6rem}
-  .info{text-align:center;color:#8a8576;margin-bottom:30px;font-size:0.85rem}
-  .test{background:rgba(20,16,12,0.94);border:1px solid rgba(184,154,92,0.18);border-radius:14px;margin:20px auto;max-width:900px;padding:24px}
-  .test h2{color:#b89a5c;font-size:1.1rem;margin-bottom:12px;border-left:3px solid #b89a5c;padding-left:10px}
-  .test h3{color:#d4bb7c;font-size:0.95rem;margin:16px 0 8px}
-  .test p{color:#c0c0b8;font-size:0.9rem;margin:6px 0}
-  .test .label{color:#8a8576;font-size:0.78rem}
-  .test .verdict{background:rgba(184,154,92,0.1);border-left:3px solid #b89a5c;padding:10px 16px;margin:12px 0;border-radius:0 8px 8px 0}
-  .test .verdict p{color:#d4bb7c}
-  .stats{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:20px 0}
-  .stat{background:rgba(24,20,14,0.82);border:1px solid rgba(184,154,92,0.15);border-radius:10px;padding:12px 18px;text-align:center;min-width:80px}
-  .stat .num{color:#b89a5c;font-size:1.4rem;font-weight:700}
-  .stat .lbl{color:#8a8576;font-size:0.75rem}
-  pre{background:#1a1612;color:#a0a098;padding:12px;border-radius:8px;font-size:0.82rem;overflow-x:auto;white-space:pre-wrap;word-break:break-all}
-</style>
-</head>
-<body>
-
-<h1>大师蒸馏引擎 v2.0 · 输出质量测试</h1>
-<div class="info">测试八字：甲子年 丙寅月 壬午日 庚子时（身旺偏财格） | 纯前端算法，零API调用</div>
-
-<div class="stats">
-  <div class="stat"><div class="num" id="totalChars">-</div><div class="lbl">总输出字数</div></div>
-  <div class="stat"><div class="num" id="totalParas">-</div><div class="lbl">总段落数</div></div>
-  <div class="stat"><div class="num" id="avgDetail">-</div><div class="lbl">平均详细度</div></div>
-</div>
-
-<div id="results"></div>
-
-<script src="static/js/masters-engine.js"></script>
-<script>
-(function(){
-  'use strict';
-
-  // 测试八字数据 — 甲子年 丙寅月 壬午日 庚子时
-  var testBazi = {
-    year_pillar: '甲子',
-    month_pillar: '丙寅',
-    day_pillar: '壬午',
-    hour_pillar: '庚子',
-    ri_zhu: '壬',
-    ri_zhu_wuxing: '水',
-    gender: 'male',
-    bazi_str: '甲子 丙寅 壬午 庚子'
-  };
-
-  var testMasters = ['guiguzi', 'yuanli', 'zhugeliang', 'shaoyong', 'shenxiao'];
-  var testTypes = ['full', 'wealth', 'talent', 'balance', 'love'];
-
-  var resultsEl = document.getElementById('results');
-  var totalChars = 0;
-  var totalParas = 0;
-
-  function runAllTests() {
-    resultsEl.innerHTML = '';
-
-    for (var mi = 0; mi < testMasters.length; mi++) {
-      var masterId = testMasters[mi];
-      var master = MastersEngine.MASTERS[masterId];
-
-      for (var ti = 0; ti < testTypes.length; ti++) {
-        var analysisType = testTypes[ti];
-        var result = MastersEngine.analyze(masterId, analysisType, testBazi, 'male');
-
-        var typeLabel = MastersEngine.ANALYSIS_TYPES[analysisType].label;
-
-        var div = document.createElement('div');
-        div.className = 'test';
-
-        var fullText = result.opening + '\n\n' + result.overview + '\n\n' + result.specialty + '\n\n' + result.quote + '\n\n' + result.closing;
-        var charCount = fullText.replace(/\s/g, '').length;
-        var paraCount = fullText.split('\n\n').filter(function(p){ return p.trim().length > 0; }).length;
-        totalChars += charCount;
-        totalParas += paraCount;
-
-        var html = '<h2>' + master.name + '（' + master.era + '·' + master.category + '）— ' + typeLabel + '</h2>';
-        html += '<div class="label">字数：' + charCount + ' | 段落：' + paraCount + ' | 代言人：' + master.pronouns + '</div>';
-
-        // 开场
-        html += '<h3>一、开场</h3><p>' + escapeHtml(result.opening).replace(/\n/g, '<br>') + '</p>';
-
-        // 总论
-        html += '<h3>二、总论</h3>';
-        var overviewParts = result.overview.split('\n\n');
-        for (var oi = 0; oi < overviewParts.length; oi++) {
-          var op = overviewParts[oi].trim();
-          if (op) {
-            if (op.indexOf('【') === 0) {
-              html += '<p><strong>' + escapeHtml(op) + '</strong></p>';
-            } else {
-              html += '<p>' + escapeHtml(op) + '</p>';
-            }
-          }
-        }
-
-        // 专论
-        html += '<h3>三、专论</h3>';
-        var specialtyParts = result.specialty.split('\n\n');
-        for (var si = 0; si < specialtyParts.length; si++) {
-          var sp = specialtyParts[si].trim();
-          if (sp) {
-            if (sp.indexOf('【') === 0) {
-              var colonIdx = sp.indexOf('】');
-              var title = sp.substring(0, colonIdx + 1);
-              var content = sp.substring(colonIdx + 1);
-              html += '<p><strong>' + escapeHtml(title) + '</strong><br>' + escapeHtml(content) + '</p>';
-            } else {
-              html += '<p>' + escapeHtml(sp) + '</p>';
-            }
-          }
-        }
-
-        // 引用 + 结语
-        html += '<h3>四、经典引用</h3><p>' + escapeHtml(result.quote).replace(/\n/g, '<br>') + '</p>';
-        html += '<h3>五、结语</h3><p>' + escapeHtml(result.closing).replace(/\n/g, '<br>') + '</p>';
-
-        // 总体评价
-        html += '<div class="verdict"><p><strong>详细度评估：</strong>';
-        if (charCount > 800) {
-          html += '高 — 分析内容丰富，因果链完整，有具体建议';
-        } else if (charCount > 400) {
-          html += '中 — 有基本分析框架，但细节可进一步丰富';
-        } else {
-          html += '低 — 需要增加推理链和具体分析';
-        }
-        html += '</p></div>';
-
-        div.innerHTML = html;
-        resultsEl.appendChild(div);
+  <head>
+    <meta charset="UTF-8" />
+    <title>大师蒸馏引擎 · 输出测试</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-    }
+      body {
+        background: #0a0806;
+        color: #e0dcd0;
+        font-family: 'Microsoft YaHei', sans-serif;
+        padding: 20px;
+        line-height: 1.7;
+      }
+      h1 {
+        color: #b89a5c;
+        text-align: center;
+        margin: 20px 0;
+        font-size: 1.6rem;
+      }
+      .info {
+        text-align: center;
+        color: #8a8576;
+        margin-bottom: 30px;
+        font-size: 0.85rem;
+      }
+      .test {
+        background: rgba(20, 16, 12, 0.94);
+        border: 1px solid rgba(184, 154, 92, 0.18);
+        border-radius: 14px;
+        margin: 20px auto;
+        max-width: 900px;
+        padding: 24px;
+      }
+      .test h2 {
+        color: #b89a5c;
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+        border-left: 3px solid #b89a5c;
+        padding-left: 10px;
+      }
+      .test h3 {
+        color: #d4bb7c;
+        font-size: 0.95rem;
+        margin: 16px 0 8px;
+      }
+      .test p {
+        color: #c0c0b8;
+        font-size: 0.9rem;
+        margin: 6px 0;
+      }
+      .test .label {
+        color: #8a8576;
+        font-size: 0.78rem;
+      }
+      .test .verdict {
+        background: rgba(184, 154, 92, 0.1);
+        border-left: 3px solid #b89a5c;
+        padding: 10px 16px;
+        margin: 12px 0;
+        border-radius: 0 8px 8px 0;
+      }
+      .test .verdict p {
+        color: #d4bb7c;
+      }
+      .stats {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 20px 0;
+      }
+      .stat {
+        background: rgba(24, 20, 14, 0.82);
+        border: 1px solid rgba(184, 154, 92, 0.15);
+        border-radius: 10px;
+        padding: 12px 18px;
+        text-align: center;
+        min-width: 80px;
+      }
+      .stat .num {
+        color: #b89a5c;
+        font-size: 1.4rem;
+        font-weight: 700;
+      }
+      .stat .lbl {
+        color: #8a8576;
+        font-size: 0.75rem;
+      }
+      pre {
+        background: #1a1612;
+        color: #a0a098;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>大师蒸馏引擎 v2.0 · 输出质量测试</h1>
+    <div class="info">测试八字：甲子年 丙寅月 壬午日 庚子时（身旺偏财格） | 纯前端算法，零API调用</div>
 
-    // 更新统计
-    document.getElementById('totalChars').textContent = totalChars;
-    document.getElementById('totalParas').textContent = totalParas;
-    var avg = (totalChars / (testMasters.length * testTypes.length)).toFixed(0);
-    document.getElementById('avgDetail').textContent = avg;
-  }
+    <div class="stats">
+      <div class="stat">
+        <div class="num" id="totalChars">-</div>
+        <div class="lbl">总输出字数</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="totalParas">-</div>
+        <div class="lbl">总段落数</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="avgDetail">-</div>
+        <div class="lbl">平均详细度</div>
+      </div>
+    </div>
 
-  function escapeHtml(str) {
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
+    <div id="results"></div>
 
-  runAllTests();
-})();
-</script>
-</body>
+    <script src="static/js/masters-engine.js"></script>
+    <script>
+      (function () {
+        'use strict';
+
+        // 测试八字数据 — 甲子年 丙寅月 壬午日 庚子时
+        var testBazi = {
+          year_pillar: '甲子',
+          month_pillar: '丙寅',
+          day_pillar: '壬午',
+          hour_pillar: '庚子',
+          ri_zhu: '壬',
+          ri_zhu_wuxing: '水',
+          gender: 'male',
+          bazi_str: '甲子 丙寅 壬午 庚子',
+        };
+
+        var testMasters = ['guiguzi', 'yuanli', 'zhugeliang', 'shaoyong', 'shenxiao'];
+        var testTypes = ['full', 'wealth', 'talent', 'balance', 'love'];
+
+        var resultsEl = document.getElementById('results');
+        var totalChars = 0;
+        var totalParas = 0;
+
+        function runAllTests() {
+          resultsEl.innerHTML = '';
+
+          for (var mi = 0; mi < testMasters.length; mi++) {
+            var masterId = testMasters[mi];
+            var master = MastersEngine.MASTERS[masterId];
+
+            for (var ti = 0; ti < testTypes.length; ti++) {
+              var analysisType = testTypes[ti];
+              var result = MastersEngine.analyze(masterId, analysisType, testBazi, 'male');
+
+              var typeLabel = MastersEngine.ANALYSIS_TYPES[analysisType].label;
+
+              var div = document.createElement('div');
+              div.className = 'test';
+
+              var fullText =
+                result.opening +
+                '\n\n' +
+                result.overview +
+                '\n\n' +
+                result.specialty +
+                '\n\n' +
+                result.quote +
+                '\n\n' +
+                result.closing;
+              var charCount = fullText.replace(/\s/g, '').length;
+              var paraCount = fullText.split('\n\n').filter(function (p) {
+                return p.trim().length > 0;
+              }).length;
+              totalChars += charCount;
+              totalParas += paraCount;
+
+              var html =
+                '<h2>' + master.name + '（' + master.era + '·' + master.category + '）— ' + typeLabel + '</h2>';
+              html +=
+                '<div class="label">字数：' +
+                charCount +
+                ' | 段落：' +
+                paraCount +
+                ' | 代言人：' +
+                master.pronouns +
+                '</div>';
+
+              // 开场
+              html += '<h3>一、开场</h3><p>' + escapeHtml(result.opening).replace(/\n/g, '<br>') + '</p>';
+
+              // 总论
+              html += '<h3>二、总论</h3>';
+              var overviewParts = result.overview.split('\n\n');
+              for (var oi = 0; oi < overviewParts.length; oi++) {
+                var op = overviewParts[oi].trim();
+                if (op) {
+                  if (op.indexOf('【') === 0) {
+                    html += '<p><strong>' + escapeHtml(op) + '</strong></p>';
+                  } else {
+                    html += '<p>' + escapeHtml(op) + '</p>';
+                  }
+                }
+              }
+
+              // 专论
+              html += '<h3>三、专论</h3>';
+              var specialtyParts = result.specialty.split('\n\n');
+              for (var si = 0; si < specialtyParts.length; si++) {
+                var sp = specialtyParts[si].trim();
+                if (sp) {
+                  if (sp.indexOf('【') === 0) {
+                    var colonIdx = sp.indexOf('】');
+                    var title = sp.substring(0, colonIdx + 1);
+                    var content = sp.substring(colonIdx + 1);
+                    html += '<p><strong>' + escapeHtml(title) + '</strong><br>' + escapeHtml(content) + '</p>';
+                  } else {
+                    html += '<p>' + escapeHtml(sp) + '</p>';
+                  }
+                }
+              }
+
+              // 引用 + 结语
+              html += '<h3>四、经典引用</h3><p>' + escapeHtml(result.quote).replace(/\n/g, '<br>') + '</p>';
+              html += '<h3>五、结语</h3><p>' + escapeHtml(result.closing).replace(/\n/g, '<br>') + '</p>';
+
+              // 总体评价
+              html += '<div class="verdict"><p><strong>详细度评估：</strong>';
+              if (charCount > 800) {
+                html += '高 — 分析内容丰富，因果链完整，有具体建议';
+              } else if (charCount > 400) {
+                html += '中 — 有基本分析框架，但细节可进一步丰富';
+              } else {
+                html += '低 — 需要增加推理链和具体分析';
+              }
+              html += '</p></div>';
+
+              div.innerHTML = html;
+              resultsEl.appendChild(div);
+            }
+          }
+
+          // 更新统计
+          document.getElementById('totalChars').textContent = totalChars;
+          document.getElementById('totalParas').textContent = totalParas;
+          var avg = (totalChars / (testMasters.length * testTypes.length)).toFixed(0);
+          document.getElementById('avgDetail').textContent = avg;
+        }
+
+        function escapeHtml(str) {
+          return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        runAllTests();
+      })();
+    </script>
+  </body>
 </html>

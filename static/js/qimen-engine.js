@@ -9,30 +9,62 @@
 
   /** 二十四节气（近似公历日期） */
   var SOLAR_TERMS = [
-    { name: '冬至', month: 12, day: 22 }, { name: '小寒', month: 1, day: 6 },
-    { name: '大寒', month: 1, day: 20 }, { name: '立春', month: 2, day: 4 },
-    { name: '雨水', month: 2, day: 19 }, { name: '惊蛰', month: 3, day: 6 },
-    { name: '春分', month: 3, day: 21 }, { name: '清明', month: 4, day: 5 },
-    { name: '谷雨', month: 4, day: 20 }, { name: '立夏', month: 5, day: 6 },
-    { name: '小满', month: 5, day: 21 }, { name: '芒种', month: 6, day: 6 },
-    { name: '夏至', month: 6, day: 21 }, { name: '小暑', month: 7, day: 7 },
-    { name: '大暑', month: 7, day: 23 }, { name: '立秋', month: 8, day: 7 },
-    { name: '处暑', month: 8, day: 23 }, { name: '白露', month: 9, day: 8 },
-    { name: '秋分', month: 9, day: 23 }, { name: '寒露', month: 10, day: 8 },
-    { name: '霜降', month: 10, day: 23 }, { name: '立冬', month: 11, day: 7 },
-    { name: '小雪', month: 11, day: 22 }, { name: '大雪', month: 12, day: 7 }
+    { name: '冬至', month: 12, day: 22 },
+    { name: '小寒', month: 1, day: 6 },
+    { name: '大寒', month: 1, day: 20 },
+    { name: '立春', month: 2, day: 4 },
+    { name: '雨水', month: 2, day: 19 },
+    { name: '惊蛰', month: 3, day: 6 },
+    { name: '春分', month: 3, day: 21 },
+    { name: '清明', month: 4, day: 5 },
+    { name: '谷雨', month: 4, day: 20 },
+    { name: '立夏', month: 5, day: 6 },
+    { name: '小满', month: 5, day: 21 },
+    { name: '芒种', month: 6, day: 6 },
+    { name: '夏至', month: 6, day: 21 },
+    { name: '小暑', month: 7, day: 7 },
+    { name: '大暑', month: 7, day: 23 },
+    { name: '立秋', month: 8, day: 7 },
+    { name: '处暑', month: 8, day: 23 },
+    { name: '白露', month: 9, day: 8 },
+    { name: '秋分', month: 9, day: 23 },
+    { name: '寒露', month: 10, day: 8 },
+    { name: '霜降', month: 10, day: 23 },
+    { name: '立冬', month: 11, day: 7 },
+    { name: '小雪', month: 11, day: 22 },
+    { name: '大雪', month: 12, day: 7 },
   ];
 
   /** 阳遁节气局数：冬至→小寒→大寒→立春→雨水→惊蛰→春分→清明→谷雨→立夏→小满→芒种 */
   var YANG_DUN_JU = {
-    '冬至': 1, '小寒': 2, '大寒': 3, '立春': 8, '雨水': 9, '惊蛰': 1,
-    '春分': 3, '清明': 4, '谷雨': 5, '立夏': 4, '小满': 5, '芒种': 6
+    冬至: 1,
+    小寒: 2,
+    大寒: 3,
+    立春: 8,
+    雨水: 9,
+    惊蛰: 1,
+    春分: 3,
+    清明: 4,
+    谷雨: 5,
+    立夏: 4,
+    小满: 5,
+    芒种: 6,
   };
 
   /** 阴遁节气局数：夏至→小暑→大暑→立秋→处暑→白露→秋分→寒露→霜降→立冬→小雪→大雪 */
   var YIN_DUN_JU = {
-    '夏至': 9, '小暑': 8, '大暑': 7, '立秋': 2, '处暑': 1, '白露': 9,
-    '秋分': 7, '寒露': 6, '霜降': 5, '立冬': 6, '小雪': 5, '大雪': 4
+    夏至: 9,
+    小暑: 8,
+    大暑: 7,
+    立秋: 2,
+    处暑: 1,
+    白露: 9,
+    秋分: 7,
+    寒露: 6,
+    霜降: 5,
+    立冬: 6,
+    小雪: 5,
+    大雪: 4,
   };
 
   /** 天干 */
@@ -51,15 +83,32 @@
 
   /** 五鼠遁（日上起时）：日干 → 子时时干 */
   var WUSHUDUN = {
-    '甲': '甲', '己': '甲', '乙': '丙', '庚': '丙',
-    '丙': '戊', '辛': '戊', '丁': '庚', '壬': '庚', '戊': '壬', '癸': '壬'
+    甲: '甲',
+    己: '甲',
+    乙: '丙',
+    庚: '丙',
+    丙: '戊',
+    辛: '戊',
+    丁: '庚',
+    壬: '庚',
+    戊: '壬',
+    癸: '壬',
   };
 
   /** 时辰名称 → 地支 */
   var SHICHEN_MAP = {
-    '子时': '子', '丑时': '丑', '寅时': '寅', '卯时': '卯',
-    '辰时': '辰', '巳时': '巳', '午时': '午', '未时': '未',
-    '申时': '申', '酉时': '酉', '戌时': '戌', '亥时': '亥'
+    子时: '子',
+    丑时: '丑',
+    寅时: '寅',
+    卯时: '卯',
+    辰时: '辰',
+    巳时: '巳',
+    午时: '午',
+    未时: '未',
+    申时: '申',
+    酉时: '酉',
+    戌时: '戌',
+    亥时: '亥',
   };
 
   /** 九宫顺序：4 9 2 / 3 5 7 / 8 1 6 */
@@ -67,14 +116,28 @@
 
   /** 九宫名称 */
   var GONG_NAMES = {
-    1: '坎一宫', 2: '坤二宫', 3: '震三宫', 4: '巽四宫',
-    5: '中五宫', 6: '乾六宫', 7: '兑七宫', 8: '艮八宫', 9: '离九宫'
+    1: '坎一宫',
+    2: '坤二宫',
+    3: '震三宫',
+    4: '巽四宫',
+    5: '中五宫',
+    6: '乾六宫',
+    7: '兑七宫',
+    8: '艮八宫',
+    9: '离九宫',
   };
 
   /** 九宫五行 */
   var GONG_WUXING = {
-    1: '水', 2: '土', 3: '木', 4: '木', 5: '土',
-    6: '金', 7: '金', 8: '土', 9: '火'
+    1: '水',
+    2: '土',
+    3: '木',
+    4: '木',
+    5: '土',
+    6: '金',
+    7: '金',
+    8: '土',
+    9: '火',
   };
 
   /** 九星 */
@@ -82,8 +145,15 @@
 
   /** 九星原始宫位（对应天盘九宫） */
   var STAR_HOME = {
-    '天蓬': 1, '天芮': 2, '天冲': 3, '天辅': 4,
-    '天禽': 5, '天心': 6, '天柱': 7, '天任': 8, '天英': 9
+    天蓬: 1,
+    天芮: 2,
+    天冲: 3,
+    天辅: 4,
+    天禽: 5,
+    天心: 6,
+    天柱: 7,
+    天任: 8,
+    天英: 9,
   };
 
   /** 八门 */
@@ -91,8 +161,14 @@
 
   /** 八门原始宫位 */
   var DOOR_HOME = {
-    '休门': 1, '生门': 8, '伤门': 3, '杜门': 4,
-    '景门': 9, '死门': 2, '惊门': 7, '开门': 6
+    休门: 1,
+    生门: 8,
+    伤门: 3,
+    杜门: 4,
+    景门: 9,
+    死门: 2,
+    惊门: 7,
+    开门: 6,
   };
 
   /** 八神：阳遁顺排，阴遁逆排 */
@@ -100,12 +176,22 @@
 
   /** 天干 → 六甲旬首（甲子戊、甲戌己、甲申庚、甲午辛、甲辰壬、甲寅癸） */
   var LIUJIA_XUNSHOU = {
-    '戊': '甲子', '己': '甲戌', '庚': '甲申', '辛': '甲午', '壬': '甲辰', '癸': '甲寅'
+    戊: '甲子',
+    己: '甲戌',
+    庚: '甲申',
+    辛: '甲午',
+    壬: '甲辰',
+    癸: '甲寅',
   };
 
   /** 六甲旬首 → 地支 */
   var XUNSHOU_ZHI = {
-    '甲子': '子', '甲戌': '戌', '甲申': '申', '甲午': '午', '甲辰': '辰', '甲寅': '寅'
+    甲子: '子',
+    甲戌: '戌',
+    甲申: '申',
+    甲午: '午',
+    甲辰: '辰',
+    甲寅: '寅',
   };
 
   /* ========== 二、日期计算工具 ========== */
@@ -152,7 +238,7 @@
     var targetDate = new Date(year, month - 1, day);
     var diffDays = Math.floor((targetDate - baseDate) / (1000 * 60 * 60 * 24));
     var baseIdx = JIAZI_INDEX['甲戌'] || 11;
-    var idx = ((baseIdx + diffDays) % 60 + 60) % 60;
+    var idx = (((baseIdx + diffDays) % 60) + 60) % 60;
     return SIXTY_JIAZI[idx];
   }
 
@@ -217,7 +303,9 @@
         break;
       }
     }
-    if (zhiFuGong === null) { zhiFuGong = 1; }
+    if (zhiFuGong === null) {
+      zhiFuGong = 1;
+    }
 
     // 该宫位的原始星即为值符星
     var zhiFuStar = STARS[zhiFuGong - 1]; // 天蓬星在1宫...
@@ -283,7 +371,10 @@
 
     // 旋转八门
     var gongSeq = period === '阴遁' ? [1, 9, 8, 7, 6, 5, 4, 3, 2] : [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    var doorSeq = period === '阴遁' ? ['休门', '生门', '伤门', '杜门', '景门', '死门', '惊门', '开门'] : ['休门', '生门', '伤门', '杜门', '景门', '死门', '惊门', '开门'];
+    var doorSeq =
+      period === '阴遁'
+        ? ['休门', '生门', '伤门', '杜门', '景门', '死门', '惊门', '开门']
+        : ['休门', '生门', '伤门', '杜门', '景门', '死门', '惊门', '开门'];
 
     for (var d = 0; d < doorSeq.length; d++) {
       var homeGong = DOOR_HOME[doorSeq[d]] || 1;
@@ -368,9 +459,21 @@
 
     lines.push('');
     if (auspiciousCount > inauspiciousCount) {
-      lines.push('【综合判断】此局吉多凶少，' + auspiciousCount + '宫得吉，' + inauspiciousCount + '宫不吉。总体运势向好，宜把握时机，积极进取。');
+      lines.push(
+        '【综合判断】此局吉多凶少，' +
+          auspiciousCount +
+          '宫得吉，' +
+          inauspiciousCount +
+          '宫不吉。总体运势向好，宜把握时机，积极进取。'
+      );
     } else if (auspiciousCount < inauspiciousCount) {
-      lines.push('【综合判断】此局凶多吉少，' + inauspiciousCount + '宫不吉，' + auspiciousCount + '宫得吉。宜守不宜攻，谨慎行事，避免重大决策。');
+      lines.push(
+        '【综合判断】此局凶多吉少，' +
+          inauspiciousCount +
+          '宫不吉，' +
+          auspiciousCount +
+          '宫得吉。宜守不宜攻，谨慎行事，避免重大决策。'
+      );
     } else {
       lines.push('【综合判断】此局吉凶参半，宜权衡利弊，取吉避凶。可参考各宫门星神之吉凶，择吉方而动。');
     }
@@ -420,7 +523,32 @@
     // 解析时辰
     if (!shichen) {
       var nowHour = new Date().getHours();
-      var shichenNames = ['子时', '丑时', '丑时', '寅时', '寅时', '卯时', '卯时', '辰时', '辰时', '巳时', '巳时', '午时', '午时', '未时', '未时', '申时', '申时', '酉时', '酉时', '戌时', '戌时', '亥时', '亥时', '子时'];
+      var shichenNames = [
+        '子时',
+        '丑时',
+        '丑时',
+        '寅时',
+        '寅时',
+        '卯时',
+        '卯时',
+        '辰时',
+        '辰时',
+        '巳时',
+        '巳时',
+        '午时',
+        '午时',
+        '未时',
+        '未时',
+        '申时',
+        '申时',
+        '酉时',
+        '酉时',
+        '戌时',
+        '戌时',
+        '亥时',
+        '亥时',
+        '子时',
+      ];
       shichen = shichenNames[nowHour] || '子时';
     }
 
@@ -481,9 +609,9 @@
       cells[pos] = {
         di_pan: diPan[pos] || '',
         tian_pan: tianPan[pos] || '',
-        door: pos === 5 ? '' : (doorPan[pos] || ''),
+        door: pos === 5 ? '' : doorPan[pos] || '',
         star: starPan[pos] || '',
-        god: pos === 5 ? '' : (godPan[pos] || '')
+        god: pos === 5 ? '' : godPan[pos] || '',
       };
     }
 
@@ -499,7 +627,7 @@
       time_gz: timeGZ,
       shichen: shichen,
       cells: cells,
-      interpretation: interpretation
+      interpretation: interpretation,
     };
   }
 
@@ -508,7 +636,6 @@
     divine: divine,
     SOLAR_TERMS: SOLAR_TERMS,
     YANG_DUN_JU: YANG_DUN_JU,
-    YIN_DUN_JU: YIN_DUN_JU
+    YIN_DUN_JU: YIN_DUN_JU,
   };
-
 })(typeof window !== 'undefined' ? window : this);

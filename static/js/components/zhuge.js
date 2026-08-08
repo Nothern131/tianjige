@@ -60,9 +60,17 @@ function renderZhugeComponent() {
       <div class="form-group" style="margin-top:20px;">
         <label class="form-label">🔮 你所问之事（可选）—— 想通过此签了解哪个方面的运势？</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="zhuge-domain-tags">
-          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行'].map(function(d) {
-            return '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' + d + '">' + d + '</button>';
-          }).join('')}
+          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行']
+            .map(function (d) {
+              return (
+                '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' +
+                d +
+                '">' +
+                d +
+                '</button>'
+              );
+            })
+            .join('')}
         </div>
         <input type="text" class="form-input" id="zhuge-question-text" placeholder="或输入你想问的具体问题，如：最近事业运如何？...">
       </div>
@@ -97,7 +105,9 @@ function renderZhugeComponent() {
     var domainText = btn.dataset.domain.replace(/^[^\s]+\s/, '');
     questionInput.value = '最近' + domainText + '运如何？';
     var allBtns = container.querySelectorAll('#zhuge-domain-tags button');
-    for (var i = 0; i < allBtns.length; i++) { allBtns[i].classList.remove('active'); }
+    for (var i = 0; i < allBtns.length; i++) {
+      allBtns[i].classList.remove('active');
+    }
     btn.classList.add('active');
   });
 
@@ -154,7 +164,14 @@ async function handleZhugeSubmit(container, params) {
     if (question && typeof DomainAnalysis !== 'undefined') {
       var qaResult = DomainAnalysis.analyze('zhuge', result, question);
       if (qaResult) {
-        questionAnalysisHtml = '<hr class="section-divider"><div class="analysis-section" style="background:rgba(184,154,92,0.03);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;margin-top:20px;"><h3 style="color:var(--gold-light);">' + qaResult.domain.icon + ' 所问之事：' + qaResult.domain.name + '</h3><div class="analysis-content">' + formatAnalysisText(qaResult.analysis) + '</div></div>';
+        questionAnalysisHtml =
+          '<hr class="section-divider"><div class="analysis-section" style="background:rgba(184,154,92,0.03);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;margin-top:20px;"><h3 style="color:var(--gold-light);">' +
+          qaResult.domain.icon +
+          ' 所问之事：' +
+          qaResult.domain.name +
+          '</h3><div class="analysis-content">' +
+          formatAnalysisText(qaResult.analysis) +
+          '</div></div>';
       }
     }
 
@@ -183,11 +200,15 @@ function renderZhugeResult(container, result, questionAnalysisHtml) {
         <h4 style="color:var(--gold);margin-bottom:12px;">解签</h4>
         <p>${escapeHtml(result.interpretation || '暂无解签内容')}</p>
       </div>
-      ${result.verdict ? `
+      ${
+        result.verdict
+          ? `
         <div class="verdict-block mt-24">
           <div class="verdict-text">${escapeHtml(result.verdict)}</div>
         </div>
-      ` : ''}
+      `
+          : ''
+      }
       ${questionAnalysisHtml || ''}
     </div>
   `;

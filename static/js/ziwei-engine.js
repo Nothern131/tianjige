@@ -15,7 +15,20 @@
   var GONG_NAMES = ['命宫', '兄弟', '夫妻', '子女', '财帛', '疾厄', '迁移', '交友', '官禄', '田宅', '福德', '父母'];
 
   // 地支五行
-  var ZHI_WX = { 子: '水', 丑: '土', 寅: '木', 卯: '木', 辰: '土', 巳: '火', 午: '火', 未: '土', 申: '金', 酉: '金', 戌: '土', 亥: '水' };
+  var ZHI_WX = {
+    子: '水',
+    丑: '土',
+    寅: '木',
+    卯: '木',
+    辰: '土',
+    巳: '火',
+    午: '火',
+    未: '土',
+    申: '金',
+    酉: '金',
+    戌: '土',
+    亥: '水',
+  };
 
   // 天干五行
   var GAN_WX = { 甲: '木', 乙: '木', 丙: '火', 丁: '火', 戊: '土', 己: '土', 庚: '金', 辛: '金', 壬: '水', 癸: '水' };
@@ -44,7 +57,7 @@
     var info = LUNAR_INFO[year];
     if (!info) {
       // 默认按立春约2月4日估算
-      var lunarYear = (month < 2 || (month === 2 && day < 4)) ? year - 1 : year;
+      var lunarYear = month < 2 || (month === 2 && day < 4) ? year - 1 : year;
       var solarDate = new Date(year, month - 1, day);
       var springDate = new Date(year, 1, 4); // 2月4日立春
       var diffDays = Math.floor((solarDate - springDate) / (1000 * 60 * 60 * 24));
@@ -108,7 +121,18 @@
    * 生年干定寅首天干：
    * 甲己→丙寅，乙庚→戊寅，丙辛→庚寅，丁壬→壬寅，戊癸→甲寅
    */
-  var YIN_SHOU_GAN = { 甲: '丙', 己: '丙', 乙: '戊', 庚: '戊', 丙: '庚', 辛: '庚', 丁: '壬', 壬: '壬', 戊: '甲', 癸: '甲' };
+  var YIN_SHOU_GAN = {
+    甲: '丙',
+    己: '丙',
+    乙: '戊',
+    庚: '戊',
+    丙: '庚',
+    辛: '庚',
+    丁: '壬',
+    壬: '壬',
+    戊: '甲',
+    癸: '甲',
+  };
 
   function buildGongGan(yearGan) {
     var yinGan = YIN_SHOU_GAN[yearGan] || '甲';
@@ -126,8 +150,66 @@
    * 简化版：直接用命宫天干地支查表
    */
   var NAYIN_WX = [
-    '金','金','火','火','木','木','土','土','金','金','火','火','水','水','土','土','金','金','木','木','水','水','土','土','火','火','木','木','水','水',
-    '火','火','土','土','木','木','水','水','金','金','土','土','木','木','水','水','金','金','火','火','木','木','水','水','金','金','火','火','土','土'
+    '金',
+    '金',
+    '火',
+    '火',
+    '木',
+    '木',
+    '土',
+    '土',
+    '金',
+    '金',
+    '火',
+    '火',
+    '水',
+    '水',
+    '土',
+    '土',
+    '金',
+    '金',
+    '木',
+    '木',
+    '水',
+    '水',
+    '土',
+    '土',
+    '火',
+    '火',
+    '木',
+    '木',
+    '水',
+    '水',
+    '火',
+    '火',
+    '土',
+    '土',
+    '木',
+    '木',
+    '水',
+    '水',
+    '金',
+    '金',
+    '土',
+    '土',
+    '木',
+    '木',
+    '水',
+    '水',
+    '金',
+    '金',
+    '火',
+    '火',
+    '木',
+    '木',
+    '水',
+    '水',
+    '金',
+    '金',
+    '火',
+    '火',
+    '土',
+    '土',
   ];
 
   var WX_JU_NUM = { 金: 4, 木: 3, 水: 2, 火: 6, 土: 5 };
@@ -164,7 +246,7 @@
 
     // 确保在1-12范围内，对应寅1到丑12
     // 紫微星从寅宫(2)开始安
-    ziWeiPos = ((ziWeiPos - 1) % 12 + 12) % 12;
+    ziWeiPos = (((ziWeiPos - 1) % 12) + 12) % 12;
     return ZHI[ziWeiPos];
   }
 
@@ -176,8 +258,18 @@
 
   // 紫微→天府位置映射
   var ZIWEI_TO_TIANFU = {
-    子: '辰', 丑: '卯', 寅: '辰', 卯: '丑', 辰: '子', 巳: '亥',
-    午: '戌', 未: '酉', 申: '申', 酉: '未', 戌: '午', 亥: '巳'
+    子: '辰',
+    丑: '卯',
+    寅: '辰',
+    卯: '丑',
+    辰: '子',
+    巳: '亥',
+    午: '戌',
+    未: '酉',
+    申: '申',
+    酉: '未',
+    戌: '午',
+    亥: '巳',
   };
 
   function anShiSiZhuXing(ziWeiZhi) {
@@ -269,17 +361,50 @@
     fuXing[ZHI[wenQuPos]] = (fuXing[ZHI[wenQuPos]] || []).concat(['文曲']);
 
     // 天魁：甲戊庚→丑未，乙己→子申，丙丁→亥酉，壬癸→卯巳，辛→午寅
-    var tianKuiMap = { 甲: '丑', 戊: '丑', 庚: '丑', 乙: '子', 己: '子', 丙: '亥', 丁: '亥', 壬: '卯', 癸: '卯', 辛: '午' };
+    var tianKuiMap = {
+      甲: '丑',
+      戊: '丑',
+      庚: '丑',
+      乙: '子',
+      己: '子',
+      丙: '亥',
+      丁: '亥',
+      壬: '卯',
+      癸: '卯',
+      辛: '午',
+    };
     var tianKui = tianKuiMap[yearGan] || '丑';
     fuXing[tianKui] = (fuXing[tianKui] || []).concat(['天魁']);
 
     // 天钺
-    var tianYueMap = { 甲: '未', 戊: '未', 庚: '未', 乙: '申', 己: '申', 丙: '酉', 丁: '酉', 壬: '巳', 癸: '巳', 辛: '寅' };
+    var tianYueMap = {
+      甲: '未',
+      戊: '未',
+      庚: '未',
+      乙: '申',
+      己: '申',
+      丙: '酉',
+      丁: '酉',
+      壬: '巳',
+      癸: '巳',
+      辛: '寅',
+    };
     var tianYue = tianYueMap[yearGan] || '未';
     fuXing[tianYue] = (fuXing[tianYue] || []).concat(['天钺']);
 
     // 禄存：甲→寅，乙→卯，丙戊→巳，丁己→午，庚→申，辛→酉，壬→亥，癸→子
-    var luCunMap = { 甲: '寅', 乙: '卯', 丙: '巳', 丁: '午', 戊: '巳', 己: '午', 庚: '申', 辛: '酉', 壬: '亥', 癸: '子' };
+    var luCunMap = {
+      甲: '寅',
+      乙: '卯',
+      丙: '巳',
+      丁: '午',
+      戊: '巳',
+      己: '午',
+      庚: '申',
+      辛: '酉',
+      壬: '亥',
+      癸: '子',
+    };
     var luCun = luCunMap[yearGan] || '寅';
     fuXing[luCun] = (fuXing[luCun] || []).concat(['禄存']);
 
@@ -293,12 +418,38 @@
     fuXing[ZHI[tuoLuoPos]] = (fuXing[ZHI[tuoLuoPos]] || []).concat(['陀罗']);
 
     // 火星：寅午戌→丑，申子辰→寅，巳酉丑→卯，亥卯未→酉
-    var huoXingMap = { 寅: '丑', 午: '丑', 戌: '丑', 申: '寅', 子: '寅', 辰: '寅', 巳: '卯', 酉: '卯', 丑: '卯', 亥: '酉', 卯: '酉', 未: '酉' };
+    var huoXingMap = {
+      寅: '丑',
+      午: '丑',
+      戌: '丑',
+      申: '寅',
+      子: '寅',
+      辰: '寅',
+      巳: '卯',
+      酉: '卯',
+      丑: '卯',
+      亥: '酉',
+      卯: '酉',
+      未: '酉',
+    };
     var huoXing = huoXingMap[yearZhi] || '寅';
     fuXing[huoXing] = (fuXing[huoXing] || []).concat(['火星']);
 
     // 铃星：寅午戌→卯，申子辰→戌，巳酉丑→戌，亥卯未→戌
-    var lingXingMap = { 寅: '卯', 午: '卯', 戌: '卯', 申: '戌', 子: '戌', 辰: '戌', 巳: '戌', 酉: '戌', 丑: '戌', 亥: '戌', 卯: '戌', 未: '戌' };
+    var lingXingMap = {
+      寅: '卯',
+      午: '卯',
+      戌: '卯',
+      申: '戌',
+      子: '戌',
+      辰: '戌',
+      巳: '戌',
+      酉: '戌',
+      丑: '戌',
+      亥: '戌',
+      卯: '戌',
+      未: '戌',
+    };
     var lingXing = lingXingMap[yearZhi] || '戌';
     fuXing[lingXing] = (fuXing[lingXing] || []).concat(['铃星']);
 
@@ -337,7 +488,7 @@
     庚: { lu: '太阳', quan: '武曲', ke: '太阴', ji: '天同' },
     辛: { lu: '巨门', quan: '太阳', ke: '文曲', ji: '文昌' },
     壬: { lu: '天梁', quan: '紫微', ke: '左辅', ji: '武曲' },
-    癸: { lu: '破军', quan: '巨门', ke: '太阴', ji: '贪狼' }
+    癸: { lu: '破军', quan: '巨门', ke: '太阴', ji: '贪狼' },
   };
 
   /* ========== 十、十二宫构建 ========== */
@@ -351,7 +502,7 @@
         name: GONG_NAMES[i],
         zhi: zhi,
         gan: gongGan[zhi],
-        ganZhi: gongGan[zhi] + zhi
+        ganZhi: gongGan[zhi] + zhi,
       });
     }
     return gongs;
@@ -375,7 +526,20 @@
     var isLunar = params.isLunar || false;
 
     // 时辰地支
-    var shichenMap = { 子时: '子', 丑时: '丑', 寅时: '寅', 卯时: '卯', 辰时: '辰', 巳时: '巳', 午时: '午', 未时: '未', 申时: '申', 酉时: '酉', 戌时: '戌', 亥时: '亥' };
+    var shichenMap = {
+      子时: '子',
+      丑时: '丑',
+      寅时: '寅',
+      卯时: '卯',
+      辰时: '辰',
+      巳时: '巳',
+      午时: '午',
+      未时: '未',
+      申时: '申',
+      酉时: '酉',
+      戌时: '戌',
+      亥时: '亥',
+    };
     var shichen = shichenMap[hour] || '子';
 
     // 农历转换
@@ -390,7 +554,7 @@
     var baseYear = 1900;
     var yearOffset = lunar.year - baseYear;
     var baseIdx = JIAZI_INDEX['庚子'] || 0;
-    var yearGzIdx = ((baseIdx + yearOffset) % 60 + 60) % 60;
+    var yearGzIdx = (((baseIdx + yearOffset) % 60) + 60) % 60;
     var yearGan = GAN[yearGzIdx % 10];
     var yearZhi = ZHI[yearGzIdx % 12];
 
@@ -439,8 +603,8 @@
     for (var i = 0; i < gongs.length; i++) {
       var gong = gongs[i];
       gong.stars = allStars[gong.zhi] || [];
-      gong.isMingGong = (gong.zhi === mingGongZhi);
-      gong.isShenGong = (gong.zhi === shenGongZhi);
+      gong.isMingGong = gong.zhi === mingGongZhi;
+      gong.isShenGong = gong.zhi === shenGongZhi;
     }
 
     // 命宫主星
@@ -448,7 +612,24 @@
     var mingGongZhuXing = [];
     for (var si = 0; si < mingGongStars.length; si++) {
       var s = mingGongStars[si];
-      if (['紫微','天机','太阳','武曲','天同','廉贞','天府','太阴','贪狼','巨门','天相','天梁','七杀','破军'].indexOf(s) !== -1) {
+      if (
+        [
+          '紫微',
+          '天机',
+          '太阳',
+          '武曲',
+          '天同',
+          '廉贞',
+          '天府',
+          '太阴',
+          '贪狼',
+          '巨门',
+          '天相',
+          '天梁',
+          '七杀',
+          '破军',
+        ].indexOf(s) !== -1
+      ) {
         mingGongZhuXing.push(s);
       }
     }
@@ -474,7 +655,7 @@
       紫微星落: ziWeiZhi,
       所有星曜: allStars,
       interpretation: interpretation,
-      总体运势: overallVerdict
+      总体运势: overallVerdict,
     };
   }
 
@@ -487,7 +668,9 @@
     // 命宫分析
     var mingGong = findGong(gongs, mingGongZhi);
     var mingStars = mingGong ? mingGong.stars : [];
-    lines.push('命宫在' + mingGongZhi + '（' + (mingGong ? mingGong.ganZhi : '') + '），' + wuxingJu.wx + wuxingJu.ju + '局。');
+    lines.push(
+      '命宫在' + mingGongZhi + '（' + (mingGong ? mingGong.ganZhi : '') + '），' + wuxingJu.wx + wuxingJu.ju + '局。'
+    );
 
     if (mingStars.length > 0) {
       lines.push('命宫主星：' + mingStars.join('、'));
@@ -500,7 +683,9 @@
     lines.push('身宫在' + shenGongZhi + '（' + (shenGong ? shenGong.name : '') + '），主后天发展重心所在。');
 
     // 四化
-    lines.push('四化：' + yearGan + '干→化禄' + siHua.lu + '、化权' + siHua.quan + '、化科' + siHua.ke + '、化忌' + siHua.ji);
+    lines.push(
+      '四化：' + yearGan + '干→化禄' + siHua.lu + '、化权' + siHua.quan + '、化科' + siHua.ke + '、化忌' + siHua.ji
+    );
 
     // 十二宫概况
     lines.push('【十二宫星曜分布】');
@@ -533,20 +718,20 @@
 
     // 主星特质
     var starTraits = {
-      '紫微': '帝星坐命，天生有领导气质，自尊心强，好面子，有管理才能。',
-      '天机': '智星坐命，思维敏捷，善于谋划，但有时想太多而行动不足。',
-      '太阳': '日星坐命，热情开朗，光明磊落，乐于助人，但有时过于主观。',
-      '武曲': '财星坐命，刚毅果断，执行力强，善于理财，但有时过于刚硬。',
-      '天同': '福星坐命，性情温和，知足常乐，人缘好，但有时缺乏进取心。',
-      '廉贞': '囚星坐命，心思细腻，有艺术天赋，但有时情绪化，易纠结。',
-      '天府': '库星坐命，稳重踏实，有包容心，善于守成，但有时过于保守。',
-      '太阴': '月星坐命，温柔细腻，有审美品味，善于理财，但有时过于内敛。',
-      '贪狼': '桃花星坐命，多才多艺，交际广泛，欲望强，但有时过于贪心。',
-      '巨门': '暗星坐命，口才好，善辩论，但有时言语犀利，易得罪人。',
-      '天相': '印星坐命，公正无私，乐于助人，有服务精神，但有时过于刻板。',
-      '天梁': '荫星坐命，有长者风范，乐于提携后辈，但有时过于清高。',
-      '七杀': '将星坐命，勇敢果断，有开拓精神，但有时过于冲动，缺乏耐心。',
-      '破军': '耗星坐命，敢作敢为，有创新精神，但有时破坏力强，不按常理出牌。'
+      紫微: '帝星坐命，天生有领导气质，自尊心强，好面子，有管理才能。',
+      天机: '智星坐命，思维敏捷，善于谋划，但有时想太多而行动不足。',
+      太阳: '日星坐命，热情开朗，光明磊落，乐于助人，但有时过于主观。',
+      武曲: '财星坐命，刚毅果断，执行力强，善于理财，但有时过于刚硬。',
+      天同: '福星坐命，性情温和，知足常乐，人缘好，但有时缺乏进取心。',
+      廉贞: '囚星坐命，心思细腻，有艺术天赋，但有时情绪化，易纠结。',
+      天府: '库星坐命，稳重踏实，有包容心，善于守成，但有时过于保守。',
+      太阴: '月星坐命，温柔细腻，有审美品味，善于理财，但有时过于内敛。',
+      贪狼: '桃花星坐命，多才多艺，交际广泛，欲望强，但有时过于贪心。',
+      巨门: '暗星坐命，口才好，善辩论，但有时言语犀利，易得罪人。',
+      天相: '印星坐命，公正无私，乐于助人，有服务精神，但有时过于刻板。',
+      天梁: '荫星坐命，有长者风范，乐于提携后辈，但有时过于清高。',
+      七杀: '将星坐命，勇敢果断，有开拓精神，但有时过于冲动，缺乏耐心。',
+      破军: '耗星坐命，敢作敢为，有创新精神，但有时破坏力强，不按常理出牌。',
     };
 
     for (var i = 0; i < stars.length; i++) {
@@ -561,7 +746,17 @@
     }
 
     // 四化影响
-    lines.push('  四化影响：' + siHua.lu + '化禄（财禄之喜）、' + siHua.quan + '化权（权力之增）、' + siHua.ke + '化科（名声之显）、' + siHua.ji + '化忌（波折之象）。');
+    lines.push(
+      '  四化影响：' +
+        siHua.lu +
+        '化禄（财禄之喜）、' +
+        siHua.quan +
+        '化权（权力之增）、' +
+        siHua.ke +
+        '化科（名声之显）、' +
+        siHua.ji +
+        '化忌（波折之象）。'
+    );
 
     return lines.join('\n');
   }
@@ -569,7 +764,8 @@
   function judgeOverall(mingGongZhuXing, mingGongZhi, allStars) {
     var jiStars = ['紫微', '天府', '太阳', '天相', '天梁', '天同', '太阴'];
     var xiongStars = ['七杀', '破军', '贪狼', '巨门', '廉贞'];
-    var jiCount = 0, xiongCount = 0;
+    var jiCount = 0,
+      xiongCount = 0;
 
     for (var i = 0; i < mingGongZhuXing.length; i++) {
       if (jiStars.indexOf(mingGongZhuXing[i]) !== -1) jiCount++;
@@ -584,7 +780,6 @@
   /* ========== 公开 API ========== */
   global.ZiWeiEngine = {
     paipan: paipan,
-    GONG_NAMES: GONG_NAMES
+    GONG_NAMES: GONG_NAMES,
   };
-
 })(typeof window !== 'undefined' ? window : this);

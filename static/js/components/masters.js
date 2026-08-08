@@ -15,11 +15,13 @@ function renderMastersPanel(container, options) {
   'use strict';
   var opts = options || {};
   var masters = opts.masters || [];
-  var analysisTypes = opts.analysisTypes || [
-    { id: 'full', label: '全盘分析' }
-  ];
+  var analysisTypes = opts.analysisTypes || [{ id: 'full', label: '全盘分析' }];
   var category = opts.category || '';
-  var onAnalyze = opts.onAnalyze || function() { return null; };
+  var onAnalyze =
+    opts.onAnalyze ||
+    function () {
+      return null;
+    };
   var resultData = opts.resultData || {};
 
   var selectedMaster = null;
@@ -27,16 +29,16 @@ function renderMastersPanel(container, options) {
 
   // 流派标签颜色
   var categoryColors = {
-    '八字': 'var(--gold)',
-    '六爻': '#c9a03c',
-    '奇门': '#4a9a8c',
-    '紫微': '#8a6ab8',
-    '大六壬': '#4a8ac9',
-    '风水': '#6a9a4a',
-    '梅花': '#c96a8a',
-    '太乙': '#8a8ac9',
-    '解梦': '#6a6a9a',
-    '综合': '#9a8a6a'
+    八字: 'var(--gold)',
+    六爻: '#c9a03c',
+    奇门: '#4a9a8c',
+    紫微: '#8a6ab8',
+    大六壬: '#4a8ac9',
+    风水: '#6a9a4a',
+    梅花: '#c96a8a',
+    太乙: '#8a8ac9',
+    解梦: '#6a6a9a',
+    综合: '#9a8a6a',
   };
 
   var html = '';
@@ -44,12 +46,16 @@ function renderMastersPanel(container, options) {
   // 标题
   html += '<div class="section-header">';
   html += '<h2 class="page-title">大师点评</h2>';
-  html += '<p class="page-subtitle">' + (category ? category + '流派 · ' + masters.length + '位大师，选择一位为汝解盘' : '选择一位大师，以古法解今盘') + '</p>';
+  html +=
+    '<p class="page-subtitle">' +
+    (category ? category + '流派 · ' + masters.length + '位大师，选择一位为汝解盘' : '选择一位大师，以古法解今盘') +
+    '</p>';
   html += '</div>';
 
   // 大师选择区
   html += '<div class="glass-card mb-24" id="masters-select-panel">';
-  html += '<h3 style="font-family:var(--font-serif);color:var(--gold);margin-bottom:16px;font-size:1rem;">选择一位大师</h3>';
+  html +=
+    '<h3 style="font-family:var(--font-serif);color:var(--gold);margin-bottom:16px;font-size:1rem;">选择一位大师</h3>';
   html += '<div class="master-cat-grid" id="masters-grid">';
   for (var i = 0; i < masters.length; i++) {
     var m = masters[i];
@@ -57,7 +63,11 @@ function renderMastersPanel(container, options) {
     html += '<div class="master-avatar">' + (m.avatar || '⭐') + '</div>';
     html += '<div class="master-name">' + m.name + '</div>';
     html += '<div class="master-title">' + (m.title || '') + '</div>';
-    html += '<div class="master-era">' + (m.era || '') + (m.style ? ' · ' + (m.style.split('，')[0] || m.style.split('，')[0]) : '') + '</div>';
+    html +=
+      '<div class="master-era">' +
+      (m.era || '') +
+      (m.style ? ' · ' + (m.style.split('，')[0] || m.style.split('，')[0]) : '') +
+      '</div>';
     html += '</div>';
   }
   html += '</div>';
@@ -65,18 +75,27 @@ function renderMastersPanel(container, options) {
   // 分析类型选择
   if (analysisTypes.length > 1) {
     html += '<div class="form-group mt-8">';
-    html += '<label class="form-label" style="font-size:0.72rem;color:var(--text2);margin-bottom:6px;letter-spacing:0.05em;">分析类型</label>';
+    html +=
+      '<label class="form-label" style="font-size:0.72rem;color:var(--text2);margin-bottom:6px;letter-spacing:0.05em;">分析类型</label>';
     html += '<div class="tabs" id="master-type-tabs" style="margin-bottom:0;border-bottom:none;">';
     for (var j = 0; j < analysisTypes.length; j++) {
       var t = analysisTypes[j];
-      html += '<button class="tab-btn' + (t.id === selectedType ? ' active' : '') + '" data-type="' + t.id + '">' + t.label + '</button>';
+      html +=
+        '<button class="tab-btn' +
+        (t.id === selectedType ? ' active' : '') +
+        '" data-type="' +
+        t.id +
+        '">' +
+        t.label +
+        '</button>';
     }
     html += '</div>';
     html += '</div>';
   }
 
   // 分析按钮
-  html += '<button class="btn-gold lg" id="master-analyze-btn" style="width:100%;margin-top:12px;" disabled>请先选择一位大师</button>';
+  html +=
+    '<button class="btn-gold lg" id="master-analyze-btn" style="width:100%;margin-top:12px;" disabled>请先选择一位大师</button>';
   html += '</div>';
 
   // 结果区域
@@ -88,17 +107,22 @@ function renderMastersPanel(container, options) {
 
   // 大师选择事件
   var grid = container.querySelector('#masters-grid');
-  grid.addEventListener('click', function(e) {
+  grid.addEventListener('click', function (e) {
     var card = e.target.closest('.master-card');
     if (!card) return;
     var masterId = card.dataset.masterId;
     selectedMaster = null;
     for (var k = 0; k < masters.length; k++) {
-      if (masters[k].id === masterId) { selectedMaster = masters[k]; break; }
+      if (masters[k].id === masterId) {
+        selectedMaster = masters[k];
+        break;
+      }
     }
     // 更新选中状态
     var allCards = grid.querySelectorAll('.master-card');
-    for (var c = 0; c < allCards.length; c++) { allCards[c].classList.remove('selected'); }
+    for (var c = 0; c < allCards.length; c++) {
+      allCards[c].classList.remove('selected');
+    }
     card.classList.add('selected');
     // 更新按钮
     var btn = container.querySelector('#master-analyze-btn');
@@ -109,18 +133,20 @@ function renderMastersPanel(container, options) {
   // 分析类型选择
   var typeTabs = container.querySelector('#master-type-tabs');
   if (typeTabs) {
-    typeTabs.addEventListener('click', function(e) {
+    typeTabs.addEventListener('click', function (e) {
       var btn = e.target.closest('.tab-btn');
       if (!btn) return;
       var allBtns = typeTabs.querySelectorAll('.tab-btn');
-      for (var b = 0; b < allBtns.length; b++) { allBtns[b].classList.remove('active'); }
+      for (var b = 0; b < allBtns.length; b++) {
+        allBtns[b].classList.remove('active');
+      }
       btn.classList.add('active');
       selectedType = btn.dataset.type;
     });
   }
 
   // 分析按钮
-  container.querySelector('#master-analyze-btn').addEventListener('click', function() {
+  container.querySelector('#master-analyze-btn').addEventListener('click', function () {
     if (!selectedMaster) return;
     var btn = container.querySelector('#master-analyze-btn');
     var resultArea = container.querySelector('#master-result-area');
@@ -132,16 +158,20 @@ function renderMastersPanel(container, options) {
     btn.textContent = '分析中...';
 
     // 使用 setTimeout 让 UI 先更新（spinner 显示），然后同步执行分析
-    setTimeout(function() {
+    setTimeout(function () {
       try {
         var result = onAnalyze(selectedMaster.id, selectedType);
         if (!result) {
-          resultCard.innerHTML = '<div class="error-container"><div class="error-icon">⚠️</div><div class="error-text">分析数据不足，请先完成排盘</div></div>';
+          resultCard.innerHTML =
+            '<div class="error-container"><div class="error-icon">⚠️</div><div class="error-text">分析数据不足，请先完成排盘</div></div>';
         } else {
           renderMasterResult(resultCard, result, selectedMaster, categoryColors);
         }
       } catch (err) {
-        resultCard.innerHTML = '<div class="error-container"><div class="error-icon">⚠️</div><div class="error-text">分析出错：' + (err.message || '未知错误') + '</div></div>';
+        resultCard.innerHTML =
+          '<div class="error-container"><div class="error-icon">⚠️</div><div class="error-text">分析出错：' +
+          (err.message || '未知错误') +
+          '</div></div>';
       }
       btn.disabled = false;
       btn.textContent = '请 ' + selectedMaster.name + ' 点评';
@@ -157,7 +187,7 @@ function renderMasterResult(container, result, master, categoryColors) {
     { key: 'overview', label: '总论', icon: '🔍', desc: '详细分析命盘/格局全貌' },
     { key: 'specialty', label: '专论', icon: '💎', desc: '聚焦所选方向，展开深度分析' },
     { key: 'quote', label: '经典引用', icon: '📖', desc: '引经据典，以古鉴今' },
-    { key: 'closing', label: '结语', icon: '🎋', desc: '总结核心论断，给出方向性指引' }
+    { key: 'closing', label: '结语', icon: '🎋', desc: '总结核心论断，给出方向性指引' },
   ];
 
   var catColor = (categoryColors || {})[master.category] || 'var(--gold)';
@@ -165,12 +195,27 @@ function renderMasterResult(container, result, master, categoryColors) {
   var html = '<div class="fade-in">';
   // 大师头部信息
   html += '<div class="master-result-header">';
-  html += '<div class="master-result-avatar-wrap"><span class="master-result-avatar">' + (master.avatar || '⭐') + '</span></div>';
+  html +=
+    '<div class="master-result-avatar-wrap"><span class="master-result-avatar">' +
+    (master.avatar || '⭐') +
+    '</span></div>';
   html += '<div class="master-result-info">';
-  html += '<h3 class="master-result-name">' + master.name + '<span class="master-result-era">' + (master.era || '') + '</span></h3>';
+  html +=
+    '<h3 class="master-result-name">' +
+    master.name +
+    '<span class="master-result-era">' +
+    (master.era || '') +
+    '</span></h3>';
   html += '<p class="master-result-title">' + (master.title || '') + '</p>';
   html += '<div class="master-result-tags">';
-  html += '<span class="master-result-tag" style="border-color:' + catColor + ';color:' + catColor + ';">' + (master.category || '') + '</span>';
+  html +=
+    '<span class="master-result-tag" style="border-color:' +
+    catColor +
+    ';color:' +
+    catColor +
+    ';">' +
+    (master.category || '') +
+    '</span>';
   if (master.style) html += '<span class="master-result-tag">' + master.style + '</span>';
   html += '</div></div></div>';
   html += '<div class="master-result-divider"></div>';
@@ -187,10 +232,15 @@ function renderMasterResult(container, result, master, categoryColors) {
         var para = paragraphs[p].trim();
         if (para) formatted += '<p>' + para.replace(/\n/g, '<br>') + '</p>';
       }
-      html += '<div class="master-result-section" style="--delay:' + (i * 0.08) + 's;">';
+      html += '<div class="master-result-section" style="--delay:' + i * 0.08 + 's;">';
       html += '<div class="master-section-header">';
       html += '<span class="master-section-icon">' + section.icon + '</span>';
-      html += '<div class="master-section-title-wrap"><span class="master-section-title">' + section.label + '</span><span class="master-section-desc">' + section.desc + '</span></div>';
+      html +=
+        '<div class="master-section-title-wrap"><span class="master-section-title">' +
+        section.label +
+        '</span><span class="master-section-desc">' +
+        section.desc +
+        '</span></div>';
       html += '<span class="master-section-num">0' + (i + 1) + '</span>';
       html += '</div>';
       html += '<div class="master-section-content">' + formatted + '</div>';
@@ -199,7 +249,8 @@ function renderMasterResult(container, result, master, categoryColors) {
   }
   html += '</div>';
 
-  html += '<div class="master-result-footer"><span class="master-footer-note">以上分析由纯前端算法生成，基于大师历史风格复刻，仅供娱乐参考</span></div>';
+  html +=
+    '<div class="master-result-footer"><span class="master-footer-note">以上分析由纯前端算法生成，基于大师历史风格复刻，仅供娱乐参考</span></div>';
   html += '</div>';
 
   container.innerHTML = html;

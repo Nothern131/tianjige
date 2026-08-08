@@ -1,0 +1,48 @@
+module.exports = {
+  root: true,
+  env: { browser: true, es2021: true },
+  parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+  globals: {
+    // 引擎全局变量（IIFE 挂载到 window）
+    Tianjige: 'readonly',
+    BaziEngine: 'readonly',
+    LiuyaoEngine: 'readonly',
+    MeihuaEngine: 'readonly',
+    QimenEngine: 'readonly',
+    TaiyiEngine: 'readonly',
+    ZhugeEngine: 'readonly',
+    ZhougongEngine: 'readonly',
+    DaLiuRenEngine: 'readonly',
+    ZiWeiEngine: 'readonly',
+    FengshuiEngine: 'readonly',
+    MastersEngine: 'readonly',
+    EngineRegistry: 'readonly',
+    CompositeEngine: 'readonly',
+    DomainAnalysis: 'readonly',
+    DualityAnalyzer: 'readonly',
+    // 组件全局函数
+    renderBaziComponent: 'readonly',
+    renderLiuyaoComponent: 'readonly',
+    renderMeihuaComponent: 'readonly',
+    renderQimenComponent: 'readonly',
+    renderTaiyiComponent: 'readonly',
+    renderZhugeComponent: 'readonly',
+    renderZhougongComponent: 'readonly',
+    renderDaliurenComponent: 'readonly',
+    renderZiweiComponent: 'readonly',
+    renderFengshuiComponent: 'readonly',
+    renderMastersComponent: 'readonly',
+    renderCompositeComponent: 'readonly',
+    // app.js 全局
+    showToast: 'readonly',
+    // 工具函数（共享模块）
+    formatAnalysisText: 'readonly',
+    escapeHtml: 'readonly',
+  },
+  rules: {
+    'no-console': 'warn',
+    'no-undef': 'off',
+    'semi': ['error', 'always'],
+    'quotes': ['error', 'single'],
+  },
+};

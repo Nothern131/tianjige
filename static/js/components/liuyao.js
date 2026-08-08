@@ -37,9 +37,17 @@ function renderLiuyaoComponent() {
       <div class="form-group" style="margin-top:20px;max-width:500px;margin-left:auto;margin-right:auto;">
         <label class="form-label">🔮 你所问之事（可选）—— 想通过此卦了解哪个方面的运势？</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;justify-content:center;" id="liuyao-domain-tags">
-          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行'].map(function(d) {
-            return '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' + d + '">' + d + '</button>';
-          }).join('')}
+          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行']
+            .map(function (d) {
+              return (
+                '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' +
+                d +
+                '">' +
+                d +
+                '</button>'
+              );
+            })
+            .join('')}
         </div>
         <input type="text" class="form-input" id="liuyao-question-text" placeholder="或输入你想问的具体问题，如：最近事业运如何？...">
       </div>
@@ -47,7 +55,9 @@ function renderLiuyaoComponent() {
       <!-- 手动输入（默认隐藏） -->
       <div class="hidden mt-24" id="liuyao-manual-panel">
         <p style="color:var(--text-secondary);margin-bottom:16px;font-size:0.85rem;">手动设置六爻（从下到上），每爻选择阴阳和动变</p>
-        ${[6, 5, 4, 3, 2, 1].map((i) => `
+        ${[6, 5, 4, 3, 2, 1]
+          .map(
+            (i) => `
           <div class="form-row mb-8" style="align-items:center;grid-template-columns:50px 1fr;">
             <span style="color:var(--gold);font-size:0.85rem;">第${i}爻</span>
             <select class="form-select" id="liuyao-line-${i}">
@@ -57,7 +67,9 @@ function renderLiuyaoComponent() {
               <option value="yin-changing">⚋ 阴爻（动）</option>
             </select>
           </div>
-        `).join('')}
+        `
+          )
+          .join('')}
         <button class="btn-gold mt-16" id="liuyao-manual-submit">🔮 排卦</button>
       </div>
     </div>
@@ -85,7 +97,9 @@ function renderLiuyaoComponent() {
     var domainText = btn.dataset.domain.replace(/^[^\s]+\s/, '');
     questionInput.value = '最近' + domainText + '运如何？';
     var allBtns = container.querySelectorAll('#liuyao-domain-tags button');
-    for (var i = 0; i < allBtns.length; i++) { allBtns[i].classList.remove('active'); }
+    for (var i = 0; i < allBtns.length; i++) {
+      allBtns[i].classList.remove('active');
+    }
     btn.classList.add('active');
   });
 
@@ -121,9 +135,8 @@ function renderLiuyaoComponent() {
       await sleep(600);
       coinsEl.classList.remove('shaking');
 
-      const total = [2, 3][Math.random() > 0.5 ? 1 : 0] +
-                    [2, 3][Math.random() > 0.5 ? 1 : 0] +
-                    [2, 3][Math.random() > 0.5 ? 1 : 0];
+      const total =
+        [2, 3][Math.random() > 0.5 ? 1 : 0] + [2, 3][Math.random() > 0.5 ? 1 : 0] + [2, 3][Math.random() > 0.5 ? 1 : 0];
       const line = lineMap[total];
       coinLines.push(line);
 
@@ -195,7 +208,14 @@ async function handleLiuyaoSubmit(container, lines) {
     if (question && typeof DomainAnalysis !== 'undefined') {
       var qaResult = DomainAnalysis.analyze('liuyao', result, question);
       if (qaResult) {
-        questionAnalysisHtml = '<hr class="section-divider"><div class="analysis-section" style="background:rgba(184,154,92,0.03);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;margin-top:20px;"><h3 style="color:var(--gold-light);">' + qaResult.domain.icon + ' 所问之事：' + qaResult.domain.name + '</h3><div class="analysis-content">' + formatAnalysisText(qaResult.analysis) + '</div></div>';
+        questionAnalysisHtml =
+          '<hr class="section-divider"><div class="analysis-section" style="background:rgba(184,154,92,0.03);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;margin-top:20px;"><h3 style="color:var(--gold-light);">' +
+          qaResult.domain.icon +
+          ' 所问之事：' +
+          qaResult.domain.name +
+          '</h3><div class="analysis-content">' +
+          formatAnalysisText(qaResult.analysis) +
+          '</div></div>';
       }
     }
 
@@ -214,9 +234,13 @@ async function handleLiuyaoSubmit(container, lines) {
           ${renderHexagramLines(lineData)}
         </div>
         <div class="hexagram-name">${escapeHtml(guaName)}</div>
-        ${changedName ? `
+        ${
+          changedName
+            ? `
           <p style="color:var(--text-muted);font-size:0.9rem;">之卦：${escapeHtml(changedName)}</p>
-        ` : ''}
+        `
+            : ''
+        }
 
         <div class="hexagram-detail">
           <div class="detail-item">
@@ -239,15 +263,21 @@ async function handleLiuyaoSubmit(container, lines) {
             <div class="detail-label">六兽</div>
             <div class="detail-value">${liuShou.join(' · ') || '—'}</div>
           </div>
-          ${najia.length ? `
+          ${
+            najia.length
+              ? `
             <div class="detail-item">
               <div class="detail-label">纳甲</div>
               <div class="detail-value">${najia.map((n) => `${n.gan}${n.zhi}`).join(' · ')}</div>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
 
-        ${result.interpretation ? `
+        ${
+          result.interpretation
+            ? `
           <hr class="section-divider">
           <div class="analysis-section">
             <h3>📖 卦象解读</h3>
@@ -256,7 +286,9 @@ async function handleLiuyaoSubmit(container, lines) {
             </div>
             <div class="analysis-content">${formatAnalysisText(result.interpretation)}</div>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         ${questionAnalysisHtml}
       </div>
     `;
@@ -272,21 +304,23 @@ async function handleLiuyaoSubmit(container, lines) {
 
 function renderHexagramLines(lines) {
   if (!lines || !lines.length) return '';
-  return lines.map((line, i) => {
-    const isYang = line.type === 'yang';
-    const isChanging = line.changing;
-    let lineHtml = '';
-    if (isYang) {
-      lineHtml = `<div class="line-bar yang${isChanging ? ' changing' : ''}"></div>`;
-    } else {
-      lineHtml = `<div class="line-bar yin${isChanging ? ' changing' : ''}"><div class="half"></div><div class="half"></div></div>`;
-    }
-    return `
+  return lines
+    .map((line, i) => {
+      const isYang = line.type === 'yang';
+      const isChanging = line.changing;
+      let lineHtml = '';
+      if (isYang) {
+        lineHtml = `<div class="line-bar yang${isChanging ? ' changing' : ''}"></div>`;
+      } else {
+        lineHtml = `<div class="line-bar yin${isChanging ? ' changing' : ''}"><div class="half"></div><div class="half"></div></div>`;
+      }
+      return `
       <div class="hexagram-line">
         <span style="min-width:40px;text-align:right;">第${i + 1}爻</span>
         ${lineHtml}
         <span>${isYang ? '⚊' : '⚋'}${isChanging ? ' ⚡' : ''}</span>
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 }

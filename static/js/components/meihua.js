@@ -41,9 +41,17 @@ function renderMeihuaComponent() {
       <div class="form-group" style="margin-top:20px;max-width:500px;margin-left:auto;margin-right:auto;">
         <label class="form-label">🔮 你所问之事（可选）—— 想通过此卦了解哪个方面的运势？</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;justify-content:center;" id="meihua-domain-tags">
-          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行'].map(function(d) {
-            return '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' + d + '">' + d + '</button>';
-          }).join('')}
+          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行']
+            .map(function (d) {
+              return (
+                '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' +
+                d +
+                '">' +
+                d +
+                '</button>'
+              );
+            })
+            .join('')}
         </div>
         <input type="text" class="form-input" id="meihua-question-text" placeholder="或输入你想问的具体问题，如：最近事业运如何？...">
       </div>
@@ -91,7 +99,9 @@ function renderMeihuaComponent() {
     var domainText = btn.dataset.domain.replace(/^[^\s]+\s/, '');
     questionInput.value = '最近' + domainText + '运如何？';
     var allBtns = container.querySelectorAll('#meihua-domain-tags button');
-    for (var i = 0; i < allBtns.length; i++) { allBtns[i].classList.remove('active'); }
+    for (var i = 0; i < allBtns.length; i++) {
+      allBtns[i].classList.remove('active');
+    }
     btn.classList.add('active');
   });
 
@@ -160,7 +170,14 @@ async function handleMeihuaSubmit(container, params) {
     if (question && typeof DomainAnalysis !== 'undefined') {
       var qaResult = DomainAnalysis.analyze('meihua', result, question);
       if (qaResult) {
-        questionAnalysisHtml = '<hr class="section-divider"><div class="analysis-section" style="background:rgba(184,154,92,0.03);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;margin-top:20px;"><h3 style="color:var(--gold-light);">' + qaResult.domain.icon + ' 所问之事：' + qaResult.domain.name + '</h3><div class="analysis-content">' + formatAnalysisText(qaResult.analysis) + '</div></div>';
+        questionAnalysisHtml =
+          '<hr class="section-divider"><div class="analysis-section" style="background:rgba(184,154,92,0.03);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;margin-top:20px;"><h3 style="color:var(--gold-light);">' +
+          qaResult.domain.icon +
+          ' 所问之事：' +
+          qaResult.domain.name +
+          '</h3><div class="analysis-content">' +
+          formatAnalysisText(qaResult.analysis) +
+          '</div></div>';
       }
     }
 
@@ -190,7 +207,11 @@ function renderMeihuaResult(container, result, questionAnalysisHtml) {
   const guaTypes = [
     { label: '本卦', name: original.name || '—', detail: `${original.shang_gua || ''}上${original.xia_gua || ''}下` },
     { label: '互卦', name: hu.name || '—', detail: hu.shang_gua ? `${hu.shang_gua}上${hu.xia_gua}下` : '过程之象' },
-    { label: '变卦', name: changed.name || '—', detail: changed.shang_gua ? `${changed.shang_gua}上${changed.xia_gua}下` : '结果之象' },
+    {
+      label: '变卦',
+      name: changed.name || '—',
+      detail: changed.shang_gua ? `${changed.shang_gua}上${changed.xia_gua}下` : '结果之象',
+    },
   ];
   guaTypes.forEach((g) => {
     html += `
@@ -207,7 +228,7 @@ function renderMeihuaResult(container, result, questionAnalysisHtml) {
   const level = shengKe.等级 !== undefined ? shengKe.等级 : 2;
   const levelMap = { 0: '大凶', 1: '凶', 2: '小吉', 3: '中吉', 4: '大吉' };
   const levelLabel = levelMap[level] || '中平';
-  const levelCls = level >= 3 ? 'auspicious' : (level <= 1 ? 'inauspicious' : 'neutral');
+  const levelCls = level >= 3 ? 'auspicious' : level <= 1 ? 'inauspicious' : 'neutral';
   html += `
     <div class="glass-card mb-24">
       <h3 style="font-family:var(--font-serif);color:var(--gold);margin-bottom:12px;font-size:1rem;">⚖️ 体用生克</h3>
@@ -228,18 +249,26 @@ function renderMeihuaResult(container, result, questionAnalysisHtml) {
       <div class="glass-card mb-24">
         <h3 style="font-family:var(--font-serif);color:var(--gold);margin-bottom:12px;font-size:1rem;">🌏 万物类象</h3>
         <div class="card-grid cols-2">
-          ${wx.体卦 ? `
+          ${
+            wx.体卦
+              ? `
             <div class="detail-item">
               <div class="detail-label">体卦 · ${escapeHtml(wx.体卦.卦名 || '')}（${escapeHtml(wx.体卦.五行 || '')}）</div>
               <div class="detail-value">方位${escapeHtml(wx.体卦.方位 || '')} · ${escapeHtml(wx.体卦.人事 || '')} · ${escapeHtml(wx.体卦.身体 || '')} · ${escapeHtml(wx.体卦.颜色 || '')} · ${escapeHtml(wx.体卦.季节 || '')}</div>
             </div>
-          ` : ''}
-          ${wx.用卦 ? `
+          `
+              : ''
+          }
+          ${
+            wx.用卦
+              ? `
             <div class="detail-item">
               <div class="detail-label">用卦 · ${escapeHtml(wx.用卦.卦名 || '')}（${escapeHtml(wx.用卦.五行 || '')}）</div>
               <div class="detail-value">方位${escapeHtml(wx.用卦.方位 || '')} · ${escapeHtml(wx.用卦.人事 || '')} · ${escapeHtml(wx.用卦.身体 || '')} · ${escapeHtml(wx.用卦.颜色 || '')} · ${escapeHtml(wx.用卦.季节 || '')}</div>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       </div>
     `;

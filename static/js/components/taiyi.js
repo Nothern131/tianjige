@@ -45,9 +45,17 @@ function renderTaiyiComponent() {
       <div class="form-group" style="margin-top:16px;">
         <label class="form-label">🔮 你所问之事（可选）—— 想通过太乙了解哪个方面的运势？</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="taiyi-domain-tags">
-          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行'].map(function(d) {
-            return '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' + d + '">' + d + '</button>';
-          }).join('')}
+          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行']
+            .map(function (d) {
+              return (
+                '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' +
+                d +
+                '">' +
+                d +
+                '</button>'
+              );
+            })
+            .join('')}
         </div>
         <input type="text" class="form-input" id="taiyi-question-text" placeholder="或输入你想问的具体问题，如：最近事业运如何？...">
       </div>
@@ -84,7 +92,9 @@ function renderTaiyiComponent() {
     var domainText = btn.dataset.domain.replace(/^[^\s]+\s/, '');
     questionInput.value = '最近' + domainText + '运如何？';
     var allBtns = container.querySelectorAll('#taiyi-domain-tags button');
-    for (var i = 0; i < allBtns.length; i++) { allBtns[i].classList.remove('active'); }
+    for (var i = 0; i < allBtns.length; i++) {
+      allBtns[i].classList.remove('active');
+    }
     btn.classList.add('active');
   });
 
@@ -109,7 +119,14 @@ async function handleTaiyiSubmit(container, params) {
     if (question && typeof DomainAnalysis !== 'undefined') {
       var qaResult = DomainAnalysis.analyze('taiyi', result, question);
       if (qaResult) {
-        questionAnalysisHtml = '<hr class="section-divider"><div class="analysis-section" style="background:rgba(184,154,92,0.03);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;margin-top:20px;"><h3 style="color:var(--gold-light);">' + qaResult.domain.icon + ' 所问之事：' + qaResult.domain.name + '</h3><div class="analysis-content">' + formatAnalysisText(qaResult.analysis) + '</div></div>';
+        questionAnalysisHtml =
+          '<hr class="section-divider"><div class="analysis-section" style="background:rgba(184,154,92,0.03);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;margin-top:20px;"><h3 style="color:var(--gold-light);">' +
+          qaResult.domain.icon +
+          ' 所问之事：' +
+          qaResult.domain.name +
+          '</h3><div class="analysis-content">' +
+          formatAnalysisText(qaResult.analysis) +
+          '</div></div>';
       }
     }
 

@@ -39,7 +39,8 @@
           }
           return 60 + Math.floor(Math.random() * 20);
         case 'qimen':
-          if (raw.interpretation && raw.interpretation.indexOf('吉') !== -1 && raw.interpretation.indexOf('凶') === -1) return 72 + Math.floor(Math.random() * 18);
+          if (raw.interpretation && raw.interpretation.indexOf('吉') !== -1 && raw.interpretation.indexOf('凶') === -1)
+            return 72 + Math.floor(Math.random() * 18);
           if (raw.interpretation && raw.interpretation.indexOf('凶') !== -1) return 38 + Math.floor(Math.random() * 15);
           return 55 + Math.floor(Math.random() * 20);
         case 'taiyi':
@@ -71,7 +72,8 @@
           return 60 + Math.floor(Math.random() * 15);
         case 'ziwei':
           if (raw.总体运势) {
-            if (raw.总体运势.indexOf('吉') !== -1 || raw.总体运势.indexOf('上') !== -1) return 75 + Math.floor(Math.random() * 15);
+            if (raw.总体运势.indexOf('吉') !== -1 || raw.总体运势.indexOf('上') !== -1)
+              return 75 + Math.floor(Math.random() * 15);
             if (raw.总体运势.indexOf('平') !== -1) return 55 + Math.floor(Math.random() * 10);
           }
           return 60 + Math.floor(Math.random() * 20);
@@ -99,14 +101,20 @@
     var cfg = config || { name: key, icon: '❓', weight: 1.0 };
     var score = getScoreFromResult(raw, key);
     var trend = getTrendFromResult(raw, key);
-    var summary = '', detail = '', keyInsights = [], verdict = '';
+    var summary = '',
+      detail = '',
+      keyInsights = [],
+      verdict = '';
 
     try {
       switch (key) {
         case 'bazi': {
           var riZhu = raw['日柱'] || '?';
-          var dayMaster = (typeof riZhu === 'string' && riZhu.length > 0) ? riZhu[0] : '?';
-          var dayWx = ({甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'})[dayMaster] || '?';
+          var dayMaster = typeof riZhu === 'string' && riZhu.length > 0 ? riZhu[0] : '?';
+          var dayWx =
+            { 甲: '木', 乙: '木', 丙: '火', 丁: '火', 戊: '土', 己: '土', 庚: '金', 辛: '金', 壬: '水', 癸: '水' }[
+              dayMaster
+            ] || '?';
           summary = '日主' + dayMaster + '（五行属' + dayWx + '），本命格局稳固，五行流通有情。';
           detail = raw['分析'] || '八字整体五行较为均衡，喜用神得力。';
           keyInsights = ['五行流通有情', '日主得令得地', '大运流年可借势'];
@@ -133,7 +141,7 @@
         }
         case 'qimen': {
           var juShu = raw.ju_num || raw.ju || '?';
-          var isYang = (raw.period && raw.period.indexOf('阳') !== -1) ? '阳遁' : '阴遁';
+          var isYang = raw.period && raw.period.indexOf('阳') !== -1 ? '阳遁' : '阴遁';
           summary = '当前为' + juShu + '局（' + isYang + '），时空格局已显。';
           detail = raw.interpretation || '';
           keyInsights = ['吉门临宫得位', '方位得时顺势', '格局无战克之象'];
@@ -163,10 +171,10 @@
           break;
         }
         case 'zhougong': {
-          var cnt = (raw.results && raw.results.length) ? raw.results.length : 0;
+          var cnt = raw.results && raw.results.length ? raw.results.length : 0;
           var jiStr = raw.ji || '中';
           summary = '匹配到' + cnt + '个梦境条目，梦兆' + jiStr + '。';
-          detail = raw.interpretation || (raw.questionAnalysis || '');
+          detail = raw.interpretation || raw.questionAnalysis || '';
           keyInsights = ['梦境映射潜意识', '象煞提示吉凶转化', '可结合现实对照'];
           verdict = jiStr;
           break;
@@ -202,10 +210,16 @@
     }
 
     return {
-      method: key, name: cfg.name, icon: cfg.icon,
-      score: score, trend: trend, verdict: verdict,
-      summary: summary, detail: detail, keyInsights: keyInsights,
-      weight: cfg.weight || 1.0
+      method: key,
+      name: cfg.name,
+      icon: cfg.icon,
+      score: score,
+      trend: trend,
+      verdict: verdict,
+      summary: summary,
+      detail: detail,
+      keyInsights: keyInsights,
+      weight: cfg.weight || 1.0,
     };
   }
 
@@ -266,9 +280,14 @@
     }
 
     return {
-      domainKey: domainKey, domainName: domainName, domainIcon: domainIcon,
-      consensusText: domainConsensusText, insights: domainInsights,
-      upCount: domainScores.up, flatCount: domainScores.flat, downCount: domainScores.down
+      domainKey: domainKey,
+      domainName: domainName,
+      domainIcon: domainIcon,
+      consensusText: domainConsensusText,
+      insights: domainInsights,
+      upCount: domainScores.up,
+      flatCount: domainScores.flat,
+      downCount: domainScores.down,
     };
   }
 
@@ -287,7 +306,9 @@
     }
 
     // 按融洽度排序
-    pairs.sort(function (a, b) { return b.harmony - a.harmony; });
+    pairs.sort(function (a, b) {
+      return b.harmony - a.harmony;
+    });
 
     // 计算总体融洽磨合指标
     var totalHarmony = 0;
@@ -312,7 +333,7 @@
       avgFriction: avgFriction,
       bestPair: bestPair,
       worstPair: worstPair,
-      analysis: analysis
+      analysis: analysis,
     };
   }
 
@@ -355,17 +376,21 @@
     var description = generatePairDescription(a, b, scoreDiff, trendAgree, harmonyLevel, frictionLevel);
 
     return {
-      methodA: a.name, methodB: b.name,
-      iconA: a.icon, iconB: b.icon,
-      scoreA: a.score, scoreB: b.score,
-      trendA: a.trend, trendB: b.trend,
+      methodA: a.name,
+      methodB: b.name,
+      iconA: a.icon,
+      iconB: b.icon,
+      scoreA: a.score,
+      scoreB: b.score,
+      trendA: a.trend,
+      trendB: b.trend,
       scoreDiff: scoreDiff,
       trendAgree: trendAgree,
       harmony: harmony,
       friction: friction,
       harmonyLevel: harmonyLevel,
       frictionLevel: frictionLevel,
-      description: description
+      description: description,
     };
   }
 
@@ -389,7 +414,16 @@
       else if (a.trend === 'down') desc += ' 两术数均呈下行态势，宜谨慎对待。';
       else desc += ' 两术数均趋于平稳，不宜激进。';
     } else {
-      desc += ' 但趋势方向不一致：' + higher.name + '倾向' + (higher.trend === 'up' ? '乐观' : (higher.trend === 'down' ? '谨慎' : '中性')) + '，' + lower.name + '倾向' + (lower.trend === 'up' ? '乐观' : (lower.trend === 'down' ? '谨慎' : '中性')) + '。';
+      desc +=
+        ' 但趋势方向不一致：' +
+        higher.name +
+        '倾向' +
+        (higher.trend === 'up' ? '乐观' : higher.trend === 'down' ? '谨慎' : '中性') +
+        '，' +
+        lower.name +
+        '倾向' +
+        (lower.trend === 'up' ? '乐观' : lower.trend === 'down' ? '谨慎' : '中性') +
+        '。';
     }
 
     // 融洽/磨合建议
@@ -428,14 +462,34 @@
     lines.push('');
     lines.push('【最佳融洽组合】');
     lines.push(bestPair.iconA + ' ' + bestPair.methodA + ' ↔ ' + bestPair.iconB + ' ' + bestPair.methodB);
-    lines.push('融洽度：' + bestPair.harmony + '分（' + bestPair.harmonyLevel + '），磨合度：' + bestPair.friction + '分（' + bestPair.frictionLevel + '）');
+    lines.push(
+      '融洽度：' +
+        bestPair.harmony +
+        '分（' +
+        bestPair.harmonyLevel +
+        '），磨合度：' +
+        bestPair.friction +
+        '分（' +
+        bestPair.frictionLevel +
+        '）'
+    );
     lines.push(bestPair.description);
 
     if (worstPair && worstPair !== bestPair) {
       lines.push('');
       lines.push('【最需磨合组合】');
       lines.push(worstPair.iconA + ' ' + worstPair.methodA + ' ↔ ' + worstPair.iconB + ' ' + worstPair.methodB);
-      lines.push('融洽度：' + worstPair.harmony + '分（' + worstPair.harmonyLevel + '），磨合度：' + worstPair.friction + '分（' + worstPair.frictionLevel + '）');
+      lines.push(
+        '融洽度：' +
+          worstPair.harmony +
+          '分（' +
+          worstPair.harmonyLevel +
+          '），磨合度：' +
+          worstPair.friction +
+          '分（' +
+          worstPair.frictionLevel +
+          '）'
+      );
       lines.push(worstPair.description);
     }
 
@@ -447,7 +501,19 @@
       for (var b = 0; b < Math.round(p.harmony / 10); b++) bar += '█';
       for (var eb = Math.round(p.harmony / 10); eb < 10; eb++) bar += '░';
       lines.push(p.iconA + p.methodA + '(' + p.scoreA + '分) ↔ ' + p.iconB + p.methodB + '(' + p.scoreB + '分)');
-      lines.push('  融洽度 ' + p.harmony + '% ' + bar + ' | ' + p.harmonyLevel + ' | 磨合度 ' + p.friction + '%（' + p.frictionLevel + '）');
+      lines.push(
+        '  融洽度 ' +
+          p.harmony +
+          '% ' +
+          bar +
+          ' | ' +
+          p.harmonyLevel +
+          ' | 磨合度 ' +
+          p.friction +
+          '%（' +
+          p.frictionLevel +
+          '）'
+      );
     }
 
     return lines.join('\n');
@@ -458,7 +524,8 @@
       return { consensus: '无足够数据', confidence: 'low', narrative: '请至少选择一种术数进行推演。' };
     }
 
-    var totalWeight = 0, weightedSum = 0;
+    var totalWeight = 0,
+      weightedSum = 0;
     var scores = [];
     for (var i = 0; i < results.length; i++) {
       var w = results[i].weight || 1.0;
@@ -475,7 +542,7 @@
     var domainKey = null;
     if (global.DomainAnalysis && global.DomainAnalysis.analyze && question && question.trim()) {
       try {
-        var firstMethod = (results[0] && results[0].method) ? results[0].method : 'bazi';
+        var firstMethod = results[0] && results[0].method ? results[0].method : 'bazi';
         var daResult = global.DomainAnalysis.analyze(firstMethod, {}, question);
         if (daResult && daResult.domain) {
           domainKey = daResult.domain.key;
@@ -494,7 +561,9 @@
     var questionText = question || '当前运势';
     var domainName = domainAnalysis.domainName;
 
-    var sorted = results.slice().sort(function (a, b) { return b.score - a.score; });
+    var sorted = results.slice().sort(function (a, b) {
+      return b.score - a.score;
+    });
     var topMethod = sorted[0];
     var bottomMethod = sorted[sorted.length - 1];
 
@@ -511,58 +580,152 @@
     if (isConsistent) {
       if (avgScore >= 75) {
         consensusLabel = '诸术同辉 · 吉兆明确';
-        narrative = '【总体研判】\n' + count + '门术数同频共振，加权综合评分' + avgScore + '分，结论高度一致。\n' +
-          '这种高度一致性本身就说明问题——' + domainName + '方面，天时地利人和的叠加效应正在显现。\n\n' +
-          '【各术推演详情】\n' + detailBreakdown + '\n' +
-          '【' + domainName + '专项研判】\n' + domainAnalysis.consensusText + '\n\n' +
+        narrative =
+          '【总体研判】\n' +
+          count +
+          '门术数同频共振，加权综合评分' +
+          avgScore +
+          '分，结论高度一致。\n' +
+          '这种高度一致性本身就说明问题——' +
+          domainName +
+          '方面，天时地利人和的叠加效应正在显现。\n\n' +
+          '【各术推演详情】\n' +
+          detailBreakdown +
+          '\n' +
+          '【' +
+          domainName +
+          '专项研判】\n' +
+          domainAnalysis.consensusText +
+          '\n\n' +
           '【三阶段推演】\n' +
-          '▶ 近期（1-3个月）：' + topMethod.name + '提示，' + domainName + '方面将迎来一个关键窗口期。此时宜主动出击，把握先机。\n' +
+          '▶ 近期（1-3个月）：' +
+          topMethod.name +
+          '提示，' +
+          domainName +
+          '方面将迎来一个关键窗口期。此时宜主动出击，把握先机。\n' +
           '▶ 中期（3-6个月）：前期积累的势能将开始释放，但需注意节奏控制。顺势而为比逆势强求更有效。\n' +
-          '▶ 远期（6-12个月）：' + domainName + '方面的格局将趋于稳定，此时宜做长远规划，巩固已有成果。\n\n';
+          '▶ 远期（6-12个月）：' +
+          domainName +
+          '方面的格局将趋于稳定，此时宜做长远规划，巩固已有成果。\n\n';
       } else if (avgScore >= 60) {
         consensusLabel = '诸术同源 · 平稳向好';
-        narrative = '【总体研判】\n' + count + '门术数结论一致，加权综合评分' + avgScore + '分，皆示平稳向好。\n' +
-          '这个分数段意味着：' + domainName + '方面不会出现戏剧性的大起大落，而是稳步推进的态势。\n\n' +
-          '【各术推演详情】\n' + detailBreakdown + '\n' +
-          '【' + domainName + '专项研判】\n' + domainAnalysis.consensusText + '\n\n' +
+        narrative =
+          '【总体研判】\n' +
+          count +
+          '门术数结论一致，加权综合评分' +
+          avgScore +
+          '分，皆示平稳向好。\n' +
+          '这个分数段意味着：' +
+          domainName +
+          '方面不会出现戏剧性的大起大落，而是稳步推进的态势。\n\n' +
+          '【各术推演详情】\n' +
+          detailBreakdown +
+          '\n' +
+          '【' +
+          domainName +
+          '专项研判】\n' +
+          domainAnalysis.consensusText +
+          '\n\n' +
           '【三阶段推演】\n' +
-          '▶ 近期（1-3个月）：' + domainName + '方面趋于平稳，此时不宜冒进，但也不应消极等待。稳中求进是当前最优策略。\n' +
-          '▶ 中期（3-6个月）：随着外部环境变化，' + domainName + '方面可能出现新的机遇窗口。建议在此期间做好能力储备和资源积累。\n' +
-          '▶ 远期（6-12个月）：' + domainName + '方面的格局将逐步明朗，届时可基于实际情况做出更精准的决策。\n\n';
+          '▶ 近期（1-3个月）：' +
+          domainName +
+          '方面趋于平稳，此时不宜冒进，但也不应消极等待。稳中求进是当前最优策略。\n' +
+          '▶ 中期（3-6个月）：随着外部环境变化，' +
+          domainName +
+          '方面可能出现新的机遇窗口。建议在此期间做好能力储备和资源积累。\n' +
+          '▶ 远期（6-12个月）：' +
+          domainName +
+          '方面的格局将逐步明朗，届时可基于实际情况做出更精准的决策。\n\n';
       } else {
         consensusLabel = '诸术同示 · 谨慎前行';
-        narrative = '【总体研判】\n' + count + '门术数一致指向，加权综合评分' + avgScore + '分，' + domainName + '方面需谨慎应对。\n' +
-          '这个分数段提示：' + domainName + '方面当前承压，但一致的低分恰好说明问题所在——看清了问题，才能有针对性地解决。\n\n' +
-          '【各术推演详情】\n' + detailBreakdown + '\n' +
-          '【' + domainName + '专项研判】\n' + domainAnalysis.consensusText + '\n\n' +
+        narrative =
+          '【总体研判】\n' +
+          count +
+          '门术数一致指向，加权综合评分' +
+          avgScore +
+          '分，' +
+          domainName +
+          '方面需谨慎应对。\n' +
+          '这个分数段提示：' +
+          domainName +
+          '方面当前承压，但一致的低分恰好说明问题所在——看清了问题，才能有针对性地解决。\n\n' +
+          '【各术推演详情】\n' +
+          detailBreakdown +
+          '\n' +
+          '【' +
+          domainName +
+          '专项研判】\n' +
+          domainAnalysis.consensusText +
+          '\n\n' +
           '【三阶段推演】\n' +
-          '▶ 近期（1-3个月）：' + domainName + '方面可能面临挑战，建议暂缓重大决策，先观察局势变化。\n' +
-          '▶ 中期（3-6个月）：随着外部环境调整，' + domainName + '方面可能出现转机，但需主动出击而非被动等待。\n' +
-          '▶ 远期（6-12个月）：' + domainName + '方面的格局将重新洗牌，届时宜重新评估方向，做出调整。\n\n';
+          '▶ 近期（1-3个月）：' +
+          domainName +
+          '方面可能面临挑战，建议暂缓重大决策，先观察局势变化。\n' +
+          '▶ 中期（3-6个月）：随着外部环境调整，' +
+          domainName +
+          '方面可能出现转机，但需主动出击而非被动等待。\n' +
+          '▶ 远期（6-12个月）：' +
+          domainName +
+          '方面的格局将重新洗牌，届时宜重新评估方向，做出调整。\n\n';
       }
     } else {
       consensusLabel = '参差见微 · 动态演化';
-      narrative = '【总体研判】\n' + count + '门术数结论存在分歧，最高' + maxScore + '分，最低' + minScore + '分，跨度' + range + '分。\n' +
-        '这种分歧本身就是重要信息：' + domainName + '方面正处于变化之中，不同术数从不同角度捕捉到了不同的信号。\n\n' +
-        '【各术推演详情】\n' + detailBreakdown + '\n' +
-        '【' + domainName + '专项研判】\n' + domainAnalysis.consensusText + '\n\n' +
+      narrative =
+        '【总体研判】\n' +
+        count +
+        '门术数结论存在分歧，最高' +
+        maxScore +
+        '分，最低' +
+        minScore +
+        '分，跨度' +
+        range +
+        '分。\n' +
+        '这种分歧本身就是重要信息：' +
+        domainName +
+        '方面正处于变化之中，不同术数从不同角度捕捉到了不同的信号。\n\n' +
+        '【各术推演详情】\n' +
+        detailBreakdown +
+        '\n' +
+        '【' +
+        domainName +
+        '专项研判】\n' +
+        domainAnalysis.consensusText +
+        '\n\n' +
         '【分歧解析】\n' +
-        topMethod.name + '（' + topMethod.score + '分）最为乐观，提示' + domainName + '方面有向好趋势。\n' +
-        bottomMethod.name + '（' + bottomMethod.score + '分）最为谨慎，提示' + domainName + '方面存在隐患。\n' +
+        topMethod.name +
+        '（' +
+        topMethod.score +
+        '分）最为乐观，提示' +
+        domainName +
+        '方面有向好趋势。\n' +
+        bottomMethod.name +
+        '（' +
+        bottomMethod.score +
+        '分）最为谨慎，提示' +
+        domainName +
+        '方面存在隐患。\n' +
         '两术数从不同维度揭示了同一件事的不同面向——乐观的一面让你看到希望，谨慎的一面让你保持清醒。\n\n' +
         '【三阶段推演】\n' +
-        '▶ 近期（1-3个月）：' + domainName + '方面可能会经历波动，不宜做重大决策，先观察再说。\n' +
-        '▶ 中期（3-6个月）：随着更多信息浮现，' + domainName + '方面的方向将更加清晰，届时再做判断。\n' +
-        '▶ 远期（6-12个月）：' + domainName + '方面的格局将趋于稳定，前期的谨慎观望将换来更准确的判断。\n\n';
+        '▶ 近期（1-3个月）：' +
+        domainName +
+        '方面可能会经历波动，不宜做重大决策，先观察再说。\n' +
+        '▶ 中期（3-6个月）：随着更多信息浮现，' +
+        domainName +
+        '方面的方向将更加清晰，届时再做判断。\n' +
+        '▶ 远期（6-12个月）：' +
+        domainName +
+        '方面的格局将趋于稳定，前期的谨慎观望将换来更准确的判断。\n\n';
     }
 
     return {
       consensus: consensusLabel,
       confidence: isConsistent ? 'high' : 'medium',
       narrative: narrative,
-      count: count, spread: range, hasConflict: !isConsistent,
+      count: count,
+      spread: range,
+      hasConflict: !isConsistent,
       domainAnalysis: domainAnalysis,
-      harmonyAnalysis: harmonyAnalysis(results)
+      harmonyAnalysis: harmonyAnalysis(results),
     };
   }
 
@@ -581,66 +744,85 @@
       var registry = global.EngineRegistry;
       if (!registry) {
         return Promise.resolve({
-          score: 50, trend: 'flat',
+          score: 50,
+          trend: 'flat',
           individualResults: [],
           synthesis: { consensus: '引擎注册中心未加载', confidence: 'low', narrative: '请刷新页面重试。' },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
-      return registry.executeAll(methods, uiParams).then(function (engineResults) {
-        try {
-          // 归一化各引擎结果
-          var normalized = [];
-          for (var i = 0; i < engineResults.length; i++) {
-            var er = engineResults[i];
-            if (er.raw === null) continue;
-            var norm = normalizeResult(er.key, er.raw, er.config);
-            normalized.push(norm);
+      return registry
+        .executeAll(methods, uiParams)
+        .then(function (engineResults) {
+          try {
+            // 归一化各引擎结果
+            var normalized = [];
+            for (var i = 0; i < engineResults.length; i++) {
+              var er = engineResults[i];
+              if (er.raw === null) continue;
+              var norm = normalizeResult(er.key, er.raw, er.config);
+              normalized.push(norm);
+            }
+
+            var overallScore = calculateOverallScore(normalized);
+            var overallTrend = calculateOverallTrend(normalized);
+            var synthesis = synthesizeResults(normalized, uiParams.question);
+
+            return {
+              score: overallScore,
+              trend: overallTrend,
+              individualResults: normalized,
+              synthesis: synthesis,
+              timestamp: new Date().toISOString(),
+            };
+          } catch (e) {
+            console.error('[合参] synthesizeResults 失败:', e);
+            return {
+              score: 60,
+              trend: 'flat',
+              individualResults: engineResults
+                .filter(function (er) {
+                  return er.raw !== null;
+                })
+                .map(function (er) {
+                  return normalizeResult(er.key, er.raw || {}, er.config);
+                }),
+              synthesis: {
+                consensus: '推演完成（部分结果异常）',
+                confidence: 'low',
+                narrative: '部分术数推演异常，但已完成的基础分析如下：\n' + (e.message || '未知错误'),
+              },
+              timestamp: new Date().toISOString(),
+            };
           }
-
-          var overallScore = calculateOverallScore(normalized);
-          var overallTrend = calculateOverallTrend(normalized);
-          var synthesis = synthesizeResults(normalized, uiParams.question);
-
+        })
+        .catch(function (err) {
+          console.error('[合参] run 整体失败:', err);
           return {
-            score: overallScore,
-            trend: overallTrend,
-            individualResults: normalized,
-            synthesis: synthesis,
-            timestamp: new Date().toISOString()
+            score: 50,
+            trend: 'flat',
+            individualResults: [],
+            synthesis: {
+              consensus: '推演异常',
+              confidence: 'low',
+              narrative: '合参引擎执行异常：' + (err.message || '未知错误') + '\n请刷新页面重试。',
+            },
+            timestamp: new Date().toISOString(),
           };
-        } catch (e) {
-          console.error('[合参] synthesizeResults 失败:', e);
-          return {
-            score: 60, trend: 'flat',
-            individualResults: engineResults.filter(function (er) { return er.raw !== null; }).map(function (er) {
-              return normalizeResult(er.key, er.raw || {}, er.config);
-            }),
-            synthesis: { consensus: '推演完成（部分结果异常）', confidence: 'low', narrative: '部分术数推演异常，但已完成的基础分析如下：\n' + (e.message || '未知错误') },
-            timestamp: new Date().toISOString()
-          };
-        }
-      }).catch(function (err) {
-        console.error('[合参] run 整体失败:', err);
-        return {
-          score: 50, trend: 'flat',
-          individualResults: [],
-          synthesis: { consensus: '推演异常', confidence: 'low', narrative: '合参引擎执行异常：' + (err.message || '未知错误') + '\n请刷新页面重试。' },
-          timestamp: new Date().toISOString()
-        };
-      });
+        });
     },
 
     calculateOverallScore: calculateOverallScore,
     calculateOverallTrend: calculateOverallTrend,
     normalizeResult: normalizeResult,
-    synthesizeResults: synthesizeResults
+    synthesizeResults: synthesizeResults,
   };
 
   function calculateOverallScore(results) {
     if (!results || results.length === 0) return 60;
-    var totalW = 0, sumW = 0;
+    var totalW = 0,
+      sumW = 0;
     for (var i = 0; i < results.length; i++) {
       var w = results[i].weight || 1.0;
       totalW += w;
@@ -651,7 +833,8 @@
 
   function calculateOverallTrend(results) {
     if (!results || results.length === 0) return 'flat';
-    var up = 0, down = 0;
+    var up = 0,
+      down = 0;
     for (var i = 0; i < results.length; i++) {
       if (results[i].trend === 'up') up++;
       if (results[i].trend === 'down') down++;
@@ -660,5 +843,4 @@
     if (down > up) return 'down';
     return 'flat';
   }
-
 })(typeof window !== 'undefined' ? window : this);

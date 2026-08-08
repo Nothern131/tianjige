@@ -65,9 +65,17 @@ function renderBaziComponent(state) {
       <div class="form-group" style="margin-top:16px;">
         <label class="form-label">🔮 你所问之事（可选）—— 想通过八字了解哪个方面的运势？</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="bazi-domain-tags">
-          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行'].map(function(d) {
-            return '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' + d + '">' + d + '</button>';
-          }).join('')}
+          ${['💼 事业', '💕 感情', '💰 财运', '🏥 健康', '📚 学业', '🏠 家庭', '🤝 人际', '✈️ 出行']
+            .map(function (d) {
+              return (
+                '<button class="btn-gold outline" style="font-size:0.75rem;padding:4px 10px;" data-domain="' +
+                d +
+                '">' +
+                d +
+                '</button>'
+              );
+            })
+            .join('')}
         </div>
         <input type="text" class="form-input" id="bazi-question-text" placeholder="或输入你想问的具体问题，如：最近事业运如何？...">
       </div>
@@ -113,7 +121,9 @@ function renderBaziComponent(state) {
     var domainText = btn.dataset.domain.replace(/^[^\s]+\s/, '');
     questionInput.value = '最近' + domainText + '运如何？';
     var allBtns = container.querySelectorAll('#bazi-domain-tags button');
-    for (var i = 0; i < allBtns.length; i++) { allBtns[i].classList.remove('active'); }
+    for (var i = 0; i < allBtns.length; i++) {
+      allBtns[i].classList.remove('active');
+    }
     btn.classList.add('active');
   });
 
@@ -128,8 +138,14 @@ async function handleBaziSubmit(container, state) {
   var time = container.querySelector('#bazi-time').value;
   var location = container.querySelector('#bazi-location').value.trim();
 
-  if (!date) { showToast('请输入出生日期'); return; }
-  if (!time) { showToast('请选择出生时辰'); return; }
+  if (!date) {
+    showToast('请输入出生日期');
+    return;
+  }
+  if (!time) {
+    showToast('请选择出生时辰');
+    return;
+  }
 
   state.userInfo = { name: name, gender: gender, birthDate: date, birthTime: time, location: location };
 
@@ -145,7 +161,9 @@ async function handleBaziSubmit(container, state) {
   try {
     // 纯前端算法排盘，无API调用
     var dateParts = date.split('-');
-    var year = parseInt(dateParts[0]), month = parseInt(dateParts[1]), day = parseInt(dateParts[2]);
+    var year = parseInt(dateParts[0]),
+      month = parseInt(dateParts[1]),
+      day = parseInt(dateParts[2]);
     var hour = SHICHEN_NAMES[time] || 0;
     var result = BaziEngine.paipan(year, month, day, hour);
 
@@ -159,7 +177,14 @@ async function handleBaziSubmit(container, state) {
       var qaResult = DomainAnalysis.analyze('bazi', result, question);
       if (qaResult) {
         qaDiv.classList.remove('hidden');
-        qaDiv.innerHTML = '<div class="glass-card mb-24" style="background:rgba(184,154,92,0.03);border:1px solid var(--border-subtle);"><h3 style="color:var(--gold-light);">' + qaResult.domain.icon + ' 所问之事：' + qaResult.domain.name + '</h3><div class="analysis-content" style="margin-top:12px;">' + formatAnalysisText(qaResult.analysis) + '</div></div>';
+        qaDiv.innerHTML =
+          '<div class="glass-card mb-24" style="background:rgba(184,154,92,0.03);border:1px solid var(--border-subtle);"><h3 style="color:var(--gold-light);">' +
+          qaResult.domain.icon +
+          ' 所问之事：' +
+          qaResult.domain.name +
+          '</h3><div class="analysis-content" style="margin-top:12px;">' +
+          formatAnalysisText(qaResult.analysis) +
+          '</div></div>';
       } else {
         qaDiv.classList.add('hidden');
       }
@@ -169,12 +194,13 @@ async function handleBaziSubmit(container, state) {
 
     // 渲染分析 Tab
     renderAnalysisTabs(container, result, state);
-
   } catch (error) {
     pillarsContent.innerHTML =
       '<div class="error-container">' +
       '<div class="error-icon">⚠️</div>' +
-      '<div class="error-text">' + escapeHtml(error.message || '排盘失败') + '</div>' +
+      '<div class="error-text">' +
+      escapeHtml(error.message || '排盘失败') +
+      '</div>' +
       '<button class="btn-gold outline sm mt-16" onclick="this.closest(\'#bazi-result-area\').classList.add(\'hidden\')">返回</button>' +
       '</div>';
   } finally {
@@ -187,8 +213,8 @@ async function handleBaziSubmit(container, state) {
 function renderPillarsV2(container, result) {
   var pillars = ['年柱', '月柱', '日柱', '时柱'];
   var labels = ['年柱', '月柱', '日柱', '时柱'];
-  var gan = ['', '', '', ''];  // 天干
-  var zhi = ['', '', '', ''];  // 地支
+  var gan = ['', '', '', '']; // 天干
+  var zhi = ['', '', '', '']; // 地支
 
   pillars.forEach(function (key, i) {
     var val = result[key] || '';
@@ -202,23 +228,60 @@ function renderPillarsV2(container, result) {
 
   // 五行属性
   var wuxingMap = {
-    '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
-    '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水',
-    '子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土',
-    '巳': '火', '午': '火', '未': '土', '申': '金', '酉': '金',
-    '戌': '土', '亥': '水'
+    甲: '木',
+    乙: '木',
+    丙: '火',
+    丁: '火',
+    戊: '土',
+    己: '土',
+    庚: '金',
+    辛: '金',
+    壬: '水',
+    癸: '水',
+    子: '水',
+    丑: '土',
+    寅: '木',
+    卯: '木',
+    辰: '土',
+    巳: '火',
+    午: '火',
+    未: '土',
+    申: '金',
+    酉: '金',
+    戌: '土',
+    亥: '水',
   };
 
   // 阴阳
   var yinyangMap = {
-    '甲': '阳', '丙': '阳', '戊': '阳', '庚': '阳', '壬': '阳',
-    '乙': '阴', '丁': '阴', '己': '阴', '辛': '阴', '癸': '阴',
-    '子': '阳', '寅': '阳', '辰': '阳', '午': '阳', '申': '阳', '戌': '阳',
-    '丑': '阴', '卯': '阴', '巳': '阴', '未': '阴', '酉': '阴', '亥': '阴'
+    甲: '阳',
+    丙: '阳',
+    戊: '阳',
+    庚: '阳',
+    壬: '阳',
+    乙: '阴',
+    丁: '阴',
+    己: '阴',
+    辛: '阴',
+    癸: '阴',
+    子: '阳',
+    寅: '阳',
+    辰: '阳',
+    午: '阳',
+    申: '阳',
+    戌: '阳',
+    丑: '阴',
+    卯: '阴',
+    巳: '阴',
+    未: '阴',
+    酉: '阴',
+    亥: '阴',
   };
 
   var html = '<table class="data-table"><thead><tr><th></th>';
-  labels.forEach(function (l) { html += '<th>' + l + '</th>'; });
+  labels.forEach(function (l) {
+    html += '<th>' + l + '</th>';
+  });
   html += '</tr></thead><tbody>';
 
   // 天干行
@@ -226,7 +289,14 @@ function renderPillarsV2(container, result) {
   gan.forEach(function (g, i) {
     var wx = wuxingMap[g] || '';
     var yy = yinyangMap[g] || '';
-    html += '<td><span class="stem-branch" style="font-size:1.2rem;font-weight:700;color:var(--gold-light);">' + escapeHtml(g) + '</span><br><span style="font-size:0.7rem;color:var(--text-muted);">' + wx + ' ' + yy + '</span></td>';
+    html +=
+      '<td><span class="stem-branch" style="font-size:1.2rem;font-weight:700;color:var(--gold-light);">' +
+      escapeHtml(g) +
+      '</span><br><span style="font-size:0.7rem;color:var(--text-muted);">' +
+      wx +
+      ' ' +
+      yy +
+      '</span></td>';
   });
   html += '</tr>';
 
@@ -235,14 +305,24 @@ function renderPillarsV2(container, result) {
   zhi.forEach(function (z, i) {
     var wx = wuxingMap[z] || '';
     var yy = yinyangMap[z] || '';
-    html += '<td><span class="stem-branch" style="font-size:1.2rem;font-weight:700;color:var(--gold-light);">' + escapeHtml(z) + '</span><br><span style="font-size:0.7rem;color:var(--text-muted);">' + wx + ' ' + yy + '</span></td>';
+    html +=
+      '<td><span class="stem-branch" style="font-size:1.2rem;font-weight:700;color:var(--gold-light);">' +
+      escapeHtml(z) +
+      '</span><br><span style="font-size:0.7rem;color:var(--text-muted);">' +
+      wx +
+      ' ' +
+      yy +
+      '</span></td>';
   });
   html += '</tr>';
 
   // 干支合并行
   html += '<tr><td style="color:var(--text-muted);">干支</td>';
   gan.forEach(function (g, i) {
-    html += '<td style="font-family:var(--font-serif);font-size:1.1rem;color:var(--gold);">' + escapeHtml(g + zhi[i]) + '</td>';
+    html +=
+      '<td style="font-family:var(--font-serif);font-size:1.1rem;color:var(--gold);">' +
+      escapeHtml(g + zhi[i]) +
+      '</td>';
   });
   html += '</tr>';
 
@@ -251,7 +331,20 @@ function renderPillarsV2(container, result) {
 }
 
 // 时辰名称→小时映射
-var SHICHEN_NAMES = { 子时: 0, 丑时: 2, 寅时: 4, 卯时: 6, 辰时: 8, 巳时: 10, 午时: 12, 未时: 14, 申时: 16, 酉时: 18, 戌时: 20, 亥时: 22 };
+var SHICHEN_NAMES = {
+  子时: 0,
+  丑时: 2,
+  寅时: 4,
+  卯时: 6,
+  辰时: 8,
+  巳时: 10,
+  午时: 12,
+  未时: 14,
+  申时: 16,
+  酉时: 18,
+  戌时: 20,
+  亥时: 22,
+};
 
 /** 渲染分析 Tab 导航 */
 function renderAnalysisTabs(container, result, state) {
@@ -269,9 +362,21 @@ function renderAnalysisTabs(container, result, state) {
     { id: 'love', label: '正缘', icon: '💕' },
   ];
 
-  tabsEl.innerHTML = analysisTabs.map(function (tab) {
-    return '<button class="tab-btn' + (tab.id === 'lifeline' ? ' active' : '') + '" data-tab="' + tab.id + '">' + tab.icon + ' ' + tab.label + '</button>';
-  }).join('');
+  tabsEl.innerHTML = analysisTabs
+    .map(function (tab) {
+      return (
+        '<button class="tab-btn' +
+        (tab.id === 'lifeline' ? ' active' : '') +
+        '" data-tab="' +
+        tab.id +
+        '">' +
+        tab.icon +
+        ' ' +
+        tab.label +
+        '</button>'
+      );
+    })
+    .join('');
 
   // 加载默认 Tab
   setTimeout(function () {
@@ -282,7 +387,9 @@ function renderAnalysisTabs(container, result, state) {
   tabsEl.addEventListener('click', function (e) {
     var btn = e.target.closest('.tab-btn');
     if (!btn) return;
-    tabsEl.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+    tabsEl.querySelectorAll('.tab-btn').forEach(function (b) {
+      b.classList.remove('active');
+    });
     btn.classList.add('active');
     loadAnalysisTab(contentEl, btn.dataset.tab, state, result);
   });
@@ -293,8 +400,13 @@ async function loadAnalysisTab(contentEl, tabId, state, result) {
   contentEl.innerHTML = '<div class="spinner"></div>';
 
   var tabLabels = {
-    lifeline: '人生K线', monthly: '流月', wealth: '财富',
-    talent: '天赋', balance: '反内耗', dateselect: '择日', love: '正缘'
+    lifeline: '人生K线',
+    monthly: '流月',
+    wealth: '财富',
+    talent: '天赋',
+    balance: '反内耗',
+    dateselect: '择日',
+    love: '正缘',
   };
 
   var label = tabLabels[tabId] || tabId;
@@ -310,7 +422,13 @@ async function loadAnalysisTab(contentEl, tabId, state, result) {
     switch (tabId) {
       case 'lifeline':
         var dateParts = state.userInfo.birthDate.split('-');
-        analysisData = BaziEngine.lifeline(result, state.userInfo.gender, parseInt(dateParts[0]), parseInt(dateParts[1]), parseInt(dateParts[2]));
+        analysisData = BaziEngine.lifeline(
+          result,
+          state.userInfo.gender,
+          parseInt(dateParts[0]),
+          parseInt(dateParts[1]),
+          parseInt(dateParts[2])
+        );
         break;
       case 'monthly':
         analysisData = BaziEngine.monthly(result);
@@ -345,14 +463,22 @@ async function loadAnalysisTab(contentEl, tabId, state, result) {
 
     contentEl.innerHTML =
       '<div class="analysis-section fade-in">' +
-      '<h3>' + label + '分析 ' + scoreHtml + '</h3>' +
-      '<div class="analysis-content">' + formatAnalysisText(text) + '</div>' +
+      '<h3>' +
+      label +
+      '分析 ' +
+      scoreHtml +
+      '</h3>' +
+      '<div class="analysis-content">' +
+      formatAnalysisText(text) +
+      '</div>' +
       '</div>';
   } catch (error) {
     contentEl.innerHTML =
       '<div class="error-container">' +
       '<div class="error-icon">⚠️</div>' +
-      '<div class="error-text">' + escapeHtml(error.message || '分析失败') + '</div>' +
+      '<div class="error-text">' +
+      escapeHtml(error.message || '分析失败') +
+      '</div>' +
       '</div>';
   }
 }
@@ -376,7 +502,8 @@ function renderLifelineChart(contentEl, data, label) {
   html += '大运' + direction + ' · 起运年龄：' + qiyunAge + '岁 · 当前' + userAge + '岁';
   html += '</div>';
   html += '<canvas id="lifeline-canvas" style="width:100%;height:320px;display:block;"></canvas>';
-  html += '<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:0.7rem;color:var(--text-muted);">';
+  html +=
+    '<div style="display:flex;justify-content:space-between;margin-top:4px;font-size:0.7rem;color:var(--text-muted);">';
   html += '<span>🔴 低潮期（<45分）</span><span>🟡 平稳期（45-60分）</span><span>🟢 上升期（>60分）</span>';
   html += '</div>';
   html += '</div>';
@@ -440,7 +567,7 @@ function drawLifelineCanvas(lifeline, userAge, currentDayun) {
 
   // 颜色区域
   var gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
-  gradient.addColorStop(0, 'rgba(200,216,168,0.08)');  // 绿色区（高分）
+  gradient.addColorStop(0, 'rgba(200,216,168,0.08)'); // 绿色区（高分）
   gradient.addColorStop(0.4, 'rgba(200,216,168,0.08)');
   gradient.addColorStop(0.4, 'rgba(230,226,216,0.04)'); // 黄色区
   gradient.addColorStop(0.7, 'rgba(230,226,216,0.04)');
@@ -549,7 +676,7 @@ function drawLifelineCanvas(lifeline, userAge, currentDayun) {
     // 年龄段标签
     ctx.fillStyle = 'rgba(184,154,92,0.5)';
     ctx.font = '8px sans-serif';
-    var ageLabel = d.ageRange || (d.age + '岁');
+    var ageLabel = d.ageRange || d.age + '岁';
     ctx.fillText(ageLabel, pt.x, pt.y + 30);
   }
 
@@ -586,8 +713,12 @@ function formatAnalysisText(text) {
   if (!text) return '<p>暂无数据</p>';
   return text
     .split('\n')
-    .filter(function (line) { return line.trim(); })
-    .map(function (line) { return '<p>' + escapeHtml(line) + '</p>'; })
+    .filter(function (line) {
+      return line.trim();
+    })
+    .map(function (line) {
+      return '<p>' + escapeHtml(line) + '</p>';
+    })
     .join('');
 }
 
@@ -617,5 +748,7 @@ function showToast(message, duration) {
   toast.textContent = message;
   toast.style.opacity = '1';
   clearTimeout(toast._timeout);
-  toast._timeout = setTimeout(function () { toast.style.opacity = '0'; }, duration);
+  toast._timeout = setTimeout(function () {
+    toast.style.opacity = '0';
+  }, duration);
 }
