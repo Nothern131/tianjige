@@ -168,7 +168,6 @@ function renderCompositeComponent() {
 
     return container;
   } catch (e) {
-    console.error('[合参] renderCompositeComponent 错误:', e);
     var errDiv = document.createElement('div');
     errDiv.className = 'error-container';
     errDiv.innerHTML =
@@ -277,7 +276,6 @@ function handleCompositeSubmit(container) {
             var masterComments = MastersEngine.batchAnalyze(masterIds, data, question);
             data.masterComments = masterComments;
           } catch (me) {
-            console.warn('[合参] 大师点评生成失败:', me);
           }
         }
 
@@ -305,10 +303,8 @@ function handleCompositeSubmit(container) {
           submitBtn.textContent = '🔮 重新推演';
         }
         if (progressBar) progressBar.classList.add('hidden');
-        console.error('[合参] 错误:', err);
       });
-  } catch (e) {
-    console.error('[合参] handleCompositeSubmit 错误:', e);
+    } catch (e) {
     var rc = container.querySelector('#comp-result-container');
     if (rc)
       rc.innerHTML =

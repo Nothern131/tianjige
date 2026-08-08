@@ -100,13 +100,11 @@
     try {
       var engineObj = global[config.engineName];
       if (!engineObj) {
-        console.warn('[Registry] 引擎对象未找到: ' + config.engineName);
         return Promise.resolve(null);
       }
 
       var fn = engineObj[config.methodName];
       if (typeof fn !== 'function') {
-        console.warn('[Registry] 方法未找到: ' + config.engineName + '.' + config.methodName);
         return Promise.resolve(null);
       }
 
@@ -125,7 +123,6 @@
       var result = fn.apply(engineObj, args);
       return Promise.resolve(result);
     } catch (err) {
-      console.warn('[Registry] 引擎 [' + key + '] 执行失败:', err);
       return Promise.resolve(null);
     }
   }
@@ -143,7 +140,6 @@
           return { key: key, raw: raw, config: REGISTRY[key] };
         })
         .catch(function (err) {
-          console.warn('[Registry] 引擎 [' + key + '] 异常:', err);
           return { key: key, raw: null, config: REGISTRY[key] };
         });
     });

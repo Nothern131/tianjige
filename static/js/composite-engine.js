@@ -95,7 +95,6 @@
   /* ========== 归一化（通用） ========== */
   function normalizeResult(key, raw, config) {
     if (!raw) {
-      console.warn('[合参] 引擎 ' + key + ' 返回空结果，使用默认值');
       raw = {};
     }
     var cfg = config || { name: key, icon: '❓', weight: 1.0 };
@@ -548,7 +547,6 @@
           domainKey = daResult.domain.key;
         }
       } catch (daErr) {
-        console.warn('[合参] 领域分析跳过（数据不足）:', daErr.message);
       }
     }
     if (!domainKey) domainKey = 'career';
@@ -777,7 +775,6 @@
               timestamp: new Date().toISOString(),
             };
           } catch (e) {
-            console.error('[合参] synthesizeResults 失败:', e);
             return {
               score: 60,
               trend: 'flat',
@@ -798,7 +795,6 @@
           }
         })
         .catch(function (err) {
-          console.error('[合参] run 整体失败:', err);
           return {
             score: 50,
             trend: 'flat',

@@ -334,7 +334,6 @@
     try {
       return fn();
     } catch (e) {
-      console.warn('[天机阁·双面分析] ' + (context || '未知操作') + ' 失败：' + e.message);
       return fallback;
     }
   }
