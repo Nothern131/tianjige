@@ -461,4 +461,8 @@
     executeAll: executeAll,
     REGISTRY: REGISTRY,
   };
+
+  if (typeof global.Tianjige !== 'undefined' && global.Tianjige.Logger) {
+    global.Tianjige.Logger.log('引擎注册中心加载完成，共 ' + Object.keys(global.EngineRegistry.REGISTRY).length + ' 个引擎');
+  }
 })(typeof window !== 'undefined' ? window : this);

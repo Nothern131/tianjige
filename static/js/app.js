@@ -479,4 +479,8 @@
   } else {
     init();
   }
+
+  (typeof Tianjige !== 'undefined' && Tianjige.Logger)
+    ? Tianjige.Logger.log('天机阁 v5 启动，星空引擎就绪')
+    : void 0;
 })();

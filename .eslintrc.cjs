@@ -38,6 +38,8 @@ module.exports = {
     // 工具函数（共享模块）
     formatAnalysisText: 'readonly',
     escapeHtml: 'readonly',
+    // 日志模块
+    Logger: 'readonly',
   },
   rules: {
     'no-console': 'warn',
