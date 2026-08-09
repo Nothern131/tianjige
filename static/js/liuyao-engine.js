@@ -1013,7 +1013,9 @@
     var riGanZhi = _getRiGanZhi(today);
     var riGan = riGanZhi.gan;
     var riZhi = riGanZhi.zhi;
-    var yueZhi = _getYueZhi(today.getMonth() + 1);
+    var yearGZ = calcYearGZ(today.getFullYear());
+    var yearGan = yearGZ[0];
+    var yueZhi = _getYueZhi(today.getFullYear(), today.getMonth() + 1, today.getDate());
     var liuShou = getLiuShou(riGan);
 
     var interpretation = generateInterpretation(gua, dongYao, shiYao, yingYao, liuQin, liuShou, changedGua);
@@ -1022,9 +1024,10 @@
     var score = calculateScore(gua, dongYao, shiYao, yingYao, liuQin, liuShou, changedGua);
     var trend = calculateTrend(score);
 
-    // 日月建
+    // 日月建（年干支来自calcYearGZ，月干用五虎遁）
     var riJian = riGan + riZhi;
-    var yueJian = _getYueGan(riGan, today.getMonth() + 1) + yueZhi;
+    var yueGan = _getYueGan(yearGan, yueZhi);
+    var yueJian = yueGan + yueZhi;
 
     // 六冲六合
     var chongHe = checkLiuChongLiuHe(gua.name, changedGua);
@@ -1070,12 +1073,12 @@
   }
 
   /**
-   * 根据公历日期获取日干（以1900-01-01甲戌日为基准）
+   * 根据公历日期获取日干（以2000-01-01甲子日为基准）
    */
   function _getRiGan(date) {
-    var base = new Date(1900, 0, 1);
+    var base = new Date(2000, 0, 1);
     var diff = Math.floor((date.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
-    var riGanIdx = ((diff % 10) + 10) % 10;
+    var riGanIdx = ((diff % 10) + 10) % 10; // 甲=0
     return GAN[riGanIdx];
   }
 
@@ -1106,30 +1109,46 @@
   };
 
   /**
-   * 计算日干支（公历转干支）
+   * 计算日干支（公历转干支，以2000-01-01甲子日为基准）
    */
   function _getRiGanZhi(date) {
-    var base = new Date(1900, 0, 1); // 1900-01-01 甲戌日
+    var base = new Date(2000, 0, 1); // 2000-01-01 甲子日（index 0）
     var diff = Math.floor((date.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
-    var ganIdx = ((diff + 9) % 10 + 10) % 10; // 甲=0
-    var zhiIdx = ((diff + 10) % 12 + 12) % 12; // 戌=10
-    return { gan: GAN[ganIdx], zhi: ZHI[zhiIdx] };
+    var idx = ((diff % 60) + 60) % 60;
+    return { gan: GAN[idx % 10], zhi: ZHI[idx % 12] };
   }
 
   /**
-   * 计算月支（简化：以农历正月为寅月开始）
+   * 计算年干支（以1900年庚子年为基准）
    */
-  function _getYueZhi(month) {
-    return ZHI[(month + 1) % 12];
+  function calcYearGZ(year) {
+    var baseYear = 1900,
+      baseIdx = JIAZI_INDEX['庚子'] || 0;
+    var offset = year - baseYear;
+    return SIXTY_JIAZI[(((baseIdx + offset) % 60) + 60) % 60];
   }
 
   /**
-   * 计算月干（以年干为基础推算）
+   * 计算月支（按节气：立春约2月4日为寅月起点，立秋约8月7-8日为申月起点）
    */
-  function _getYueGan(yearGan, month) {
-    var baseGanIdx = { 甲: 0, 乙: 1, 丙: 2, 丁: 3, 戊: 4, 己: 5, 庚: 6, 辛: 7, 壬: 8, 癸: 9 }[yearGan] || 0;
-    var monthGanIdx = (baseGanIdx * 2 + month) % 10;
-    return GAN[monthGanIdx];
+  function _getYueZhi(year, month, day) {
+    // 立春：约2月4日，之后为寅月；其余按公历月-1映射（1月→丑月）
+    var afterLichun = month > 2 || (month === 2 && day >= 4);
+    var beforeLiqiu = month < 8 || (month === 8 && day < 7);
+    if (month === 1) return '丑';
+    if (month === 2 && day < 4) return '丑';
+    if (month >= 8 && day >= 7) return ZHI[month % 12];       // 申(8),酉(9),戌(10),亥(11),子(0)
+    if (month >= 2 && month <= 7) return ZHI[(month + 1) % 12]; // 寅(1)..未(6)
+    return ZHI[month % 12]; // month >= 9
+  }
+
+  /**
+   * 计算月干（五虎遁：年干→寅月月干丙/戊/庚/壬/甲）
+   */
+  function _getYueGan(yearGan, monthZhi) {
+    var startGan = WUHUDUN[yearGan] || '丙';
+    var monthIdx = (ZHI.indexOf(monthZhi) - ZHI.indexOf('寅') + 12) % 12;
+    return GAN[(GAN.indexOf(startGan) + monthIdx) % 10];
   }
 
   /**
