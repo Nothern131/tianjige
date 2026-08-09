@@ -1643,6 +1643,24 @@
             '</tr>';
         }
 
+        // 摇卦过程可视化 HTML
+        var castingHtml = '<div class="casting-process" style="margin-top:20px;padding:16px;background:rgba(184,154,92,0.06);border:1px solid var(--border-gold);border-radius:var(--radius-sm);">';
+        castingHtml += '<h3 style="font-family:var(--font-serif);color:var(--gold);font-size:0.92rem;margin-bottom:12px;">🪙 摇卦过程</h3>';
+        castingHtml += '<p style="font-size:0.78rem;color:var(--text2);margin-bottom:12px;line-height:1.7;">古法以三枚铜钱摇六次，每次总和为2(少阴⚋)、3(少阳⚊)、4(老阳⚡)、5(老阴⚡)，老阴老阳为动爻，变为相反之爻。今以算法模拟此过程，以时辰为种子随机起卦：</p>';
+        castingHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">';
+        for (var ci = 0; ci < 6; ci++) {
+          var lineVal = yaoArr[ci];
+          var isYang2 = lineVal === 1;
+          var isMv = dongYao.indexOf(ci + 1) >= 0;
+          var yaoSymbol = isYang2 ? '⚊' : '⚋';
+          castingHtml += '<div style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(184,154,92,0.1);border-radius:4px;font-size:0.82rem;">';
+          castingHtml += '<span style="color:var(--text3);font-size:0.72rem;">第' + (ci + 1) + '次</span>';
+          castingHtml += '<span style="font-size:1.1rem;">' + yaoSymbol + '</span>';
+          castingHtml += '<span style="color:var(--text2);font-size:0.72rem;">' + (isYang2 ? '阳' : '阴') + (isMv ? ' ⚡动' : '') + '</span>';
+          castingHtml += '</div>';
+        }
+        castingHtml += '</div></div>';
+
         area.innerHTML =
           '<div class="hexagram-display">' +
           '<div class="hexagram-name">' +
@@ -1666,6 +1684,7 @@
           '<div class="table-wrap"><table class="yao-table">' +
           '<thead><tr><th>爻位</th><th>阴阳</th><th>变爻</th><th>六亲</th><th>六兽</th><th>纳甲</th></tr></thead>' +
           '<tbody>' + yaoTableRows + '</tbody></table></div>' +
+          castingHtml +
           (result.interpretation
             ? '<div class="interp-block"><h3>📖 卦象解读</h3><div style="font-size:0.85rem;color:var(--text2);line-height:1.85;">' +
               formatAnalysisText(result.interpretation) +
@@ -1713,6 +1732,78 @@
 
         function yaoPos(n) {
           return ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'][n - 1] || '第' + n + '爻';
+        }
+
+        // 地支序（用于应期推断）
+        var ZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+
+        // ── 应期推断：动爻冲合 → 时间应期 ──
+        function inferTiming(shouldDongYao, domainKey) {
+          var zhi = najia ? (najia[shouldDongYao - 1] ? najia[shouldDongYao - 1].zhi : '') : '';
+          if (!zhi) return '';
+          var chongMap = { 子: '午', 午: '子', 丑: '未', 未: '丑', 寅: '申', 申: '寅', 巳: '亥', 亥: '巳', 卯: '酉', 酉: '卯', 辰: '戌', 戌: '辰' };
+          var heMap = { 子: '丑', 丑: '子', 寅: '亥', 亥: '寅', 卯: '戌', 戌: '卯', 辰: '酉', 酉: '辰', 巳: '申', 申: '巳', 午: '未', 未: '午' };
+          var chongZhi = chongMap[zhi] || '';
+          var heZhi = heMap[zhi] || '';
+          var zhiNum = ZHI.indexOf(zhi);
+          var chongNum = ZHI.indexOf(chongZhi);
+          var heNum = ZHI.indexOf(heZhi);
+          var parts = [];
+          parts.push('动爻地支「' + zhi + '」（第' + (zhiNum + 1) + '位）');
+          if (chongZhi) parts.push('冲「' + chongZhi + '」——逢冲则动，冲动之日为应期。');
+          if (heZhi) parts.push('合「' + heZhi + '」——逢合则合，合住之日为应期。');
+          // 按事域给出时间粒度
+          var granularity = '';
+          if (domainKey === 'career') granularity = '应期可能在数日、数周或数月内显现，具体看事情紧迫程度。';
+          else if (domainKey === 'love') granularity = '感情之事，应期多在数周至数月内，太快则不真，太迟则失机。';
+          else if (domainKey === 'wealth') granularity = '财运之期，多在逢冲逢合之日，近期留意。';
+          else if (domainKey === 'health') granularity = '健康之事，应期较近，宜尽快行动。';
+          else granularity = '应期多在近期显现，具体时长视事态急缓而定。';
+          parts.push(granularity);
+          return parts.join(' ');
+        }
+
+        // ── 六亲事域详解：每个六亲在当前事域中的具体含义 ──
+        function qinDomainDetail(qin, domainKey) {
+          var detail = '';
+          switch (domainKey) {
+            case 'career':
+              if (qin === '官鬼') detail = '事业线：代表职位、官运、上级认可、工作压力、事业危机。官鬼旺相则事业有成，休囚则压力重重。';
+              if (qin === '妻财') detail = '事业线：代表薪资待遇、项目收益、资源支持、职场人脉。财生官则事业有源，财旺官兴则升迁有望。';
+              if (qin === '子孙') detail = '事业线：代表创意、技术能力、解忧之力。子孙克官鬼——创意能化解压力，但子孙过旺亦可能影响仕途。';
+              if (qin === '父母') detail = '事业线：代表文书合同、公司制度、上级指令、学历背景。父母爻为事业之根基，动则可能有文书变动。';
+              if (qin === '兄弟') detail = '事业线：代表竞争、同僚、破财因素。兄弟克财——竞争中易有利益损失，需谨慎处理人际关系。';
+              break;
+            case 'love':
+              if (qin === '官鬼') detail = '感情线（女占）：代表男友/丈夫、感情对象、异性缘分。官鬼持世则感情主动，官鬼动则感情有变。';
+              if (qin === '妻财') detail = '感情线（男占）：代表女友/妻子、感情对象、异性缘分。财爻旺相则感情顺遂，财爻安静则感情平淡。';
+              if (qin === '子孙') detail = '感情线：代表愉悦感、轻松氛围、暧昧气息。子孙爻旺则感情甜蜜，但子孙克官鬼——太快乐可能缺乏责任感。';
+              if (qin === '父母') detail = '感情线：代表长辈意见、婚约承诺、稳定程度。父母爻旺则长辈支持，动则可能有婚嫁之事。';
+              if (qin === '兄弟') detail = '感情线：代表竞争者、阻挠因素、感情中的第三方。兄弟爻动则感情有竞争，需警惕第三者介入。';
+              break;
+            case 'wealth':
+              if (qin === '妻财') detail = '财运线：代表正财收入、投资收益、现金流。妻财持世则财运主动，财爻旺则财源广进。';
+              if (qin === '子孙') detail = '财运线：代表生财之道、投资项目、盈利模式。子孙生妻财——有稳定财源，投资可期。';
+              if (qin === '官鬼') detail = '财运线：代表财运压力、税务、罚款、意外支出。官鬼持世则求财辛苦，动则可能有意外破财。';
+              if (qin === '父母') detail = '财运线：代表合同文书、房产资产、稳定收入来源。父母爻旺则资产稳固，动则可能有买卖文书。';
+              if (qin === '兄弟') detail = '财运线：代表破财因素、竞争对手、投资风险。兄弟克妻财——忌兄弟爻动，否则财运受损。';
+              break;
+            case 'health':
+              if (qin === '官鬼') detail = '健康线：代表病症所在、身体不适。官鬼持世则病在身，官鬼旺相病重，休囚病轻。';
+              if (qin === '子孙') detail = '健康线：代表康复力量、医药效果、免疫力。子孙爻旺则康复有望，子孙动则病情有转机。';
+              if (qin === '父母') detail = '健康线：代表检查报告、医疗文书、治疗方案。父母爻旺则诊断明确，动则可能调整治疗方案。';
+              if (qin === '妻财') detail = '健康线：代表营养状况、身体能量。妻财休囚则营养不良或体力不济。';
+              if (qin === '兄弟') detail = '健康线：代表竞争、情绪压力、炎症。兄弟爻动则可能有炎症或情绪问题。';
+              break;
+            case 'study':
+              if (qin === '父母') detail = '学业线：代表成绩、老师、课本、学历证书。父母爻旺则学业有成，动则成绩有变化。';
+              if (qin === '官鬼') detail = '学业线：代表考试压力、竞争排名、自我约束。官鬼持世则压力在己，动则考试临近。';
+              if (qin === '子孙') detail = '学业线：代表领悟力、考试发挥、学习兴趣。子孙爻旺则发挥稳定，动则可能有意外发挥。';
+              if (qin === '妻财') detail = '学业线：代表分散注意力的因素、娱乐诱惑。妻财动则可能因娱乐影响学习。';
+              if (qin === '兄弟') detail = '学业线：代表竞争者、同学关系、学业阻力。兄弟爻动则竞争激烈，需更加努力。';
+              break;
+          }
+          return detail;
         }
 
         // ── 事域检测 ──
@@ -2178,6 +2269,43 @@
         }
         specialty += '宜：\n' + doList.map(function (d) { return '  · ' + d; }).join('\n') + '\n\n';
         specialty += '不宜：\n' + dontList.map(function (d) { return '  · ' + d; }).join('\n') + '\n';
+
+        // ── 3i. 应期推断：动爻冲合 → 何时发生 ──
+        if (dongYao.length > 0 && najia) {
+          specialty += '\n【应期推断】\n';
+          var timingParts = [];
+          for (var ti = 0; ti < dongYao.length; ti++) {
+            var tiText = inferTiming(dongYao[ti], domainKey);
+            if (tiText) timingParts.push(tiText);
+          }
+          if (timingParts.length > 0) {
+            specialty += timingParts.join('\n');
+          } else {
+            specialty += '动爻无明确地支，应期需结合具体问事和时令综合判断。';
+          }
+        }
+
+        // ── 3j. 六亲事域详解 ──
+        specialty += '\n【六亲事域详解】\n';
+        var qinDetails = [];
+        var allQin = ['官鬼', '妻财', '子孙', '父母', '兄弟'];
+        for (var qi2 = 0; qi2 < allQin.length; qi2++) {
+          var q2 = allQin[qi2];
+          var posArr = qinPositions[q2] || [];
+          if (posArr.length > 0) {
+            var posText = posArr.map(function (p) { return yaoPos(p); }).join('、');
+            var detailText = qinDomainDetail(q2, domainKey);
+            if (detailText) {
+              var movedFlag = posArr.some(function (p) { return dongYao.indexOf(p) >= 0; }) ? ' ⚡动' : '';
+              qinDetails.push('『' + q2 + '』' + posText + movedFlag + '——' + detailText);
+            }
+          }
+        }
+        if (qinDetails.length > 0) {
+          specialty += qinDetails.join('\n');
+        } else {
+          specialty += '六亲分布已完整呈现于上文中，详见各爻位标注。';
+        }
 
         // ══════════════════════════════════════════════════════════
         // SECTION 4: QUOTE — 大师经典引用

@@ -291,7 +291,7 @@
     var key = newYao.join('');
     var changed = YAO_TO_GUA[key];
     if (!changed) return null;
-    return { name: changed.name, yao: newYao };
+    return { name: changed.name, yao: newYao, dong_yao: dongYao };
   }
 
   /* ========== 八、解读生成 ========== */
