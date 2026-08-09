@@ -1,4 +1,6 @@
 import { defineConfig } from 'vite';
+import fs from 'fs';
+import path from 'path';
 
 export default defineConfig({
   root: '.',
@@ -17,4 +19,15 @@ export default defineConfig({
     port: 8889,
     open: false,
   },
+  plugins: [
+    {
+      name: 'copy-static',
+      closeBundle() {
+        const src = path.resolve('static');
+        const dst = path.resolve('dist/static');
+        if (!fs.existsSync(src)) return;
+        fs.cpSync(src, dst, { recursive: true });
+      },
+    },
+  ],
 });
