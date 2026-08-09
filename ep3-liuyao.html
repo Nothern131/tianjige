@@ -1736,6 +1736,44 @@
           return '平';
         }
 
+        // ── 旬空计算：日柱所属旬的空亡地支 ──
+        function getXunKong(riJian) {
+          var idx = JIAZI_INDEX[riJian] || 0;
+          var xunStart = idx - (idx % 10);
+          return [ZHI[(xunStart + 10) % 12], ZHI[(xunStart + 11) % 12]];
+        }
+        // 各爻是否旬空
+        var kongWang = getXunKong(riJian);
+        var yaoKongWang = [];
+        for (var ki = 0; ki < 6; ki++) {
+          yaoKongWang[ki] = kongWang.indexOf(najia[ki] ? najia[ki].zhi : '') >= 0;
+        }
+
+        // ── 日月建生克分析：日建/月建对某爻地支的影响 ──
+        function yaoRiYueRelation(yaoZhi) {
+          if (!yaoZhi) return '';
+          var yaoWx = ZHI_WUXING[yaoZhi] || '';
+          // 日建关系
+          var riZhi = riJian ? riJian[2] : '';
+          var riWx = ZHI_WUXING[riZhi] || '';
+          var riRel = '';
+          if (riWx === yaoWx) riRel = '日辰比和';
+          else if (WX_SHENG[riWx] === yaoWx) riRel = '日辰生扶';
+          else if (WX_SHENG[yaoWx] === riWx) riRel = '日辰泄气';
+          else if (WX_KE[riWx] === yaoWx) riRel = '日辰克制';
+          else if (WX_KE[yaoWx] === riWx) riRel = '日辰反克';
+          // 月建关系
+          var yueZhi = yueJian ? yueJian[2] : '';
+          var yueWx = ZHI_WUXING[yueZhi] || '';
+          var yueRel = '';
+          if (yueWx === yaoWx) yueRel = '月建比和';
+          else if (WX_SHENG[yueWx] === yaoWx) yueRel = '月建生扶';
+          else if (WX_SHENG[yaoWx] === yueWx) yueRel = '月建泄气';
+          else if (WX_KE[yueWx] === yaoWx) yueRel = '月建克制';
+          else if (WX_KE[yaoWx] === yueWx) yueRel = '月建反克';
+          return (riRel || yueRel) ? riRel + '·' + yueRel : '';
+        }
+
         // ── 应期推断：动爻冲合 → 时间应期 ──
         function inferTiming(shouldDongYao, domainKey) {
           var zhi = najia ? (najia[shouldDongYao - 1] ? najia[shouldDongYao - 1].zhi : '') : '';
@@ -2123,10 +2161,38 @@
         }
         specialty += yongShenParts.join('\n') + '\n';
 
+        // ── 3a.5 旬空标注：用神爻是否空亡 ──
+        if (kongWang && kongWang.length === 2) {
+          specialty += '\n【旬空标注】\n';
+          specialty += '本日旬空：' + kongWang[0] + '、' + kongWang[1] + '。\n';
+          var yongLines = [];
+          if (domainKey === 'career') yongLines = liuQin.indexOf('官鬼');
+          else if (domainKey === 'love') yongLines = domainSex === 'male' ? liuQin.indexOf('妻财') : liuQin.indexOf('官鬼');
+          else if (domainKey === 'wealth') yongLines = liuQin.indexOf('妻财');
+          else if (domainKey === 'health') yongLines = liuQin.indexOf('官鬼');
+          else if (domainKey === 'study') yongLines = liuQin.indexOf('父母');
+          for (var yki = 0; yki < 6; yki++) {
+            if (yaoKongWang[yki]) {
+              var yq = liuQin[yki] || '—';
+              var yn = najia[yki] ? najia[yki].gan + najia[yki].zhi : '—';
+              var ykDesc = (yongLines === yki) ? '——此爻为用神，逢空则事有虚象，需待填实。' : '——此爻逢空，暂不显其用。';
+              specialty += yaoPos(yki + 1) + '（' + yq + '，纳' + yn + '）' + ykDesc + '\n';
+            }
+          }
+          var anyKong = yaoKongWang.some(function(v){ return v; });
+          if (!anyKong) specialty += '卦中六爻均不落空亡，气脉通畅，事有实象可断。\n';
+        }
+
         // ── 3b. 你的状态（世爻详细分析）──
         specialty += '\n【你的状态】\n';
         var youState = [];
-        youState.push('世爻临' + shiQin + '居' + yaoPos(shiYao) + '——你是这件事的主动参与者，目前你的基本状态是「' + (qinMap[shiQin] || shiQin) + '」。');
+        var shiNajia = najia[shiYao - 1] || {};
+        var shiZhi = shiNajia.zhi || '';
+        var shiRiYue = yaoRiYueRelation(shiZhi);
+        var shiKongText = yaoKongWang[shiYao - 1] ? '（⚡旬空）' : '';
+        youState.push('世爻' + yaoPos(shiYao) + '临' + shiQin + '，纳' + (shiNajia.gan || '') + (shiZhi || '') + shiKongText + '——你是这件事的主动参与者，目前你的基本状态是「' + (qinMap[shiQin] || shiQin) + '」。');
+        if (shiRiYue) youState.push('日辰月建对世爻：' + shiRiYue + '——此关系影响你对该事的实际掌控力。');
+        if (wangShuai.length > 0 && wangShuai[shiYao - 1]) youState.push('世爻临' + wangShuai[shiYao - 1] + '——世爻能量状态。');
         if (shiShou) youState.push('值' + shiShou + '，' + (shouAdvice(shiShou) || '') + '。');
         if (dongYao.indexOf(shiYao) >= 0) {
           var movedQin = liuQin[shiYao - 1] || shiQin;
@@ -2144,7 +2210,13 @@
         // ── 3c. 对方/外部状态（应爻详细分析）──
         specialty += '\n【对方/外部状态】\n';
         var otherState = [];
-        otherState.push('应爻临' + yingQin + '居' + yaoPos(yingYao) + '——此事的另一方或外部环境目前的状态是「' + (qinMap[yingQin] || yingQin) + '」。');
+        var yingNajia = yingYao ? (najia[yingYao - 1] || {}) : {};
+        var yingZhi = yingNajia.zhi || '';
+        var yingRiYue = yingZhi ? yaoRiYueRelation(yingZhi) : '';
+        var yingKongText = (yingYao && yaoKongWang[yingYao - 1]) ? '（⚡旬空）' : '';
+        otherState.push('应爻' + yaoPos(yingYao) + '临' + yingQin + '，纳' + (yingNajia.gan || '') + (yingZhi || '') + yingKongText + '——此事的另一方或外部环境目前的状态是「' + (qinMap[yingQin] || yingQin) + '」。');
+        if (yingRiYue) otherState.push('日辰月建对方爻：' + yingRiYue + '——此关系影响对方/外部对你的助力或阻力。');
+        if (yingYao && wangShuai.length > 0 && wangShuai[yingYao - 1]) otherState.push('应爻临' + wangShuai[yingYao - 1] + '——应爻能量状态。');
         if (yingYao !== shiYao) {
           otherState.push('世应不相重叠，说明你与此事/对方并非完全同步，存在理解上的偏差。');
         } else {
@@ -2166,9 +2238,17 @@
             var d2 = dongYao[di2];
             var dQin = liuQin[d2 - 1] || '—';
             var dShou = liuShou[d2 - 1] || '';
-            var dDesc = yaoPos(d2) + '动，临' + dQin;
+            var dNajia = najia[d2 - 1] || {};
+            var dZhi = dNajia.zhi || '';
+            var dRiYue = dZhi ? yaoRiYueRelation(dZhi) : '';
+            var dKong = yaoKongWang[d2 - 1] ? '（⚡旬空）' : '';
+            var dWang = wangShuai[d2 - 1] || '';
+            var dDesc = yaoPos(d2) + '动，临' + dQin + dKong;
+            if (dNajia.gan) dDesc += '，纳' + dNajia.gan + dZhi;
             if (dShou) dDesc += '值' + dShou;
+            if (dWang) dDesc += '，月建临' + dWang;
             dDesc += '——' + dQin + '在此事中代表「' + (qinMap[dQin] || dQin) + '」。';
+            if (dRiYue) dDesc += ' 日月建对动爻：' + dRiYue + '——此关系决定动爻在实际事务中的发力程度。';
 
             // 动爻对谁的影响
             if (d2 === shiYao) {
