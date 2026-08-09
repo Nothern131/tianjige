@@ -1166,6 +1166,18 @@
 
         <input type="text" class="question-input" id="question" placeholder="心中所问之事，例如：近日事业是否有转机？" />
 
+        <div id="genderSelectorWrap" style="display:none;margin-top:12px;">
+          <label style="font-size:13px;color:var(--text-secondary);display:block;margin-bottom:6px;">占问性别</label>
+          <div style="display:flex;gap:16px;">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;">
+              <input type="radio" name="domainSex" value="male" checked> 男
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;">
+              <input type="radio" name="domainSex" value="female"> 女
+            </label>
+          </div>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>提问年份</label>
@@ -1852,6 +1864,19 @@
         var domainName = { career: '事业', love: '感情', wealth: '财运', health: '健康', study: '学业', family: '家庭', social: '人际', travel: '出行', general: '综合' }[domainKey] || '综合';
         var judgedName = domainName === '综合' ? '此事' : domainName;
 
+        // 性别：用于感情领域判断用神（女占用官鬼，男占用妻财）
+        var domainSex = 'male';
+        // 如果用户指定了性别，优先使用
+        var genderRadios = document.querySelectorAll('input[name="domainSex"]');
+        for (var ggi = 0; ggi < genderRadios.length; ggi++) {
+          if (genderRadios[ggi].checked) domainSex = genderRadios[ggi].value;
+        }
+        // 感情领域显示性别选择器
+        var genderWrap = document.getElementById('genderSelectorWrap');
+        if (genderWrap) {
+          genderWrap.style.display = (domainKey === 'love' || domainKey === 'general') ? 'block' : 'none';
+        }
+
         // ── 六亲分布 ──
         var qinPositions = {};
         for (var qi = 0; qi < 6; qi++) {
@@ -2242,6 +2267,66 @@
         else if (yingYao === 6) otherState.push('应居上爻，对方的态度可能已经明确或趋于终结。');
         specialty += otherState.join('\n') + '\n';
 
+        // ── 3c.5 世爻持用神判断 ──
+        specialty += '\n【世爻持用神判断】\n';
+        var yongQin = '';
+        if (domainKey === 'career') yongQin = '官鬼';
+        else if (domainKey === 'love') yongQin = domainSex === 'female' ? '官鬼' : '妻财';
+        else if (domainKey === 'wealth') yongQin = '妻财';
+        else if (domainKey === 'health') yongQin = '官鬼';
+        else if (domainKey === 'study') yongQin = '父母';
+        if (yongQin && liuQin[shiYao - 1] === yongQin) {
+          specialty += '世爻临' + yongQin + '——此乃「用神持世」，你是此事的核心当事人，事体与自身紧密相连，掌控力最强。';
+          if (dongYao.indexOf(shiYao) >= 0) {
+            specialty += '且世爻发动——此事的变化完全由你自己主导，宜主动决策、快速行动。';
+          } else {
+            specialty += '世爻安静——你当前状态稳定，此事宜以不变应万变，静待时机。';
+          }
+        } else if (yongQin) {
+          specialty += '世爻临' + (liuQin[shiYao - 1] || '—') + '，用神为' + yongQin + '——用神不持世，此事对你而言有一定距离感，需要借助外力或他人推动。';
+        }
+
+        // ── 3c.6 用神与世爻关系（生克合冲）──
+        if (yongQin) {
+          specialty += '\n【用神与世爻关系】\n';
+          var yongPositions = qinPositions[yongQin] || [];
+          var yongRelNotes = [];
+          for (var yri = 0; yri < yongPositions.length; yri++) {
+            var yongPos = yongPositions[yri];
+            var yongNajia = najia[yongPos - 1] || {};
+            var yongZhi = yongNajia.zhi || '';
+            var yongWx = ZHI_WUXING[yongZhi] || '';
+            var shiZhi2 = shiNajia.zhi || '';
+            var shiWx2 = ZHI_WUXING[shiZhi2] || '';
+            var relType = '';
+            if (yongWx === shiWx2) relType = '比和';
+            else if (WX_SHENG[yongWx] === shiWx2) relType = '用神生世';
+            else if (WX_SHENG[shiWx2] === yongWx) relType = '用神泄气';
+            else if (WX_KE[yongWx] === shiWx2) relType = '用神克世';
+            else if (WX_KE[shiWx2] === yongWx) relType = '世爻克用神';
+            if (relType === '用神生世') {
+              yongRelNotes.push('用神（' + yongQin + '）生世——外界资源/对方对你有利，宜顺势借力，主动把握。');
+            } else if (relType === '用神克世') {
+              yongRelNotes.push('用神（' + yongQin + '）克世——此事对你有一定压力，需承受责任或挑战方能达成。');
+            } else if (relType === '世爻克用神') {
+              yongRelNotes.push('世爻克用神——你想掌控此事，但力不从心，需谨慎推进。');
+            } else if (relType === '用神泄气') {
+              yongRelNotes.push('用神泄气于世——此事需要你付出精力，收获需以付出来换取。');
+            } else {
+              yongRelNotes.push('世爻与用神比和——双方能量相当，此事宜平等协商、互利合作。');
+            }
+            // 用神是否动
+            if (dongYao.indexOf(yongPos) >= 0) {
+              yongRelNotes.push('用神发动——' + yongQin + '临' + yaoPos(yongPos) + '发动，此事的核心因素正在变化，需重点关注。');
+            }
+            // 用神是否旬空
+            if (yaoKongWang[yongPos - 1]) {
+              yongRelNotes.push('用神逢空——' + yongQin + '临' + yaoPos(yongPos) + '旬空，用神暂虚，此事目前难以落实，需待填实。');
+            }
+          }
+          specialty += yongRelNotes.join('\n') + '\n';
+        }
+
         // ── 3d. 动爻详细分析（最重要）──
         specialty += '\n【动爻分析】\n';
         if (dongYao.length > 0) {
@@ -2279,6 +2364,73 @@
           // 静卦世应关系
           var rel2 = shiYingRelationText(shiQin, yingQin);
           if (rel2) specialty += '世应关系：' + rel2 + '\n';
+        }
+
+        // ── 3d.5 动爻生克链 ──
+        if (dongYao.length > 0) {
+          specialty += '\n【动爻生克链】\n';
+          var chainNotes = [];
+          for (var ci = 0; ci < dongYao.length; ci++) {
+            var cYao = dongYao[ci];
+            var cQin = liuQin[cYao - 1] || '—';
+            var cNajia = najia[cYao - 1] || {};
+            var cZhi = cNajia.zhi || '';
+            var cWx = ZHI_WUXING[cZhi] || '';
+            // 对世爻的影响
+            var shiWx = ZHI_WUXING[shiZhi] || '';
+            var toShi = '';
+            if (cWx === shiWx) toShi = '与世爻比和——动爻与你同频，此事变化你能够掌控。';
+            else if (WX_SHENG[cWx] === shiWx) toShi = '生助世爻——动爻对你有利，外界有资源或助力在推动此事。';
+            else if (WX_SHENG[shiWx] === cWx) toShi = '泄耗世爻——动爻在消耗你的能量，你需要为此付出额外精力。';
+            else if (WX_KE[cWx] === shiWx) toShi = '克制世爻——动爻对你构成压力或挑战，需妥善应对。';
+            else if (WX_KE[shiWx] === cWx) toShi = '世爻克制动爻——你能够控制此事的变化，但过程会有阻力。';
+            // 对用神的影响
+            var toYong = '';
+            if (yongQin) {
+              var yongPosArr = qinPositions[yongQin] || [];
+              for (var ypi = 0; ypi < yongPosArr.length; ypi++) {
+                var yp = yongPosArr[ypi];
+                var yongNajia2 = najia[yp - 1] || {};
+                var yongZhi2 = yongNajia2.zhi || '';
+                var yongWx2 = ZHI_WUXING[yongZhi2] || '';
+                if (cWx === yongWx2) toYong += '与用神' + yongQin + '比和；';
+                else if (WX_SHENG[cWx] === yongWx2) toYong += '生助用神' + yongQin + '——动爻为用神之源，此事有持续动力；';
+                else if (WX_SHENG[yongWx2] === cWx) toYong += '泄耗用神' + yongQin + '——动爻在消耗用神能量，需谨慎；';
+                else if (WX_KE[cWx] === yongWx2) toYong += '克制用神' + yongQin + '——动爻为用神之忌，此事有阻碍；';
+                else if (WX_KE[yongWx2] === cWx) toYong += '用神克动爻——用神能够掌控此变化，但需付出代价；';
+              }
+            }
+            var chainLine = yaoPos(cYao) + '临' + cQin + '发动——' + (toShi || '') + (toYong || '');
+            if (!toShi && !toYong) chainLine = yaoPos(cYao) + '临' + cQin + '发动——此动爻与世爻、用神无直接生克，变化在关联层面。';
+            chainNotes.push(chainLine);
+          }
+          specialty += chainNotes.join('\n') + '\n';
+        }
+
+        // ── 3d.6 六兽逐爻详解 ──
+        specialty += '\n【六兽逐爻详解】\n';
+        var shouDesc = {
+          青龙: { 官鬼: '事业上有贵人，官运亨通', 妻财: '正财稳健，有意外之喜', 子孙: '创意迸发，项目顺利', 父母: '文书有利，合同可成', 兄弟: '朋友助力，但需防破财' },
+          朱雀: { 官鬼: '口舌是非，注意言行', 妻财: '财务纠纷需防范', 子孙: '有创意表达，适合宣传', 父母: '文书合同有口舌，需仔细', 兄弟: '竞争中有口舌是非' },
+          勾陈: { 官鬼: '压力迟滞，需耐心', 妻财: '财运稳定但缓慢', 子孙: '稳步前进，不宜急躁', 父母: '文书拖延，需跟进', 兄弟: '竞争中有拉扯，需坚持' },
+          螣蛇: { 官鬼: '虚惊变化，需防小人', 妻财: '财运有变数，需谨慎', 子孙: '思路活跃但多变', 父母: '文书有变化，需留后手', 兄弟: '朋友关系有变化，需留意' },
+          白虎: { 官鬼: '压力巨大，但也可成事', 妻财: '财运有压力，可能破财', 子孙: '行动力强，适合突破', 父母: '文书有压力，但可解决', 兄弟: '竞争激烈，不可退缩' },
+          玄武: { 官鬼: '暗中压力，需防陷阱', 妻财: '有暗财但也需防骗', 子孙: '思路隐晦，需明察', 父母: '文书有隐情，需核实', 兄弟: '朋友有隐瞒，需谨慎' },
+        };
+        for (var si = 0; si < 6; si++) {
+          var sShou = liuShou[si] || '';
+          var sQin = liuQin[si] || '';
+          var sPos = yaoPos(si + 1);
+          var sNajia = najia[si] || {};
+          var sKong = yaoKongWang[si] ? '（旬空）' : '';
+          var sDong = dongYao.indexOf(si + 1) >= 0 ? '（动）' : '';
+          var sShouTxt = sShou ? '值' + sShou + '——' + (shouDesc[sShou] ? (shouDesc[sShou][sQin] || shouDesc[sShou]['兄弟']) : '') : '';
+          var sDongTxt = sDong ? '此爻发动，是卦中变化最活跃之处，' + (si === shiYao - 1 ? '且持世，你的态度决定此事走向。' : si === yingYao - 1 ? '且持应，外部环境正在变化。' : '关注其动向即可。') : '';
+          var sWang = wangShuai[si] || '';
+          var sLine = sPos + '：临' + sQin + sShouTxt + sKong + sDongTxt;
+          if (sWang) sLine += ' 临' + sWang;
+          if (sNajia.gan) sLine += '，纳' + sNajia.gan + sNajia.zhi;
+          specialty += sLine + '\n';
         }
 
         // ── 3e. 变卦详解 ──
