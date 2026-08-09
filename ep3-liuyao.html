@@ -2129,6 +2129,17 @@
           else if (siCount + qiuCount >= 3) overview += '整体能量偏弱，此事需积蓄力量，不宜冒进。';
           else overview += '能量分布均衡，此事需综合判断，不可单看旺衰。';
         }
+        // 旬空
+        if (kongWang && kongWang.length === 2) {
+          var kongWangText = kongWang.join('、');
+          overview += '\n旬空：' + kongWangText + '为空亡。';
+          var kongWangYao = [];
+          for (var kc = 0; kc < 6; kc++) {
+            if (yaoKongWang[kc]) kongWangYao.push(yaoPos(kc + 1) + '(' + liuQin[kc] + ')');
+          }
+          if (kongWangYao.length > 0) overview += ' 卦中' + kongWangYao.join('、') + '逢空——此等爻位目前力量暂虚，需待填实之期方显其用。';
+          else overview += ' 卦中无爻逢空，事事可凭实断。';
+        }
         // 六冲六合
         if (chongHe && (chongHe.isLiuChong || chongHe.isLiuHe)) {
           overview += '\n' + (chongHe.isLiuChong ? '【六冲】本卦为六冲卦——' + (chongHe.desc || '') : '【六合】本卦为六合卦——' + (chongHe.desc || ''));
