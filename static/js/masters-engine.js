@@ -2331,10 +2331,11 @@
 
   /* ========== 组合蒸馏专用点评生成 ========== */
   function generateCommentary(master, score, trend, synthesis, results, question) {
+    var liuyao = synthesis._liuyao || null;
     var opening = master.openingTemplates[Math.floor(Math.random() * master.openingTemplates.length)];
     var closing = master.closingTemplates[Math.floor(Math.random() * master.closingTemplates.length)];
 
-    var trendText = trend === 'up' ? '呈上升之势' : trend === 'down' ? '需谨慎应对' : '趋于平稳';
+    var trendText = trend === 'up' ? '呈上升之势，吉多凶少' : trend === 'down' ? '需谨慎应对，凶多吉少' : '趋于平稳，有吉有凶';
     var scoreText = score >= 75 ? '吉象明显' : score >= 55 ? '吉凶参半' : '局势偏凶';
 
     var methodsUsed = '';
@@ -2343,94 +2344,287 @@
     }
     if (results.length > 3) methodsUsed += '等';
 
+    var p = master.pronouns;
+
+    // 基础开场
     var base =
-      master.pronouns +
-      opening
-        .replace(/\{日主\}/g, '')
-        .replace(/\{日主五行\}/g, '')
-        .replace(/\{旺衰\}/g, trendText) +
-      '\n\n综合' +
+      '【卦象总论】\n' +
+      p +
+      '以' +
+      master.name +
+      '之法，参' +
       methodsUsed +
-      '多术同参，所问之事【' +
+      '之术，为汝断卦。\n' +
+      '所问之事：' +
       (question || '当前运势') +
-      '】已现端倪：' +
-      scoreText +
       '。\n\n';
 
-    // 根据大师风格生成差异化点评
-    var flavor = '';
-    if (master.id === 'guiguzi') {
-      flavor = '捭阖之道，贵在审时度势。此事宜开不宜阖，宜动不宜静。阴阳之机，正在转折处把握。';
-    } else if (master.id === 'jingfang') {
-      flavor = '纳甲推之，吉凶早有定数。然天道无亲，常与善人。顺势而为，自有天助。';
-    } else if (master.id === 'zhugeliang') {
-      flavor = '谋事在人，成事在天。诸术合参已示方向，当择吉日吉时而动，步步为营，方能运筹帷幄。';
-    } else if (master.id === 'yuanli') {
-      flavor = '五行流通，命自不凡。多术验证已明，此一事天时地利皆备，唯待人和。顺势而行，可保无虞。';
-    } else if (master.id === 'lichunfeng') {
-      flavor = '天象人事，理出一源。星象历数已示吉兆，把握当下，顺势推进，则天道可循，人事可成。';
-    } else if (master.id === 'wangpu') {
-      flavor = '太乙之数，穷极天地。多术合参归一，吉凶已在数中。守正待时，自有定数。';
-    } else if (master.id === 'chenxizai') {
-      flavor = '紫微斗数所示，星曜流转自有规律。今多术合参，已见帝星照耀，宜把握良机。';
-    } else if (master.id === 'shaoyong') {
-      flavor = '先天易学，象数理占。以数推之，体用关系已明；以象验之，变化之机可寻。顺其自然，功到自然成。';
-    } else if (master.id === 'xuzile') {
-      flavor = '子平之法，以日为主。今观多术结果，格局已成，用神得力。顺势而为，则命途亨通。';
-    } else if (master.id === 'liuzhitong') {
-      flavor = '奇门遁甲，帝王之学。时空格局已显，开门大吉在即。择吉方吉时而动，天助人助。';
-    } else if (master.id === 'wanminying') {
-      flavor = '三命通会，万法归宗。各路术数虽有不同，结论却殊途同归。此乃大吉之兆。';
-    } else if (master.id === 'zhangnan') {
-      flavor = '病药相济，中和为贵。多术合参所示，有冲必有合，有险必有机。知险而避之，知机而取之。';
-    } else if (master.id === 'yelan') {
-      flavor = '格局清浊，贵贱自分。多术同参，格局已明。清气上扬，浊气退散，顺势而为。';
-    } else if (master.id === 'shenxiao') {
-      flavor = '格局顺逆，真假分明。今日多术合参，格局已成，用神得位。当顺势而行，不可逆势而动。';
-    } else if (master.id === 'renqiao') {
-      flavor = '滴天髓阐微，用神为要。多术同示吉象，用神得力。得用神之助，如虎添翼。';
-    } else if (master.id === 'zhenguan') {
-      flavor = '大道至简，命理亦然。千言万语，约之不过顺势二字。多术合参已示方向，行之即可。';
-    } else if (master.id === 'shutong') {
-      flavor = '星平会海，合参为妙。星宗子平，一炉共冶。今多术合参，其理自明，顺势而行。';
-    } else if (master.id === 'weixian') {
-      flavor = '千里命稿，验之于实。命理非玄虚之学，乃人生经验之总结。多术合参所示方向明确，当付诸行动。';
-    } else if (master.id === 'yuanshu') {
-      flavor = '探源溯本，五行流通。多术合参所示，根源已明，大势已定。源清则流洁，本固则枝荣。';
-    } else if (master.id === 'linxuan') {
-      flavor = '人鉴命理，以人为镜。古今名人命例已证：多术同归之时，即为时机成熟之日。当机立断。';
-    } else if (master.id === 'songhuibin') {
-      flavor = '奇门学术，逻辑为先。多术合参实为多模型交叉验证，结论可信度高。科学决策，理性执行。';
-    } else if (master.id === 'zhougong') {
-      flavor = '梦者魂游，兆者事应。今以梦学合参诸术，象数已明。吉梦兆福，凶梦示警，当察而改之。';
-    } else if (master.id === 'zhangziye') {
-      flavor = '综合术数，融会贯通。各派虽异，其理归一。多术合参已示方向，当择善而从，勇往直前。';
-    } else if (master.id === 'shaoyanhe') {
-      flavor = '六壬神课，天地盘开。四课三传已示端的，吉凶之象，尽在课中。观象知机，顺势而为，则天人相应。';
-    } else if (master.id === 'chengongxian') {
-      flavor = '六壬指南，理法兼备。课体既定，类神已明，三传所示即为事之机要。知理而行，方不迷途。';
-    } else if (master.id === 'nihaihsia') {
-      flavor = '天纪紫微，以医入命。星曜分布如人身经络，有病则治，有偏则调。知命如知病，改运如用药。';
-    } else if (master.id === 'wangtingzhi') {
-      flavor = '中州紫微，星曜为宗。庙旺利陷已分，四化飞星已定。星曜组合如棋局，一着得位，全局皆活。';
-    } else if (master.id === 'guoyuqing') {
-      flavor = '六壬大全，集古法之大成。课经为纲，毕法为目，纲举目张。多术合参，如众星拱月，方向已明。';
-    } else if (master.id === 'chengshuxun') {
-      flavor = '一字诀妙，玉连环通。精微之处见真章，多术合参之下，关键节点已浮现。把握机要，事半功倍。';
-    } else if (master.id === 'luohongxian') {
-      flavor = '星曜性情，宫位断事。多术合参已明，星宫相应，吉凶自见。知命而行，如顺水行舟。';
-    } else if (master.id === 'lubinzao') {
-      flavor = '体系为纲，逻辑为用。多术合参如多模型交叉验证，结论可信。科学决策，理性前行。';
+    // 如果有六爻详细数据，生成深度分析
+    if (liuyao) {
+      base += generateLiuyaoDetail(master, liuyao, p);
     } else {
-      flavor = '综合百家之言，此事格局已现。多术同参，吉兆明确。把握关键节点，自可趋吉避凶。';
+      // 通用分析（无六爻数据时）
+      base +=
+        trendText +
+        '，' +
+        scoreText +
+        '。\n\n' +
+        generateFlavorText(master, score, trend);
     }
 
-    var resultText =
-      base +
-      flavor +
-      '\n\n' +
-      closing.replace(/\{结论\}/g, scoreText).replace(/\{建议\}/g, trend === 'up' ? '顺势而为' : '韬光养晦');
+    base +=
+      '\n【大师结语】\n' +
+      closing.replace(/\{结论\}/g, scoreText).replace(/\{建议\}/g, trend === 'up' ? '顺势而为，积极进取' : '韬光养晦，守正待时');
 
-    return resultText;
+    return base;
   }
+
+  /**
+   * 生成六爻深度解读
+   */
+  function generateLiuyaoDetail(master, liuyao, p) {
+    var parts = [];
+    var guaName = liuyao.gua_name || '—';
+    var changedGua = liuyao.changed_gua;
+    var changedName = changedGua ? changedGua.name : '';
+    var dongYao = liuyao.dong_yao || [];
+    var shiYao = liuyao.shi_yao || '?';
+    var yingYao = liuyao.ying_yao || '?';
+    var liuQin = liuyao.liu_qin || [];
+    var liuShou = liuyao.liu_shou || [];
+    var najia = liuyao.najia || [];
+    var originalGua = liuyao.original_gua || {};
+
+    // 1. 卦象总览
+    parts.push(
+      '【卦象总览】\n' +
+        '本卦「' +
+        guaName +
+        '」，属' +
+        (originalGua.gong || '—') +
+        '宫，上' +
+        (originalGua.upper || '—') +
+        '下' +
+        (originalGua.lower || '—') +
+        '。\n' +
+        (changedName ? '之卦「' + changedName + '」，主事有变动之象。\n' : '六爻安静，主事态稳定，宜守不宜攻。\n')
+    );
+
+    // 2. 世应分析（核心）
+    var shiQin = liuQin[shiYao - 1] || '—';
+    var yingQin = yingYao ? liuQin[yingYao - 1] || '—' : '';
+    parts.push(
+      '【世应核心】\n' +
+        '世爻居第' +
+        shiYao +
+        '爻（' +
+        yaoPositionName(shiYao) +
+        '），临' +
+        shiQin +
+        '，为占者自身之位。\n' +
+        '应爻居第' +
+        (yingYao || '?') +
+        '爻（' +
+        (yingYao ? yaoPositionName(yingYao) : '?') +
+        '），临' +
+        yingQin +
+        '，为所占之事或他人之位。\n' +
+        shiYingRelation(shiQin, yingQin, shiYao, yingYao, p)
+    );
+
+    // 3. 动爻详解
+    if (dongYao.length > 0) {
+      parts.push('【动爻详解】');
+      var dyText = '';
+      for (var di = 0; di < dongYao.length; di++) {
+        var dy = dongYao[di];
+        var dyQin = liuQin[dy - 1] || '—';
+        var dyShou = liuShou[dy - 1] || '—';
+        var dyNajia = najia[dy - 1] || {};
+        dyText +=
+          '第' +
+          dy +
+          '爻（' +
+          yaoPositionName(dy) +
+          '）动——临' +
+          dyQin +
+          '，值' +
+          dyShou +
+          '，纳' +
+          (dyNajia.gan || '') +
+          (dyNajia.zhi || '') +
+          '。\n';
+        dyText += '  → ' + dongYaoAnalysis(dyQin, dyShou, dy, shiYao, yingYao) + '\n';
+      }
+      if (dongYao.length >= 3) {
+        dyText += '（多爻齐动，局势复杂，不宜轻举妄动，以静制动为上。）\n';
+      }
+      parts.push(dyText);
+    } else {
+      parts.push('【动爻】六爻安静，无动爻。事态稳定，暂不宜做重大决策，守正待时。\n');
+    }
+
+    // 4. 六亲布局
+    parts.push(
+      '【六亲布局】\n' +
+        '六爻六亲（自下而上）：' +
+        liuQin.join('、') +
+        '。\n' +
+        '世爻临' +
+        shiQin +
+        '，' +
+        shiQinAnalysis(shiQin, p) +
+        '\n'
+    );
+
+    // 5. 六兽提示
+    var shiShou = liuShou[shiYao - 1] || '—';
+    parts.push(
+      '【六兽提示】\n六爻六兽：' + liuShou.join('、') + '。\n世爻值' + shiShou + '，' + liuShouAdvice(shiShou) + '\n'
+    );
+
+    // 6. 纳甲简析
+    if (najia.length > 0) {
+      var najiaStr = '';
+      for (var ni = 0; ni < najia.length; ni++) {
+        najiaStr += (najia[ni].gan || '') + (najia[ni].zhi || '') + (ni < 5 ? '、' : '');
+      }
+      parts.push('【纳甲】六爻纳甲：' + najiaStr + '。\n');
+    }
+
+    // 7. 综合断语（结合大师风格）
+    parts.push(
+      '【' + master.name + '综合断语】\n' +
+        generateFlavorText(master, score, trend) +
+        (changedName ? '\n变卦「' + changedName + '」提示最终走向，' + changedGuaAdvice(changedName) : '')
+    );
+
+    return parts.join('\n');
+  }
+
+  function yaoPositionName(pos) {
+    var names = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'];
+    return names[pos - 1] || '第' + pos + '爻';
+  }
+
+  function shiYingRelation(shiQin, yingQin, shi, ying, p) {
+    if (shiQin === yingQin) {
+      return '世应同临' + shiQin + '——' + p + '以为，内外一致，自身与外部环境同频。吉在目标明确，凶在易陷单一视角。';
+    }
+    if ((shiQin === '妻财' && yingQin === '官鬼') || (shiQin === '官鬼' && yingQin === '妻财')) {
+      return '世应财官相生——' + p + '观之，事业与财富相互促进，此乃吉兆。但需防精力分散，明确主次。';
+    }
+    if ((shiQin === '子孙' && yingQin === '官鬼') || (shiQin === '官鬼' && yingQin === '子孙')) {
+      return '世应子官相克——' + p + '警示：事业压力与逍遥心态冲突。需在压力中保持轻松，适度放松但不可懈怠。';
+    }
+    if ((shiQin === '兄弟' && yingQin === '妻财') || (shiQin === '妻财' && yingQin === '兄弟')) {
+      return '世应兄财相克——' + p + '提醒：竞争与财富并存。合作需明确权责，警惕利益纠纷。';
+    }
+    if ((shiQin === '父母' && yingQin === '子孙') || (shiQin === '子孙' && yingQin === '父母')) {
+      return '世应父子相克——' + p + '观之，思虑过多或行动过多皆非所宜。需在规划与执行间找到平衡。';
+    }
+    return '世应关系需综合判断。' + p + '以为，世为内、应为外，内外协调方能成事。';
+  }
+
+  function dongYaoAnalysis(qin, shou, pos, shi, ying) {
+    var descs = [];
+    if (qin === '官鬼') descs.push('事业有变，宜关注职位变动或官方消息');
+    if (qin === '妻财') descs.push('财运波动，宜把握时机，忌贪心冒进');
+    if (qin === '父母') descs.push('文书契约之事需谨慎，长辈或有消息');
+    if (qin === '子孙') descs.push('忧愁可解，有转机之兆，利长远规划');
+    if (qin === '兄弟') descs.push('竞争加剧，需防破财，合作中注意权责分明');
+    if (shou === '青龙') descs.push('青龙临动，吉兆明显，喜庆之事可期');
+    if (shou === '白虎') descs.push('白虎临动，需防意外，行事多加小心');
+    if (shou === '玄武') descs.push('玄武临动，暗昧之事需防，小人暗算或信息泄露');
+    if (shou === '朱雀') descs.push('朱雀临动，口舌是非，谨言慎行');
+    if (shou === '勾陈') descs.push('勾陈临动，事多牵延，需耐心');
+    if (shou === '螣蛇') descs.push('螣蛇临动，虚惊怪异，保持清醒');
+    if (pos === shi) descs.push('（此动爻即为世爻，变化由自身引发，主动权在己）');
+    if (pos === ying) descs.push('（此动爻即为应爻，变化来自外部，需灵活应变）');
+    return descs.join('；') || '此爻动而待察。';
+  }
+
+  function shiQinAnalysis(qin, p) {
+    var map = {
+      父母: p + '断：操心劳碌之象，利于文书、学业、长辈之事。需注意劳逸结合，不宜过度思虑。',
+      官鬼: p + '断：事业心强，责任感重。压力可化为动力，但需关注身心健康。',
+      兄弟: p + '断：人际交往活跃，朋友多助。但竞争亦多，合作需明算账。',
+      妻财: p + '断：财运亨通之兆，求财有利。但需知足常乐，不可贪得无厌。',
+      子孙: p + '断：心态轻松，忧患易解。利投资、创意、娱乐之事。但需防过于安逸。',
+    };
+    return map[qin] || p + '以为，世爻临' + qin + '，自有其象。';
+  }
+
+  function liuShouAdvice(shou) {
+    var map = {
+      青龙: '主喜庆，宜推进重要事务，但需防乐极生悲。',
+      朱雀: '主口舌，宜发挥表达能力，但谨言慎行。',
+      勾陈: '主迟滞，宜稳扎稳打，耐心应对。',
+      螣蛇: '主虚惊，宜保持清醒，多观察少行动。',
+      白虎: '主凶险，宜果断利落，大事化小。',
+      玄武: '主暗昧，宜暗中观察，守正为要。',
+    };
+    return map[shou] || '自有其象。';
+  }
+
+  function changedGuaAdvice(name) {
+    var map = {
+      乾为天: '宜积极进取，刚健有为。',
+      坤为地: '宜柔顺包容，以静制动。',
+      地天泰: '亨通之兆，坚持即为胜利。',
+      天地否: '阻滞之象，暂时退守亦是智慧。',
+      水火既济: '守成防变，不可松懈。',
+      火水未济: '尚未完成，继续努力，调整方法。',
+      水雷屯: '万事开头难，宜坚定信心。',
+      山水蒙: '宜虚心求教，不可自作聪明。',
+      地雷复: '转机重现，宜把握良机。',
+      泽火革: '宜顺应时势，革故鼎新。',
+    };
+    return map[name] || '事有变化，宜随机应变。';
+  }
+
+  function generateFlavorText(master, score, trend) {
+    var flavors = {
+      guiguzi:
+        '捭阖之道，贵在审时度势。' +
+        (trend === 'up' ? '此事宜开不宜阖，宜动不宜静。阴阳之机，正在转折处把握。' : '此事宜阖不宜开，宜静不宜动。暂退一步，以待天时。'),
+      jingfang:
+        '纳甲推之，天人相应。' +
+        (trend === 'up' ? '卦象与干支相配，吉兆已显。顺势而为，自有天助。' : '卦象干支所示，需防微杜渐。守正待时，则化险为夷。'),
+      zhugeliang:
+        '运筹帷幄之中，决胜千里之外。' +
+        (trend === 'up' ? '天时地利人和，三者兼备，大事可成。' : '天时未至，不可强求。亮观之，暂守为上，待机而动。'),
+      shaoyong:
+        '先天易学，象数理占。' +
+        (trend === 'up' ? '以数推之，体用相生；以象验之，变化之机可寻。顺其自然，功到自然成。' : '以数推之，体用有克；以象验之，需防变动。守正待时，自有转机。'),
+      chengongxian:
+        '六壬指南，理法兼备。' +
+        (trend === 'up' ? '课体既定，类神已明，三传所示即为事之机要。知理而行，方不迷途。' : '课体有变，类神受制。需重新审视策略，以柔克刚，方为上策。'),
+      shaoyanhe:
+        '六壬神课，天地盘开。' +
+        (trend === 'up' ? '四课三传已示吉兆，观象知机，顺势而为，天人相应。' : '四课三传有凶象，需暂避锋芒。观象知机，以静制动。'),
+      nihaihsia:
+        '天纪紫微，以医入命。' +
+        (trend === 'up' ? '星曜分布如经络通畅，有病则治，有偏则调。知命如知病，改运如用药。' : '星曜有偏，需调理。知命而后改运，方为大道。'),
+      songhuibin:
+        '奇门学术，逻辑为先。' +
+        (trend === 'up' ? '多模型交叉验证，结论可信。科学决策，理性执行。' : '数据模型示警，需重新评估。理性分析，科学调整。'),
+      zhangziye:
+        '综合术数，融会贯通。' +
+        (trend === 'up' ? '各派虽异，其理归一。多术合参已示方向，择善而从，勇往直前。' : '各路术数一致示警，不可轻进。暂守为宜，以待转机。'),
+    };
+
+    return flavors[master.id] || '综合百家之言，' + (trend === 'up' ? '吉兆已现，把握关键节点，自可趋吉避凶。' : '需谨慎行事，守正待时，方得善终。');
+  }
+
+  /* ========== 更新 batchAnalyze 传递 liuyao 数据 ========== */
+  // 在 batchAnalyze 中把 liuyao 数据传给 generateCommentary
+  var _origBatchAnalyze = global.MastersEngine.batchAnalyze;
+  global.MastersEngine.batchAnalyze = function (masterIds, compositeData, question) {
+    // 把 liuyao 数据挂到 synthesis 上供 generateCommentary 使用
+    if (compositeData.liuyao && compositeData.synthesis) {
+      compositeData.synthesis._liuyao = compositeData.liuyao;
+    }
+    return _origBatchAnalyze(masterIds, compositeData, question);
+  };
 })(typeof window !== 'undefined' ? window : this);

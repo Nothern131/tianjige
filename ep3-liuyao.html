@@ -328,6 +328,87 @@
         box-shadow: 0 0 0 3px var(--gold-glow);
       }
 
+      /* ===== Tab Bar ===== */
+      .tab-bar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .tab-btn {
+        padding: 10px 22px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text2);
+        cursor: pointer;
+        font-family: var(--font-sans);
+        font-size: 0.82rem;
+        transition: all 0.3s;
+        letter-spacing: 0.04em;
+      }
+      .tab-btn:hover {
+        border-color: var(--border-gold);
+        color: var(--gold-light);
+        background: rgba(184, 154, 92, 0.06);
+      }
+      .tab-btn.active {
+        border-color: var(--border-gold);
+        color: var(--gold-light);
+        background: rgba(184, 154, 92, 0.12);
+        box-shadow: 0 0 12px var(--gold-glow);
+      }
+      .tab-panel {
+        min-height: 120px;
+      }
+
+      /* ===== Manual Yao Selector ===== */
+      .manual-yao-grid {
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 8px;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .manual-yao-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+      }
+      .manual-yao-label {
+        font-size: 0.78rem;
+        color: var(--text3);
+        min-width: 36px;
+        font-family: var(--font-serif);
+      }
+      .manual-yao-row select {
+        flex: 1;
+        padding: 8px 10px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font-size: 0.82rem;
+        outline: none;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8576' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 28px;
+      }
+      .manual-yao-row select:focus {
+        border-color: var(--border-gold);
+        box-shadow: 0 0 0 3px var(--gold-glow);
+      }
+
       /* ===== Coin Animation ===== */
       .coin-stage {
         display: flex;
@@ -889,19 +970,45 @@
           </div>
         </div>
 
-        <div class="coin-stage">
-          <div class="coins-container">
-            <div class="coin" id="coin1">☰</div>
-            <div class="coin" id="coin2">☰</div>
-            <div class="coin" id="coin3">☰</div>
-          </div>
-          <p class="coin-prompt" id="coinPrompt">心中默念所问之事，点击"起卦"</p>
-          <div class="line-results hidden" id="lineResults"></div>
+        <!-- 起卦方式选择 -->
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="manual-shake">🪙 铜钱摇卦</button>
+          <button class="tab-btn" data-tab="quick">⚡ 一键起卦</button>
+          <button class="tab-btn" data-tab="specify">✏️ 手工指定</button>
         </div>
 
-        <div class="btn-row">
-          <button class="btn" id="castBtn">🪙 摇卦起卜</button>
-          <button class="btn btn-secondary" id="randomBtn">🎲 随机起卦</button>
+        <!-- 铜钱摇卦面板 -->
+        <div class="tab-panel" id="panel-manual-shake">
+          <div class="coin-stage">
+            <div class="coins-container">
+              <div class="coin" id="coin1">☰</div>
+              <div class="coin" id="coin2">☰</div>
+              <div class="coin" id="coin3">☰</div>
+            </div>
+            <p class="coin-prompt" id="coinPrompt">心中默念所问之事，逐爻摇卦（共六爻）</p>
+            <div class="line-results hidden" id="lineResults"></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="castBtn">🪙 开始摇卦</button>
+          </div>
+        </div>
+
+        <!-- 一键起卦面板 -->
+        <div class="tab-panel hidden" id="panel-quick">
+          <div class="text-center" style="padding: 36px 0;">
+            <p style="color:var(--text2);font-size:0.85rem;margin-bottom:18px;">一键生成随机卦象，无需手动操作</p>
+            <button class="btn" id="quickCastBtn">🎲 随机起卦</button>
+          </div>
+        </div>
+
+        <!-- 手工指定面板 -->
+        <div class="tab-panel hidden" id="panel-specify">
+          <p style="color:var(--text2);font-size:0.8rem;text-align:center;margin-bottom:16px;">请选择每爻的阴阳属性（从初爻到上爻，自下而上）</p>
+          <div class="manual-yao-grid" id="manualYaoGrid">
+          </div>
+          <div class="btn-row" style="margin-top:16px;">
+            <button class="btn" id="specifyCastBtn">📋 排盘推演</button>
+          </div>
         </div>
       </div>
 
@@ -1062,7 +1169,7 @@
           .join('');
       }
 
-      // ===== 起卦 =====
+      // ===== 爻线映射 =====
       var lineMap = {
         6: { type: 'yin', changing: true, label: '⚋ 老阴（动）', cls: 'yin' },
         7: { type: 'yang', changing: false, label: '⚊ 少阳', cls: 'yang' },
@@ -1070,7 +1177,16 @@
         9: { type: 'yang', changing: true, label: '⚊ 老阳（动）', cls: 'yang' },
       };
 
+      // 手工指定选项
+      var manualYaoOptions = [
+        { value: '7', label: '⚊ 少阳（阳，静）', type: 'yang', changing: false },
+        { value: '8', label: '⚋ 少阴（阴，静）', type: 'yin', changing: false },
+        { value: '9', label: '⚊ 老阳（阳，动）', type: 'yang', changing: true },
+        { value: '6', label: '⚋ 老阴（阴，动）', type: 'yin', changing: true },
+      ];
+
       var isCasting = false;
+      var currentMode = 'manual-shake'; // manual-shake | quick | specify
 
       function sleep(ms) {
         return new Promise(function (r) {
@@ -1078,13 +1194,92 @@
         });
       }
 
+      // ===== 选项卡切换 =====
+      function switchTab(tabName) {
+        currentMode = tabName;
+        // 更新按钮状态
+        var btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(function (b) {
+          b.classList.toggle('active', b.dataset.tab === tabName);
+        });
+        // 切换面板
+        var panels = document.querySelectorAll('.tab-panel');
+        panels.forEach(function (p) {
+          p.classList.toggle('hidden', p.id !== 'panel-' + tabName);
+        });
+      }
+
+      // 初始化选项卡
+      var tabBtns = document.querySelectorAll('.tab-btn');
+      tabBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          switchTab(btn.dataset.tab);
+        });
+      });
+
+      // ===== 构建手工指定面板 =====
+      function buildManualYaoGrid() {
+        var grid = document.getElementById('manualYaoGrid');
+        var yaoNames = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'];
+        grid.innerHTML = '';
+        for (var i = 0; i < 6; i++) {
+          var row = document.createElement('div');
+          row.className = 'manual-yao-row';
+          var label = document.createElement('span');
+          label.className = 'manual-yao-label';
+          label.textContent = yaoNames[i];
+          var sel = document.createElement('select');
+          sel.id = 'manualYao' + (i + 1);
+          for (var j = 0; j < manualYaoOptions.length; j++) {
+            var opt = document.createElement('option');
+            opt.value = manualYaoOptions[j].value;
+            opt.textContent = manualYaoOptions[j].label;
+            if (j === 0) opt.selected = true;
+            sel.appendChild(opt);
+          }
+          row.appendChild(label);
+          row.appendChild(sel);
+          grid.appendChild(row);
+        }
+      }
+      buildManualYaoGrid();
+
+      // ===== 获取手工指定的爻线 =====
+      function getManualLines() {
+        var lines = [];
+        for (var i = 0; i < 6; i++) {
+          var sel = document.getElementById('manualYao' + (i + 1));
+          var val = sel ? sel.value : '7';
+          var opt = manualYaoOptions.find(function (o) { return o.value === val; });
+          lines.push(opt || manualYaoOptions[0]);
+        }
+        return lines;
+      }
+
+      // ===== 铜钱摇卦：逐爻 =====
       async function castLines(count) {
         var lines = [];
         var container = document.getElementById('lineResults');
         container.innerHTML = '';
         container.classList.remove('hidden');
 
+        var castBtn = document.getElementById('castBtn');
+        var prompt = document.getElementById('coinPrompt');
+
         for (var i = 0; i < count; i++) {
+          // 更新提示
+          prompt.textContent = '正在摇第' + (i + 1) + '爻（共6爻）...';
+          castBtn.textContent = '摇第' + (i + 1) + '爻中...';
+          castBtn.disabled = true;
+
+          // 硬币动画
+          var coins = [document.getElementById('coin1'), document.getElementById('coin2'), document.getElementById('coin3')];
+          coins.forEach(function (c) {
+            c.classList.add('shaking');
+          });
+          await sleep(600);
+
+          // 随机三枚铜钱
           var total =
             [2, 3][Math.random() > 0.5 ? 1 : 0] +
             [2, 3][Math.random() > 0.5 ? 1 : 0] +
@@ -1092,12 +1287,6 @@
           var line = lineMap[total];
           lines.push(line);
 
-          // 硬币动画
-          var coins = [document.getElementById('coin1'), document.getElementById('coin2'), document.getElementById('coin3')];
-          coins.forEach(function (c) {
-            c.classList.add('shaking');
-          });
-          await sleep(500);
           coins.forEach(function (c) {
             c.classList.remove('shaking');
             c.textContent = line.type === 'yang' ? '☰' : '☷';
@@ -1114,7 +1303,30 @@
             (line.changing ? ' ⚡' : '') +
             '</span>';
           container.appendChild(el);
-          await sleep(300);
+
+          if (i < count - 1) {
+            castBtn.textContent = '摇第' + (i + 2) + '爻';
+            castBtn.disabled = false;
+            // 等待用户点击下一爻
+            await new Promise(function (resolve) {
+              castBtn.onclick = function () { resolve(); };
+            });
+          }
+        }
+
+        prompt.textContent = '六爻已全部摇出，正在排盘...';
+        return lines;
+      }
+
+      // ===== 一键随机生成爻线 =====
+      function quickCastLines() {
+        var lines = [];
+        for (var i = 0; i < 6; i++) {
+          var total =
+            [2, 3][Math.random() > 0.5 ? 1 : 0] +
+            [2, 3][Math.random() > 0.5 ? 1 : 0] +
+            [2, 3][Math.random() > 0.5 ? 1 : 0];
+          lines.push(lineMap[total]);
         }
         return lines;
       }
@@ -1270,6 +1482,8 @@
             individualResults: [
               { name: '六爻纳甲', score: currentLiuyaoResult.score || 50 },
             ],
+            // 传递六爻详细数据
+            liuyao: currentLiuyaoResult,
           };
 
           var analyses = MastersEngine.batchAnalyze([masterId], compositeData, currentQuestion || '六爻占卜');
@@ -1297,24 +1511,18 @@
         }
       }
 
-      // ===== 主流程 =====
-      async function doCast() {
+      // ===== 主流程：统一排盘入口 =====
+      async function doDivine(lines, source) {
         if (isCasting) return;
         isCasting = true;
 
-        var castBtn = document.getElementById('castBtn');
-        castBtn.disabled = true;
-        castBtn.textContent = '摇卦中...';
-
-        document.getElementById('lineResults').classList.add('hidden');
+        // 隐藏结果
         document.getElementById('resultCard').classList.add('hidden');
         document.getElementById('mastersCard').classList.add('hidden');
 
-        var lines = await castLines(6);
-
-        var year = parseInt(document.getElementById('castYear').value) || 2026;
-        var month = parseInt(document.getElementById('castMonth').value) || 8;
-        var day = parseInt(document.getElementById('castDay').value) || 5;
+        var year = parseInt(document.getElementById('castYear').value) || new Date().getFullYear();
+        var month = parseInt(document.getElementById('castMonth').value) || (new Date().getMonth() + 1);
+        var day = parseInt(document.getElementById('castDay').value) || new Date().getDate();
         var question = document.getElementById('question').value.trim();
         currentQuestion = question;
 
@@ -1337,29 +1545,49 @@
           callMasterAnalysis(currentMasterId);
         }
 
-        // 滚动到结果
         resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-        castBtn.disabled = false;
-        castBtn.textContent = '🪙 再摇一卦';
         isCasting = false;
       }
 
+      // ===== 铜钱摇卦模式 =====
+      async function doManualShake() {
+        if (isCasting) return;
+        var castBtn = document.getElementById('castBtn');
+        castBtn.textContent = '🪙 开始摇卦';
+        castBtn.disabled = false;
+
+        var lines = await castLines(6);
+        await doDivine(lines, 'manual-shake');
+        castBtn.textContent = '🪙 再摇一卦';
+        castBtn.disabled = false;
+      }
+
+      // ===== 一键起卦模式 =====
+      function doQuickCast() {
+        if (isCasting) return;
+        var lines = quickCastLines();
+        doDivine(lines, 'quick');
+      }
+
+      // ===== 手工指定模式 =====
+      function doSpecifyCast() {
+        if (isCasting) return;
+        var lines = getManualLines();
+        doDivine(lines, 'specify');
+      }
+
       // ===== 事件绑定 =====
-      document.getElementById('castBtn').addEventListener('click', doCast);
+      document.getElementById('castBtn').addEventListener('click', doManualShake);
+      document.getElementById('quickCastBtn').addEventListener('click', doQuickCast);
+      document.getElementById('specifyCastBtn').addEventListener('click', doSpecifyCast);
 
-      document.getElementById('randomBtn').addEventListener('click', function () {
-        document.getElementById('castYear').value = new Date().getFullYear();
-        document.getElementById('castMonth').value = new Date().getMonth() + 1;
-        document.getElementById('castDay').value = new Date().getDate();
-        doCast();
-      });
-
-      // 回车键触发起卦
+      // 回车键触发（根据当前模式）
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && document.activeElement && document.activeElement.closest('.card')) {
           e.preventDefault();
-          doCast();
+          if (currentMode === 'manual-shake') doManualShake();
+          else if (currentMode === 'quick') doQuickCast();
+          else if (currentMode === 'specify') doSpecifyCast();
         }
       });
     })();
