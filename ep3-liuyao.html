@@ -598,69 +598,292 @@
         margin: 20px 0;
       }
 
-      /* ===== Masters ===== */
-      .master-select {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
-      }
-      .master-btn {
-        padding: 8px 18px;
-        border-radius: 20px;
-        border: 1px solid var(--border);
-        background: transparent;
-        color: var(--text2);
-        cursor: pointer;
-        font-family: var(--font-serif);
-        font-size: 0.82rem;
-        transition: all 0.25s;
-        letter-spacing: 0.04em;
-      }
-      .master-btn:hover {
-        border-color: var(--border-gold);
-        color: var(--gold-light);
-        background: rgba(184, 154, 92, 0.06);
-      }
-      .master-btn.active {
-        border-color: var(--border-gold);
-        color: var(--gold-light);
-        background: rgba(184, 154, 92, 0.1);
-        box-shadow: 0 0 12px var(--gold-glow);
-      }
-      .master-content {
-        background: rgba(0, 0, 0, 0.25);
+      /* ===== 大师蒸馏 CSS（对齐 EP1/EP2） ===== */
+      .glass-card {
+        background: var(--card);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: 24px;
-        animation: fadeIn 0.4s ease both;
+        padding: 28px;
+        transition: border-color 0.4s, box-shadow 0.4s;
+        position: relative;
+        overflow: hidden;
       }
-      .master-content h4 {
+      .glass-card:hover {
+        border-color: var(--border-gold);
+        box-shadow: 0 4px 28px rgba(0,0,0,0.3), 0 0 20px var(--gold-glow);
+      }
+      .section-header {
+        margin-bottom: 24px;
+      }
+      .page-title {
         font-family: var(--font-serif);
-        font-size: 1.1rem;
-        color: var(--gold-light);
-        margin-bottom: 4px;
-        letter-spacing: 0.05em;
-      }
-      .master-content .master-era {
-        font-size: 0.72rem;
-        color: var(--text3);
-        margin-bottom: 12px;
-      }
-      .master-content .master-text {
-        font-size: 0.86rem;
-        color: var(--text2);
-        line-height: 1.9;
-      }
-      .master-content .master-text p {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: var(--gold);
         margin-bottom: 8px;
+        letter-spacing: 0.08em;
+      }
+      .page-subtitle {
+        font-size: 0.85rem;
+        color: var(--text2);
+        line-height: 1.7;
+      }
+      .btn-gold {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 28px;
+        background: linear-gradient(135deg, rgba(138,109,52,0.82), rgba(184,154,92,0.9));
+        color: #0a080f;
+        font-weight: 600;
+        font-size: 0.84rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(184,154,92,0.28);
+        transition: all 0.25s;
+        cursor: pointer;
+        letter-spacing: 0.05em;
+        font-family: var(--font-sans);
+      }
+      .btn-gold:hover {
+        background: linear-gradient(135deg, var(--gold), var(--gold-light));
+        box-shadow: 0 0 20px var(--gold-glow);
+        transform: translateY(-1px) scale(1.02);
+      }
+      .btn-gold:active {
+        transform: translateY(0) scale(0.97);
+      }
+      .btn-gold.lg {
+        padding: 14px 40px;
+        font-size: 0.96rem;
+      }
+      .btn-gold:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+      }
+      .mt-8 { margin-top: 8px; }
+      .mb-24 { margin-bottom: 24px; }
+      .hidden { display: none !important; }
+      .master-cat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+        gap: 10px;
+      }
+      .master-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 14px 10px;
+        background: rgba(10,8,6,0.6);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: all 0.25s;
+        position: relative;
+      }
+      .master-card:hover {
+        background: rgba(20,16,12,0.9);
+        border-color: var(--border-gold);
+        box-shadow: 0 0 16px var(--gold-glow);
+        transform: translateY(-2px);
+      }
+      .master-card.selected {
+        background: rgba(184,154,92,0.08);
+        border-color: rgba(184,154,92,0.4);
+        box-shadow: 0 0 20px var(--gold-glow), inset 0 0 20px rgba(184,154,92,0.04);
+      }
+      .master-card.selected::after {
+        content: '✓';
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        font-size: 0.7rem;
+        color: var(--gold);
+        font-weight: 700;
+      }
+      .master-avatar {
+        font-size: 1.8rem;
+        transition: transform 0.3s;
+      }
+      .master-card:hover .master-avatar {
+        transform: scale(1.1);
+      }
+      .master-name {
+        font-family: var(--font-serif);
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--text);
+        transition: color 0.25s;
+      }
+      .master-card:hover .master-name {
+        color: var(--gold-light);
+      }
+      .master-title {
+        font-size: 0.68rem;
+        color: var(--text3);
+        text-align: center;
+        line-height: 1.4;
+        max-width: 130px;
+      }
+      .master-era {
+        font-size: 0.62rem;
+        color: var(--text3);
+        padding: 1px 8px;
+        border-radius: 8px;
+        background: rgba(184,154,92,0.04);
+        border: 1px solid var(--border);
+      }
+      .master-result-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 8px 0 20px;
+      }
+      .master-result-avatar-wrap {
+        flex-shrink: 0;
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(184,154,92,0.06);
+        border: 1px solid var(--border-gold);
+        border-radius: 50%;
+      }
+      .master-result-avatar {
+        font-size: 2rem;
+      }
+      .master-result-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .master-result-name {
+        font-family: var(--font-serif);
+        font-size: 1.2rem;
+        color: var(--gold-light);
+        font-weight: 700;
+        margin: 0 0 4px;
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+      }
+      .master-result-era {
+        font-size: 0.7rem;
+        color: var(--text3);
+        font-weight: 400;
+        font-family: var(--font-sans);
+      }
+      .master-result-title {
+        font-size: 0.8rem;
+        color: var(--text2);
+        margin: 0 0 8px;
+      }
+      .master-result-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .master-result-tag {
+        font-size: 0.65rem;
+        padding: 2px 10px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text3);
+        white-space: nowrap;
+      }
+      .master-result-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border-gold), transparent);
+        margin-bottom: 24px;
+      }
+      .master-result-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .master-result-section {
+        padding: 20px 0;
+        border-bottom: 1px solid var(--border);
+        animation: sectionFadeIn 0.5s ease both;
+        animation-delay: var(--delay, 0s);
+      }
+      .master-result-section:last-child {
+        border-bottom: none;
+      }
+      @keyframes sectionFadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .master-section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .master-section-icon {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(184,154,92,0.04);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+      }
+      .master-section-title-wrap {
+        flex: 1;
+        min-width: 0;
+      }
+      .master-section-title {
+        font-family: var(--font-serif);
+        font-size: 0.95rem;
+        color: var(--gold);
+        font-weight: 600;
+        display: block;
+      }
+      .master-section-desc {
+        font-size: 0.7rem;
+        color: var(--text3);
+        display: block;
+        margin-top: 2px;
+      }
+      .master-section-num {
+        font-family: var(--font-serif);
+        font-size: 1.4rem;
+        color: var(--text3);
+        opacity: 0.5;
+        letter-spacing: 0.04em;
+      }
+      .master-section-content {
+        font-size: 0.88rem;
+        color: var(--text2);
+        line-height: 1.95;
+      }
+      .master-section-content p {
+        margin-bottom: 10px;
         text-indent: 2em;
       }
-      .master-content .master-text p:last-child {
+      .master-section-content p:last-child {
         margin-bottom: 0;
       }
-      .master-content .master-text strong {
+      .master-section-content strong {
         color: var(--gold);
+      }
+      .master-result-footer {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+        text-align: center;
+      }
+      .master-footer-note {
+        font-size: 0.68rem;
+        color: var(--text3);
+        letter-spacing: 0.04em;
       }
 
       /* ===== Loading ===== */
@@ -1020,11 +1243,10 @@
         </div>
       </div>
 
-      <!-- 大师解读 -->
+      <!-- 大师点评 -->
       <div class="card fade-up hidden" id="mastersCard">
-        <div class="section-title">大师解读<span class="num">03</span></div>
-        <div class="master-select" id="masterSelect"></div>
-        <div class="master-content hidden" id="masterContent"></div>
+        <div class="section-title">大师点评<span class="num">03</span></div>
+        <div id="mastersArea"></div>
       </div>
 
       <div class="footer">
@@ -1256,7 +1478,11 @@
         return lines;
       }
 
-      // ===== 铜钱摇卦：逐爻 =====
+      // ===== 铜钱摇卦：逐爻（修复版——用 addEventListener/removeEventListener 避免重复触发） =====
+      var shakeResolve = null;
+      function onShakeClick() {
+        if (shakeResolve) { var r = shakeResolve; shakeResolve = null; r(); }
+      }
       async function castLines(count) {
         var lines = [];
         var container = document.getElementById('lineResults');
@@ -1266,20 +1492,21 @@
         var castBtn = document.getElementById('castBtn');
         var prompt = document.getElementById('coinPrompt');
 
+        // 移除旧事件，绑定逐爻点击
+        castBtn.removeEventListener('click', doManualShake);
+        castBtn.addEventListener('click', onShakeClick);
+
         for (var i = 0; i < count; i++) {
-          // 更新提示
           prompt.textContent = '正在摇第' + (i + 1) + '爻（共6爻）...';
           castBtn.textContent = '摇第' + (i + 1) + '爻中...';
           castBtn.disabled = true;
 
           // 硬币动画
           var coins = [document.getElementById('coin1'), document.getElementById('coin2'), document.getElementById('coin3')];
-          coins.forEach(function (c) {
-            c.classList.add('shaking');
-          });
+          coins.forEach(function (c) { c.classList.add('shaking'); });
           await sleep(600);
 
-          // 随机三枚铜钱
+          // 随机三枚铜钱（概率：6/7/8/9 = 1:3:3:1）
           var total =
             [2, 3][Math.random() > 0.5 ? 1 : 0] +
             [2, 3][Math.random() > 0.5 ? 1 : 0] +
@@ -1292,28 +1519,24 @@
             c.textContent = line.type === 'yang' ? '☰' : '☷';
           });
 
-          // 显示爻线
+          // 逐爻显示
           var el = document.createElement('div');
           el.className = 'line-result ' + line.cls + (line.changing ? ' changing' : '');
           el.innerHTML =
-            '<span class="line-label">第' +
-            (i + 1) +
-            '爻</span><span class="line-symbol">' +
-            (line.type === 'yang' ? '⚊' : '⚋') +
-            (line.changing ? ' ⚡' : '') +
-            '</span>';
+            '<span class="line-label">第' + (i + 1) + '爻</span>' +
+            '<span class="line-symbol">' + (line.type === 'yang' ? '⚊' : '⚋') + (line.changing ? ' ⚡' : '') + '</span>';
           container.appendChild(el);
 
           if (i < count - 1) {
-            castBtn.textContent = '摇第' + (i + 2) + '爻';
+            castBtn.textContent = '🪙 摇第' + (i + 2) + '爻';
             castBtn.disabled = false;
-            // 等待用户点击下一爻
-            await new Promise(function (resolve) {
-              castBtn.onclick = function () { resolve(); };
-            });
+            await new Promise(function (resolve) { shakeResolve = resolve; });
           }
         }
 
+        // 恢复原始事件
+        castBtn.removeEventListener('click', onShakeClick);
+        castBtn.addEventListener('click', doManualShake);
         prompt.textContent = '六爻已全部摇出，正在排盘...';
         return lines;
       }
@@ -1416,11 +1639,11 @@
           questionHtml;
       }
 
-      // ===== 大师解读 =====
-      var currentMasterId = 'guiguzi';
+      // ===== 大师点评（使用 renderMastersPanel 组件 + 五段式分析） =====
       var currentLiuyaoResult = null;
       var currentQuestion = '';
 
+      // 过滤六爻相关大师
       var liuyaoMasters = [];
       var allMasters = MastersEngine.MASTERS;
       for (var key in allMasters) {
@@ -1432,83 +1655,152 @@
         }
       }
 
-      function initMasters() {
-        var selectArea = document.getElementById('masterSelect');
-        var contentArea = document.getElementById('masterContent');
-        if (!selectArea || !contentArea) return;
+      /**
+       * 生成六爻五段式分析（对齐 EP2 的 MastersEngine.analyze 输出格式）
+       * 返回 { opening, overview, specialty, quote, closing }
+       */
+      function generateLiuyaoAnalysis(master, liuyao, question) {
+        var p = master.pronouns || '吾';
+        var guaName = liuyao.gua_name || '—';
+        var changedGua = liuyao.changed_gua;
+        var changedName = changedGua ? changedGua.name : '';
+        var dongYao = liuyao.dong_yao || [];
+        var shiYao = liuyao.shi_yao || '?';
+        var yingYao = liuyao.ying_yao || '?';
+        var liuQin = liuyao.liu_qin || [];
+        var liuShou = liuyao.liu_shou || [];
+        var najia = liuyao.najia || [];
+        var originalGua = liuyao.original_gua || {};
+        var score = liuyao.score || 50;
+        var trend = liuyao.trend || 'neutral';
 
-        selectArea.innerHTML = '';
-        contentArea.innerHTML = '';
+        function yaoPos(n) {
+          var names = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'];
+          return names[n - 1] || '第' + n + '爻';
+        }
 
-        liuyaoMasters.forEach(function (master) {
-          var btn = document.createElement('button');
-          btn.className = 'master-btn' + (master.id === currentMasterId ? ' active' : '');
-          btn.textContent = master.avatar + ' ' + master.name;
-          btn.addEventListener('click', function () {
-            liuyaoMasters.forEach(function (m) {
-              var b = selectArea.querySelector('[data-id="' + m.id + '"]');
-              if (b) b.classList.remove('active');
-            });
-            btn.classList.add('active');
-            currentMasterId = master.id;
-            callMasterAnalysis(master.id);
-          });
-          btn.dataset.id = master.id;
-          selectArea.appendChild(btn);
-        });
+        // ── 开篇 ──
+        var openingTpl = master.openingTemplates || [p + '以' + master.name + '之法，为汝断卦。'];
+        var opening = openingTpl[Math.floor(Math.random() * openingTpl.length)];
+        opening += '\n\n所问之事：' + (question || '当前运势') + '。\n'
+          + '本卦「' + guaName + '」，属' + (originalGua.gong || '—') + '宫，'
+          + '上' + (originalGua.upper || '—') + '下' + (originalGua.lower || '—') + '。'
+          + (changedName ? '之卦「' + changedName + '」，主事有变动之象。' : '六爻安静，主事态稳定。');
+
+        // ── 总论 ──
+        var shiQin = liuQin[shiYao - 1] || '—';
+        var yingQin = yingYao ? liuQin[yingYao - 1] || '—' : '';
+        var overview = '';
+        overview += '世爻居' + yaoPos(shiYao) + '，临' + shiQin + '，为占者自身之位。\n';
+        overview += '应爻居' + (yingYao ? yaoPos(yingYao) : '—') + '，临' + yingQin + '，为所占之事或他人之位。\n\n';
+
+        // 世应关系分析
+        var wxRel = { 父母: '生我', 兄弟: '同我', 官鬼: '克我', 妻财: '我克', 子孙: '我生' };
+        if (shiQin && yingQin) {
+          var shiWx = wxRel[shiQin] || '';
+          var yingWx = wxRel[yingQin] || '';
+          if (shiQin === '官鬼' && yingQin === '妻财') overview += '世应相生，事有转机，利于所求。\n';
+          else if (shiQin === '子孙' && yingQin === '官鬼') overview += '世应相克，事多阻碍，当审时度势。\n';
+          else if (shiWx === '生我' || yingWx === '生我') overview += '世应生合，事有贵人暗助，可期成事。\n';
+          else overview += '世应之间，' + p + '观之，需看动爻变化而定吉凶。\n';
+        }
+
+        overview += '\n六爻六亲（自下而上）：' + liuQin.join('、') + '。\n';
+        overview += '六爻六兽：' + liuShou.join('、') + '。\n';
+        overview += '世爻值' + (liuShou[shiYao - 1] || '—') + '，' + (function () {
+          var ss = liuShou[shiYao - 1] || '';
+          var adv = { 青龙: '主喜庆文书之事', 朱雀: '主口舌是非，宜谨言慎行', 勾陈: '主田土迟滞，事多反复',
+            螣蛇: '主虚惊怪异，防小人暗算', 白虎: '主凶伤孝服，宜守不宜攻', 玄武: '主暗昧盗贼，防失脱之事' };
+          return adv[ss] || '宜综合判断吉凶';
+        })() + '。';
+
+        // ── 专论 ──
+        var specialty = '';
+        if (dongYao.length > 0) {
+          specialty += '本卦有' + dongYao.length + '处动爻：\n';
+          for (var di = 0; di < dongYao.length; di++) {
+            var dy = dongYao[di];
+            var dyQin = liuQin[dy - 1] || '—';
+            var dyShou = liuShou[dy - 1] || '—';
+            var dyNajia = najia[dy - 1] || {};
+            specialty += '• 第' + dy + '爻（' + yaoPos(dy) + '）动——临' + dyQin + '，值' + dyShou
+              + '，纳' + (dyNajia.gan || '') + (dyNajia.zhi || '') + '。\n';
+            // 动爻解读
+            if (dy === shiYao) specialty += '  此爻为世爻动，主占者自身将有变动。' + (dyQin === '官鬼' ? '需防官非口舌。' : dyQin === '妻财' ? '利于求财，但需防损耗。' : dyQin === '子孙' ? '有解忧之象，可化险为夷。' : dyQin === '父母' ? '文书之事有变动，宜谨慎处理。' : '兄弟朋友之事有变。') + '\n';
+            else if (dy === yingYao) specialty += '  此爻为应爻动，主所占之事或他人有变。\n';
+            else specialty += '  此爻动而变，' + (dyQin === '官鬼' ? '主事有阻碍，' : dyQin === '妻财' ? '主财帛有变，' : dyQin === '子孙' ? '主有解忧之机，' : dyQin === '父母' ? '主文书有变，' : '兄弟朋友之事变动，') + '当审慎应对。\n';
+          }
+          if (dongYao.length >= 3) {
+            specialty += '\n多爻齐动，局势复杂。' + p + '以为：不宜轻举妄动，以静制动为上。\n';
+          }
+        } else {
+          specialty += '六爻安静，无动爻。事态趋于稳定，暂不宜做重大决策，守正待时。\n';
+          specialty += '世爻临' + shiQin + '，' + (function () {
+            var a = { 父母: '主文书、学业之事，宜静心修习', 兄弟: '主朋友、竞争之事，宜团结协作',
+              官鬼: '主事业、官非之事，宜谨慎行事', 妻财: '主财运、婚姻之事，宜审时度势',
+              子孙: '主子女、享乐之事，宜放松心态' };
+            return a[shiQin] || '宜守正待时';
+          })() + '。\n';
+        }
+
+        // ── 经典引用 ──
+        var quoteTpl = master.quoteTemplates || [p + '引古训以证今卦。'];
+        var quote = quoteTpl[Math.floor(Math.random() * quoteTpl.length)];
+        quote += '\n\n' + p + '观此「' + guaName + '」之象，';
+        if (changedName) {
+          quote += '本卦「' + guaName + '」变「' + changedName + '」，提示最终走向。';
+          var chgAdv = { 乾: '刚健中正，自强不息', 坤: '厚德载物，柔顺守成', 屯: '万事起头难，宜耐心经营',
+            蒙: '启蒙发智，宜虚心求教', 需: '待时而动，不宜急躁', 讼: '争讼不利，宜和解为上',
+            师: '师出有名，宜正当行事', 比: '亲附和合，宜团结协作', 小畜: '小有积蓄，宜稳健前行',
+            履: '如履薄冰，宜谨慎行事', 泰: '天地交泰，万事亨通', 否: '天地不交，宜韬光养晦' };
+          var shortName = changedName.replace(/为.*$/, '').replace(/卦$/, '');
+          quote += (chgAdv[shortName] || '事有转机，当顺势而为') + '。\n';
+        } else {
+          quote += '卦象安静，' + master.name + '尝言：' + (master.phrase || '静观其变，待时而动') + '。\n';
+        }
+        quote += '\n' + p + '引此以证汝卦：' + master.name + '之法，其理自明，其象自现。古人云' + (master.phrase || '天机不可尽泄') + '，诚不我欺也。';
+
+        // ── 结语 ──
+        var closingTpl = master.closingTemplates || [p + '断曰：吉凶祸福，皆由心生。'];
+        var closing = closingTpl[Math.floor(Math.random() * closingTpl.length)];
+        closing += '\n\n';
+        closing += '卦象总评：' + (score >= 75 ? '吉象明显，可积极行事。' : score >= 55 ? '吉凶参半，宜审时度势。' : '局势偏凶，当谨慎应对。') + '\n';
+        closing += '趋势：' + (trend === 'up' ? '呈上升之势，顺势而为。' : trend === 'down' ? '需谨慎应对，守正待时。' : '趋于平稳，有吉有凶。') + '\n';
+        if (dongYao.length > 0) {
+          closing += '动爻提示：' + (dongYao.length === 1 ? '一爻独动，变化明确，可按动爻指引行事。' : '多爻变动，宜以静制动，待局势明朗。') + '\n';
+        }
+        closing += '\n' + p + '赠言：' + (master.phrase || '天机不可尽泄，留三分与造化。');
+
+        return {
+          opening: opening,
+          overview: overview,
+          specialty: specialty,
+          quote: quote,
+          closing: closing
+        };
       }
 
-      function callMasterAnalysis(masterId) {
-        var contentArea = document.getElementById('masterContent');
-        if (!contentArea || !currentLiuyaoResult) return;
+      function initMastersPanel() {
+        var mastersArea = document.getElementById('mastersArea');
+        if (!mastersArea || !currentLiuyaoResult) return;
+        mastersArea.innerHTML = '';
 
-        contentArea.classList.remove('hidden');
-        contentArea.innerHTML = '<div class="spinner"></div>';
-
-        try {
-          var compositeData = {
-            score: currentLiuyaoResult.score || 50,
-            trend: currentLiuyaoResult.trend || 'neutral',
-            synthesis: {
-              summary:
-                (currentLiuyaoResult.gua_name || '') +
-                (currentLiuyaoResult.changed_gua ? ' → ' + currentLiuyaoResult.changed_gua.name : '') +
-                '，世在第' +
-                currentLiuyaoResult.shi_yao +
-                '爻，应在第' +
-                currentLiuyaoResult.ying_yao +
-                '爻',
-            },
-            individualResults: [
-              { name: '六爻纳甲', score: currentLiuyaoResult.score || 50 },
-            ],
-            // 传递六爻详细数据
-            liuyao: currentLiuyaoResult,
-          };
-
-          var analyses = MastersEngine.batchAnalyze([masterId], compositeData, currentQuestion || '六爻占卜');
-          if (analyses && analyses.length > 0) {
-            var a = analyses[0];
-            contentArea.innerHTML =
-              '<h4>' +
-              escHtml(a.avatar + ' ' + a.name) +
-              ' · ' +
-              escHtml(a.title) +
-              '</h4>' +
-              '<p class="master-era">' +
-              escHtml(a.era) +
-              ' · ' +
-              escHtml(a.style) +
-              '</p>' +
-              '<div class="master-text">' +
-              formatAnalysisText(a.commentary) +
-              '</div>';
-          } else {
-            contentArea.innerHTML = '<p class="text-muted text-center">大师解读生成中...</p>';
-          }
-        } catch (e) {
-          contentArea.innerHTML = '<p class="text-muted text-center">解读生成失败：' + escHtml(e.message) + '</p>';
-        }
+        renderMastersPanel(mastersArea, {
+          category: '六爻',
+          masters: liuyaoMasters,
+          analysisTypes: [
+            { id: 'full', label: '全盘分析' },
+            { id: 'career', label: '事业运势' },
+            { id: 'wealth', label: '财运分析' },
+            { id: 'love', label: '感情婚姻' },
+            { id: 'health', label: '健康运势' },
+          ],
+          onAnalyze: function (masterId, analysisType) {
+            var master = allMasters[masterId];
+            if (!master || !currentLiuyaoResult) return null;
+            return generateLiuyaoAnalysis(master, currentLiuyaoResult, currentQuestion);
+          },
+        });
       }
 
       // ===== 主流程：统一排盘入口 =====
@@ -1516,7 +1808,6 @@
         if (isCasting) return;
         isCasting = true;
 
-        // 隐藏结果
         document.getElementById('resultCard').classList.add('hidden');
         document.getElementById('mastersCard').classList.add('hidden');
 
@@ -1540,10 +1831,7 @@
 
         var mastersCard = document.getElementById('mastersCard');
         mastersCard.classList.remove('hidden');
-        initMasters();
-        if (liuyaoResult && liuyaoMasters.length > 0) {
-          callMasterAnalysis(currentMasterId);
-        }
+        initMastersPanel();
 
         resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         isCasting = false;
