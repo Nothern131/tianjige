@@ -262,8 +262,11 @@ function renderMasterResult(container, result, master, categoryColors) {
   html += '</div>';
   html += '<div class="satisfaction-msg hidden" id="satisfaction-msg"></div>';
   html += '</div>';
+  html += '</div>';
 
-  // 评分交互
+  container.innerHTML = html;
+
+  // 评分交互（必须在 innerHTML 赋值后查询）
   var satBar = container.querySelector('#satisfaction-bar');
   var satStars = container.querySelector('#satisfaction-stars');
   var satMsg = container.querySelector('#satisfaction-msg');
@@ -303,7 +306,4 @@ function renderMasterResult(container, result, master, categoryColors) {
       localStorage.setItem('liuyao_ratings', JSON.stringify(history));
     } catch (e) {}
   });
-  html += '</div>';
-
-  container.innerHTML = html;
 }
