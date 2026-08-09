@@ -11,6 +11,7 @@ export default defineConfig({
         index: 'index.html',
         'ep1-fengshui': 'ep1-fengshui.html',
         'ep2-bazi': 'ep2-bazi.html',
+        'ep3-liuyao': 'ep3-liuyao.html',
         architecture: 'architecture.html',
       },
     },

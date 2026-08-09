@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>天机阁 EP3 · 六爻占卜</title>
+  <meta name="description" content="天机阁EP3——六爻占卜。以京房纳甲、鬼谷捭阖为骨，铜钱起卦、卦象推演，断百事吉凶。古籍为经，算法为纬，纯前端实现。">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="static/css/style.css" />
+  <style>
+    body{background:var(--bg-deep);color:var(--text-primary);font-family:'Noto Serif SC',serif;min-height:100vh;overflow-x:hidden}
+    *{margin:0;padding:0;box-sizing:border-box}
+    ::selection{background:rgba(184,154,92,0.3);color:#fff}
+    ::-webkit-scrollbar{width:6px}
+    ::-webkit-scrollbar-track{background:var(--bg-layer)}
+    ::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
+    a{color:var(--gold);text-decoration:none}
+    a:hover{color:var(--gold-light)}
+
+    /* ===== HERO ===== */
+    .hero{position:relative;padding:60px 24px 40px;text-align:center;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(184,154,92,0.06) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(139,69,38,0.05) 0%,transparent 50%);animation:heroGlow 8s ease-in-out infinite alternate;pointer-events:none}
+    @keyframes heroGlow{0%{transform:translate(0,0)}100%{transform:translate(-30px,20px)}}
+    .hero-icon{font-size:3.5rem;margin-bottom:16px;display:block;animation:float 3s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .hero h1{font-family:'Ma Shan Zheng',cursive;font-size:clamp(2.4rem,10vw,4rem);color:var(--gold);letter-spacing:0.1em;margin-bottom:12px;text-shadow:0 0 40px rgba(184,154,92,0.5)}
+    .hero p{color:var(--text-secondary);font-size:clamp(0.9rem,2.5vw,1.15rem);max-width:520px;margin:0 auto;line-height:1.8}
+    .hero-divider{width:120px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:20px auto 0}
+
+    /* ===== WRAP ===== */
+    .wrap{max-width:960px;margin:0 auto;padding:0 20px 80px}
+
+    /* ===== CARD ===== */
+    .card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:16px;padding:28px;margin-bottom:24px;position:relative;overflow:hidden}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0.6}
+    .card-title{font-family:'Ma Shan Zheng',cursive;font-size:1.4rem;color:var(--gold);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+    /* ===== FORM ===== */
+    .form-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+    .form-group{margin-bottom:16px}
+    .form-label{display:block;color:var(--text-secondary);font-size:0.85rem;margin-bottom:6px}
+    .form-input,.form-select{width:100%;padding:10px 14px;background:var(--bg-layer);border:1px solid var(--border-subtle);border-radius:8px;color:var(--text-primary);font-size:0.95rem;font-family:'Noto Serif SC',serif;transition:border-color 0.2s}
+    .form-input:focus,.form-select:focus{outline:none;border-color:var(--gold)}
+    .form-select option{background:var(--bg-deep);color:var(--text-primary)}
+
+    /* ===== BUTTONS ===== */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 24px;border-radius:8px;font-size:0.9rem;font-family:'Noto Serif SC',serif;cursor:pointer;transition:all 0.2s;border:none}
+    .btn-primary{background:var(--gold);color:var(--bg-deep);font-weight:600}
+    .btn-primary:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 4px 16px rgba(184,154,92,0.3)}
+    .btn-outline{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+    .btn-outline:hover{background:rgba(184,154,92,0.1)}
+    .btn-row{display:flex;gap:12px;flex-wrap:wrap}
+
+    /* ===== COIN ANIMATION ===== */
+    .coin-stage{display:flex;flex-direction:column;align-items:center;padding:24px 0}
+    .coins-container{display:flex;gap:20px;margin-bottom:20px}
+    .coin{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#b89a5c 0%,#8b6914 50%,#b89a5c 100%);display:flex;align-items:center;justify-content:center;font-size:1.8rem;box-shadow:0 4px 20px rgba(184,154,92,0.4);transition:transform 0.3s}
+    .coin.shaking{animation:coinShake 0.15s infinite alternate}
+    @keyframes coinShake{0%{transform:rotate(-15deg) scale(1.05)}100%{transform:rotate(15deg) scale(0.95)}}
+    .coin-result{font-size:0.85rem;color:var(--text-muted);margin-top:6px;text-align:center}
+    .line-results{display:flex;flex-direction:column-reverse;gap:8px;margin-top:20px;width:100%;max-width:320px}
+    .line-result{display:flex;align-items:center;gap:12px;padding:8px 16px;border-radius:8px;background:var(--bg-layer);border:1px solid var(--border-subtle);animation:lineAppear 0.3s ease-out}
+    @keyframes lineAppear{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+    .line-result .line-symbol{font-size:1.2rem}
+    .line-result .line-label{color:var(--text-muted);font-size:0.8rem}
+    .line-result.yang{border-color:rgba(184,154,92,0.3)}
+    .line-result.yin{border-color:rgba(139,69,38,0.3)}
+    .line-result.changing{border-color:rgba(220,80,60,0.5);background:rgba(220,80,60,0.05)}
+
+    /* ===== HEXAGRAM DISPLAY ===== */
+    .hexagram-display{text-align:center;padding:20px 0}
+    .hexagram-name{font-family:'Ma Shan Zheng',cursive;font-size:1.6rem;color:var(--gold);margin-bottom:4px}
+    .hexagram-detail{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:20px}
+    .detail-item{background:var(--bg-layer);border:1px solid var(--border-subtle);border-radius:8px;padding:12px;text-align:center}
+    .detail-label{color:var(--text-muted);font-size:0.75rem;margin-bottom:4px}
+    .detail-value{color:var(--text-primary);font-size:0.9rem}
+    .yao-table{width:100%;border-collapse:collapse;margin-top:16px;font-size:0.85rem}
+    .yao-table th{color:var(--gold);padding:8px;border-bottom:1px solid var(--border-subtle);text-align:center;font-weight:600}
+    .yao-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:center;color:var(--text-secondary)}
+    .yao-table tr:hover td{color:var(--text-primary)}
+    .yao-changing{color:#dc503c;font-weight:600}
+    .line-visual{display:inline-flex;flex-direction:column;align-items:center;gap:3px;padding:12px;background:var(--bg-layer);border-radius:8px;margin-bottom:16px}
+    .line-bar{height:4px;border-radius:2px}
+    .line-bar.yang{width:60px;background:var(--gold)}
+    .line-bar.yang.changing{background:#dc503c;animation:pulse 1s infinite}
+    .line-bar.yin{display:flex;gap:8px;width:60px}
+    .line-bar.yin .half{flex:1;height:4px;background:var(--gold);border-radius:2px}
+    .line-bar.yin.changing .half{background:#dc503c}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+    /* ===== LINES GRID ===== */
+    .lines-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:16px 0}
+    .line-box{text-align:center;padding:8px 4px;background:var(--bg-layer);border-radius:6px;border:1px solid var(--border-subtle)}
+    .line-box.changing{border-color:rgba(220,80,60,0.5)}
+    .line-box .line-num{font-size:0.7rem;color:var(--text-muted);margin-bottom:4px}
+    .line-box .line-icon{font-size:1.3rem}
+    .line-box .line-text{font-size:0.65rem;color:var(--text-secondary);margin-top:2px}
+
+    /* ===== MASTERS ===== */
+    .masters-card{margin-top:24px}
+    .master-select{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+    .master-btn{padding:8px 16px;border-radius:20px;border:1px solid var(--border-subtle);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:'Noto Serif SC',serif;font-size:0.85rem;transition:all 0.2s}
+    .master-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(184,154,92,0.1)}
+    .master-btn:hover{border-color:var(--gold);color:var(--gold)}
+    .master-content{background:var(--bg-layer);border:1px solid var(--border-subtle);border-radius:12px;padding:24px}
+    .master-content h4{color:var(--gold);font-size:1.1rem;margin-bottom:12px}
+    .master-content p{color:var(--text-secondary);line-height:1.8;font-size:0.9rem}
+
+    /* ===== SECTION DIVIDER ===== */
+    .section-divider{border:none;height:1px;background:linear-gradient(90deg,transparent,var(--border-subtle),transparent);margin:24px 0}
+
+    /* ===== UTILS ===== */
+    .hidden{display:none!important}
+    .mt-16{margin-top:16px}
+    .text-center{text-align:center}
+    .text-muted{color:var(--text-muted)}
+    .text-gold{color:var(--gold)}
+
+    /* ===== LOADING ===== */
+    .spinner{width:32px;height:32px;border:3px solid var(--border-subtle);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;margin:20px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ===== RESPONSIVE ===== */
+    @media(max-width:768px){
+      .hero{padding:40px 16px 28px}
+      .hero h1{font-size:2rem}
+      .card{padding:20px 16px}
+      .form-row{grid-template-columns:1fr;gap:10px}
+      .btn{padding:10px 18px;font-size:0.85rem}
+      .coins-container{gap:14px}
+      .coin{width:52px;height:52px;font-size:1.4rem}
+      .hexagram-detail{grid-template-columns:repeat(2,1fr)}
+      .lines-grid{grid-template-columns:repeat(3,1fr)}
+    }
+    @media(max-width:400px){
+      .hero h1{font-size:1.6rem}
+      .hero-icon{font-size:2.5rem}
+      .card{padding:16px 12px}
+      .coin{width:44px;height:44px;font-size:1.2rem}
+      .hexagram-detail{grid-template-columns:1fr}
+      .lines-grid{grid-template-columns:repeat(3,1fr);gap:6px}
+      .line-box{padding:6px 2px}
+    }
+  </style>
+</head>
+<body>
+  <!-- 星空背景 Canvas -->
+  <canvas id="starfield"></canvas>
+
+  <div class="wrap">
+    <!-- HERO -->
+    <div class="hero">
+      <span class="hero-icon">🪙</span>
+      <h1>六 爻 卜 卦</h1>
+      <p>以三枚铜钱演六十四卦，断吉凶悔吝。京房纳甲，鬼谷捭阖，卦象自成。</p>
+      <div class="hero-divider"></div>
+    </div>
+
+    <!-- 起卦卡片 -->
+    <div class="card" id="castCard">
+      <div class="card-title">🪙 起 卦</div>
+
+      <div class="form-group">
+        <label class="form-label">心中所问之事</label>
+        <input type="text" class="form-input" id="question" placeholder="例如：近日事业是否有转机？" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">提问日期（年）</label>
+          <input type="number" class="form-input" id="castYear" value="2026" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">提问日期（月）</label>
+          <input type="number" class="form-input" id="castMonth" value="8" min="1" max="12" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">提问日期（日）</label>
+          <input type="number" class="form-input" id="castDay" value="5" min="1" max="31" />
+        </div>
+      </div>
+
+      <div class="coin-stage">
+        <div class="coins-container">
+          <div class="coin" id="coin1">☰</div>
+          <div class="coin" id="coin2">☰</div>
+          <div class="coin" id="coin3">☰</div>
+        </div>
+        <p class="text-muted" id="coinPrompt">心中默念所问之事，点击"起卦"</p>
+        <div class="line-results hidden" id="lineResults"></div>
+      </div>
+
+      <div class="btn-row text-center">
+        <button class="btn btn-primary" id="castBtn">🪙 摇卦起卜</button>
+        <button class="btn btn-outline" id="randomBtn">🎲 随机起卦</button>
+      </div>
+    </div>
+
+    <!-- 结果卡片 -->
+    <div class="card hidden" id="resultCard">
+      <div class="card-title">📜 卦 象</div>
+      <div id="resultArea">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- 大师解读 -->
+    <div class="card hidden masters-card" id="mastersCard">
+      <div class="card-title">🧙 大师解读</div>
+      <div class="master-select" id="masterSelect"></div>
+      <div class="master-content hidden" id="masterContent"></div>
+    </div>
+  </div>
+
+  <!-- 脚本加载 -->
+  <script src="static/js/constants.js"></script>
+  <script src="static/js/logger.js"></script>
+  <script src="static/js/bazi-engine.js"></script>
+  <script src="static/js/liuyao-engine.js"></script>
+  <script src="static/js/masters-engine.js"></script>
+  <script src="static/js/domain-analysis.js"></script>
+  <script src="static/js/duality-analyzer.js"></script>
+  <script src="static/js/components/masters.js"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ===== 星空背景 =====
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let animId;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function initStars() {
+      stars = [];
+      const count = Math.floor((canvas.width * canvas.height) / 8000);
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          r: Math.random() * 1.2 + 0.3,
+          alpha: Math.random(),
+          da: (Math.random() - 0.5) * 0.008,
+        });
+      }
+    }
+
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        s.alpha += s.da;
+        if (s.alpha <= 0.05 || s.alpha >= 1) s.da = -s.da;
+        s.alpha = Math.max(0.05, Math.min(1, s.alpha));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(184,154,92,' + s.alpha * 0.6 + ')';
+        ctx.fill();
+      }
+      animId = requestAnimationFrame(drawStars);
+    }
+
+    resizeCanvas();
+    initStars();
+    drawStars();
+    window.addEventListener('resize', function () {
+      resizeCanvas();
+      initStars();
+    });
+
+    // ===== 工具函数 =====
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatAnalysisText(raw) {
+      if (!raw) return '';
+      return String(raw)
+        .split('\n')
+        .map(function (line) {
+          var t = line.replace(/^【(.+)】(.*)/, '<strong style="color:var(--gold)">$1</strong>$2');
+          return t ? '<p>' + t + '</p>' : '';
+        })
+        .join('');
+    }
+
+    // ===== 起卦 =====
+    const lineMap = {
+      6: { type: 'yin', changing: true, label: '⚋ 老阴（动）', cls: 'yin' },
+      7: { type: 'yang', changing: false, label: '⚊ 少阳', cls: 'yang' },
+      8: { type: 'yin', changing: false, label: '⚋ 少阴', cls: 'yin' },
+      9: { type: 'yang', changing: true, label: '⚊ 老阳（动）', cls: 'yang' },
+    };
+
+    let isCasting = false;
+
+    function sleep(ms) {
+      return new Promise(function (r) {
+        setTimeout(r, ms);
+      });
+    }
+
+    async function castLines(count) {
+      const lines = [];
+      const container = document.getElementById('lineResults');
+      container.innerHTML = '';
+      container.classList.remove('hidden');
+
+      for (let i = 0; i < count; i++) {
+        const total =
+          [2, 3][Math.random() > 0.5 ? 1 : 0] +
+          [2, 3][Math.random() > 0.5 ? 1 : 0] +
+          [2, 3][Math.random() > 0.5 ? 1 : 0];
+        const line = lineMap[total];
+        lines.push(line);
+
+        // 硬币动画
+        const coins = [document.getElementById('coin1'), document.getElementById('coin2'), document.getElementById('coin3')];
+        coins.forEach(function (c) {
+          c.classList.add('shaking');
+        });
+        await sleep(500);
+        coins.forEach(function (c) {
+          c.classList.remove('shaking');
+          c.textContent = line.type === 'yang' ? '☰' : '☷';
+        });
+
+        // 显示爻线
+        const el = document.createElement('div');
+        el.className = 'line-result ' + line.cls + (line.changing ? ' changing' : '');
+        el.innerHTML =
+          '<span class="line-label">第' +
+          (i + 1) +
+          '爻</span><span class="line-symbol">' +
+          (line.type === 'yang' ? '⚊' : '⚋') +
+          (line.changing ? ' ⚡' : '') +
+          '</span>';
+        container.appendChild(el);
+        await sleep(300);
+      }
+      return lines;
+    }
+
+    // ===== 渲染六爻结果 =====
+    function renderLiuyaoResult(result, question) {
+      const area = document.getElementById('resultArea');
+      if (!result) {
+        area.innerHTML = '<p class="text-muted text-center">起卦失败，请重试</p>';
+        return;
+      }
+
+      const guaName = result.gua_name || '—';
+      const changedName = result.changed_gua ? result.changed_gua.name : '';
+      const yaoArr = result.original_gua ? result.original_gua.yao : [];
+      const dongYao = result.dong_yao || [];
+      const shiYao = result.shi_yao || '?';
+      const yingYao = result.ying_yao || '?';
+      const liuQin = result.liu_qin || [];
+      const liuShou = result.liu_shou || [];
+      const najia = result.najia || [];
+
+      // 事域分析
+      var questionHtml = '';
+      if (question && typeof DomainAnalysis !== 'undefined') {
+        try {
+          var qaResult = DomainAnalysis.analyze('liuyao', result, question);
+          if (qaResult) {
+            questionHtml =
+              '<hr class="section-divider"><div style="background:rgba(184,154,92,0.04);border:1px solid rgba(184,154,92,0.15);border-radius:10px;padding:16px;margin-top:16px;"><h3 style="color:var(--gold);font-size:1rem;margin-bottom:8px;">' +
+              qaResult.domain.icon +
+              ' ' +
+              qaResult.domain.name +
+              '</h3><div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.8;">' +
+              formatAnalysisText(qaResult.analysis) +
+              '</div></div>';
+          }
+        } catch (e) {}
+      }
+
+      // 爻线表格
+      var yaoTableRows = '';
+      for (var i = 0; i < 6; i++) {
+        var v = yaoArr[i] !== undefined ? yaoArr[i] : 1;
+        var isYang = v === 1;
+        var isDong = dongYao.indexOf(i + 1) !== -1;
+        var changed = isDong ? (isYang ? '阴' : '阳') : '—';
+        yaoTableRows +=
+          '<tr>' +
+          '<td>第' +
+          (i + 1) +
+          '爻</td>' +
+          '<td>' +
+          (isYang ? '⚊ 阳' : '⚋ 阴') +
+          (isDong ? ' <span class="yao-changing">⚡动</span>' : '') +
+          '</td>' +
+          '<td>' +
+          (isDong ? '<span class="yao-changing">' + changed + '</span>' : '—') +
+          '</td>' +
+          '<td>' +
+          (liuQin[i] || '—') +
+          '</td>' +
+          '<td>' +
+          (liuShou[i] || '—') +
+          '</td>' +
+          '<td>' +
+          (najia[i] ? najia[i].gan + najia[i].zhi : '—') +
+          '</td>' +
+          '</tr>';
+      }
+
+      area.innerHTML =
+        '<div class="hexagram-display">' +
+        '<div class="hexagram-name">' +
+        escHtml(guaName) +
+        (changedName ? ' → ' + escHtml(changedName) : '') +
+        '</div>' +
+        (changedName ? '<p class="text-muted" style="font-size:0.85rem">之卦：' + escHtml(changedName) + '</p>' : '') +
+        '</div>' +
+        '<hr class="section-divider">' +
+        '<div class="hexagram-detail">' +
+        '<div class="detail-item"><div class="detail-label">本卦</div><div class="detail-value">' + escHtml(guaName) + '</div></div>' +
+        (changedName ? '<div class="detail-item"><div class="detail-label">之卦</div><div class="detail-value">' + escHtml(changedName) + '</div></div>' : '') +
+        '<div class="detail-item"><div class="detail-label">世爻</div><div class="detail-value">第' + escHtml(String(shiYao)) + '爻</div></div>' +
+        '<div class="detail-item"><div class="detail-label">应爻</div><div class="detail-value">第' + escHtml(String(yingYao)) + '爻</div></div>' +
+        '<div class="detail-item"><div class="detail-label">动爻</div><div class="detail-value">' +
+        (dongYao.length ? dongYao.map(function (d) {
+          return '第' + d + '爻';
+        }).join('、') : '无') +
+        '</div></div>' +
+        '<div class="detail-item"><div class="detail-label">卦数</div><div class="detail-value">' + escHtml(String(result.gua_number || '—')) + '</div></div>' +
+        '</div>' +
+        '<hr class="section-divider">' +
+        '<h3 style="color:var(--gold);font-size:1rem;margin-bottom:12px;">六爻明细</h3>' +
+        '<table class="yao-table">' +
+        '<thead><tr><th>爻位</th><th>阴阳</th><th>变爻</th><th>六亲</th><th>六兽</th><th>纳甲</th></tr></thead>' +
+        '<tbody>' +
+        yaoTableRows +
+        '</tbody></table>' +
+        (result.interpretation
+          ? '<hr class="section-divider"><div style="background:rgba(184,154,92,0.04);border:1px solid rgba(184,154,92,0.15);border-radius:10px;padding:16px;"><h3 style="color:var(--gold);font-size:1rem;margin-bottom:8px;">📖 卦象解读</h3><div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.8;">' +
+            formatAnalysisText(result.interpretation) +
+            '</div></div>'
+          : '') +
+        questionHtml;
+    }
+
+    // ===== 大师解读 =====
+    var currentMasterId = 'guiguzi';
+    var currentLiuyaoResult = null;
+    var currentQuestion = '';
+
+    var liuyaoMasters = [];
+    var allMasters = MastersEngine.MASTERS;
+    for (var key in allMasters) {
+      if (allMasters.hasOwnProperty(key)) {
+        var m = allMasters[key];
+        if (m.category === '六爻' || m.category === '梅花' || m.category === '奇门' || m.category === '大六壬' || m.category === '综合') {
+          liuyaoMasters.push(m);
+        }
+      }
+    }
+
+    function initMasters() {
+      var selectArea = document.getElementById('masterSelect');
+      var contentArea = document.getElementById('masterContent');
+      if (!selectArea || !contentArea) return;
+
+      selectArea.innerHTML = '';
+      contentArea.innerHTML = '';
+
+      liuyaoMasters.forEach(function (master) {
+        var btn = document.createElement('button');
+        btn.className = 'master-btn' + (master.id === currentMasterId ? ' active' : '');
+        btn.textContent = master.avatar + ' ' + master.name;
+        btn.addEventListener('click', function () {
+          liuyaoMasters.forEach(function (m) {
+            var b = selectArea.querySelector('[data-id="' + m.id + '"]');
+            if (b) b.classList.remove('active');
+          });
+          btn.classList.add('active');
+          currentMasterId = master.id;
+          callMasterAnalysis(master.id);
+        });
+        btn.dataset.id = master.id;
+        selectArea.appendChild(btn);
+      });
+    }
+
+    function callMasterAnalysis(masterId) {
+      var contentArea = document.getElementById('masterContent');
+      if (!contentArea || !currentLiuyaoResult) return;
+
+      contentArea.classList.remove('hidden');
+      contentArea.innerHTML = '<div class="spinner"></div>';
+
+      try {
+        var compositeData = {
+          score: currentLiuyaoResult.score || 50,
+          trend: currentLiuyaoResult.trend || 'neutral',
+          synthesis: {
+            summary:
+              (currentLiuyaoResult.gua_name || '') +
+              (currentLiuyaoResult.changed_gua ? ' → ' + currentLiuyaoResult.changed_gua.name : '') +
+              '，世在第' +
+              currentLiuyaoResult.shi_yao +
+              '爻，应在第' +
+              currentLiuyaoResult.ying_yao +
+              '爻',
+          },
+          individualResults: [
+            { name: '六爻纳甲', score: currentLiuyaoResult.score || 50 },
+          ],
+        };
+
+        var analyses = MastersEngine.batchAnalyze([masterId], compositeData, currentQuestion || '六爻占卜');
+        if (analyses && analyses.length > 0) {
+          var a = analyses[0];
+          contentArea.innerHTML =
+            '<h4>' +
+            escHtml(a.avatar + ' ' + a.name) +
+            ' · ' +
+            escHtml(a.title) +
+            '</h4>' +
+            '<p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">' +
+            escHtml(a.era) +
+            ' · ' +
+            escHtml(a.style) +
+            '</p>' +
+            '<div style="font-size:0.9rem;color:var(--text-secondary);line-height:1.9;">' +
+            formatAnalysisText(a.commentary) +
+            '</div>';
+        } else {
+          contentArea.innerHTML = '<p class="text-muted">大师解读生成中...</p>';
+        }
+      } catch (e) {
+        contentArea.innerHTML = '<p class="text-muted">解读生成失败：' + escHtml(e.message) + '</p>';
+      }
+    }
+
+    // ===== 主流程 =====
+    async function doCast() {
+      if (isCasting) return;
+      isCasting = true;
+
+      var castBtn = document.getElementById('castBtn');
+      castBtn.disabled = true;
+      castBtn.textContent = '摇卦中...';
+
+      document.getElementById('lineResults').classList.add('hidden');
+      document.getElementById('resultCard').classList.add('hidden');
+      document.getElementById('mastersCard').classList.add('hidden');
+
+      var lines = await castLines(6);
+
+      var year = parseInt(document.getElementById('castYear').value) || 2026;
+      var month = parseInt(document.getElementById('castMonth').value) || 8;
+      var day = parseInt(document.getElementById('castDay').value) || 5;
+      var question = document.getElementById('question').value.trim();
+      currentQuestion = question;
+
+      var liuyaoResult = null;
+      try {
+        liuyaoResult = LiuyaoEngine.divine(lines, year, month, day);
+      } catch (e) {
+        console.error('[天机阁] 六爻排盘失败:', e);
+      }
+      currentLiuyaoResult = liuyaoResult;
+
+      var resultCard = document.getElementById('resultCard');
+      resultCard.classList.remove('hidden');
+      renderLiuyaoResult(liuyaoResult, question);
+
+      var mastersCard = document.getElementById('mastersCard');
+      mastersCard.classList.remove('hidden');
+      initMasters();
+      if (liuyaoResult && liuyaoMasters.length > 0) {
+        callMasterAnalysis(currentMasterId);
+      }
+
+      castBtn.disabled = false;
+      castBtn.textContent = '🪙 再摇一卦';
+      isCasting = false;
+    }
+
+    // ===== 事件绑定 =====
+    document.getElementById('castBtn').addEventListener('click', doCast);
+
+    document.getElementById('randomBtn').addEventListener('click', function () {
+      document.getElementById('castYear').value = new Date().getFullYear();
+      document.getElementById('castMonth').value = new Date().getMonth() + 1;
+      document.getElementById('castDay').value = new Date().getDate();
+      doCast();
+    });
+
+    // ===== 控制台声明 =====
+    console.log('%c 天机阁 EP3 · 六爻占卜 ', 'background:#1a1408;color:#b89a5c;font-size:14px;font-weight:bold;padding:4px 8px;border-radius:4px 4px 0 0;');
+    console.log('%c 以京房纳甲、鬼谷捭阖为骨，铜钱起卦，卦象推演。古籍为经，算法为纬。', 'background:#1a1408;color:#8b7355;padding:4px 8px;border-radius:0 0 4px 4px;');
+  })();
+  </script>
+</body>
+</html>
