@@ -57,6 +57,17 @@
     坤: { yao: [0, 0, 0], wuxing: '土', xiang: '地', fangwei: '西南' },
   };
 
+  /* ========== 二、六十甲子与五虎遁 ========== */
+  var SIXTY_JIAZI = [];
+  var JIAZI_INDEX = {};
+  for (var jzI = 0; jzI < 60; jzI++) {
+    var jz = GAN[jzI % 10] + ZHI[jzI % 12];
+    SIXTY_JIAZI.push(jz);
+    JIAZI_INDEX[jz] = jzI;
+  }
+  // 五虎遁（年干→寅月月干）：甲己之年丙作首，乙庚之岁戊为头...
+  var WUHUDUN = { 甲: '丙', 己: '丙', 乙: '戊', 庚: '戊', 丙: '庚', 辛: '庚', 丁: '壬', 壬: '壬', 戊: '甲', 癸: '甲' };
+
   /* ========== 三、64卦表（八宫卦序，按"变爻法"生成） ========== */
   // 每卦：{ name, gong, yao[6]从下到上, shi(1-6), upper, lower }
   var GUAS = [];
