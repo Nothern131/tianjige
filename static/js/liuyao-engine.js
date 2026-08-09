@@ -891,6 +891,94 @@
    * @param {Array} lines - 6个爻，从下到上，每个 { type: "yang"|"yin", changing: boolean }
    * @returns {Object} 卦象结果
    */
+  /**
+   * 计算卦象吉凶分数（0-100）
+   * 基于：卦象本质 + 世应关系 + 动爻 + 六亲分布
+   */
+  function calculateScore(gua, dongYao, shiYao, yingYao, liuQin, liuShou, changedGua) {
+    var score = 50; // 基准分
+
+    // 1. 卦象本质吉凶（64卦吉凶权重）
+    var guaFortune = {
+      // 大吉卦
+      '天地否': 75, '地天泰': 85, '雷水解': 72, '水雷屯': 68,
+      '风雷益': 78, '火雷噬嗑': 65, '山雷颐': 70,
+      '天雷无妄': 73, '火天大有': 82, '山天大畜': 75,
+      '火泽睽': 55, '泽天夬': 68, '雷泽归妹': 60,
+      // 大凶卦
+      '地火明夷': 35, '火地晋': 58, '山火贲': 62,
+      '天水讼': 42, '火天同人': 68, '地天泰': 85,
+      '泽天夬': 68, '天泽履': 70, '风天小畜': 65,
+      // 中性卦
+      '坎为水': 45, '离为火': 55, '震为雷': 60, '巽为风': 58,
+      '艮为山': 50, '兑为泽': 62, '坤为地': 48, '乾为天': 72,
+    };
+    score += (guaFortune[gua.name] || 50) - 50;
+
+    // 2. 世爻六亲加分/减分
+    var shiQin = liuQin[shiYao - 1] || '';
+    if (shiQin === '子孙') score += 8;      // 子孙持世，解忧之神
+    else if (shiQin === '妻财') score += 5; // 妻财持世，财运主动
+    else if (shiQin === '官鬼') score -= 5; // 官鬼持世，压力在身
+    else if (shiQin === '兄弟') score -= 3; // 兄弟持世，竞争破财
+    else if (shiQin === '父母') score += 2; // 父母持世，文书有利
+
+    // 3. 动爻分析
+    if (dongYao.length > 0) {
+      for (var di = 0; di < dongYao.length; di++) {
+        var d = dongYao[di];
+        var dQin = liuQin[d - 1] || '';
+        if (d === shiYao) {
+          // 世爻动
+          if (dQin === '子孙') score += 6;
+          else if (dQin === '妻财') score += 4;
+          else if (dQin === '官鬼') score -= 4;
+        } else if (d === yingYao) {
+          // 应爻动
+          if (dQin === '子孙') score += 3;
+          else if (dQin === '官鬼') score -= 3;
+        } else {
+          // 其他爻动
+          if (dQin === '子孙') score += 2;
+          else if (dQin === '官鬼') score -= 2;
+        }
+      }
+    }
+
+    // 4. 世应关系
+    var dist = Math.abs(shiYao - yingYao);
+    if (dist === 1 || dist === 5) score += 5;      // 世应相邻，助力
+    else if (dist >= 3) score -= 3;                 // 世应相隔，阻力
+
+    // 5. 变卦影响
+    if (changedGua) {
+      var changedFortune = guaFortune[changedGua.name] || 50;
+      if (changedFortune > 60) score += 5;
+      else if (changedFortune < 45) score -= 5;
+    }
+
+    // 6. 六亲数量平衡
+    var qinCount = {};
+    for (var qi = 0; qi < 6; qi++) {
+      var q = liuQin[qi];
+      qinCount[q] = (qinCount[q] || 0) + 1;
+    }
+    var maxCount = Math.max.apply(null, Object.keys(qinCount).map(function(k) { return qinCount[k]; }));
+    if (maxCount >= 3) score -= 3;  // 某六亲过多，偏颇
+
+    // 限制分数范围
+    return Math.max(0, Math.min(100, score));
+  }
+
+  /**
+   * 根据分数计算趋势
+   */
+  function calculateTrend(score) {
+    if (score >= 65) return 'up';
+    if (score <= 35) return 'down';
+    return 'neutral';
+  }
+
   function divine(lines) {
     if (!lines || lines.length !== 6) {
       throw new Error('六爻起卦需要6个爻，从下到上排列');
@@ -927,6 +1015,10 @@
 
     var interpretation = generateInterpretation(gua, dongYao, shiYao, yingYao, liuQin, liuShou, changedGua);
 
+    // 计算吉凶分数和趋势
+    var score = calculateScore(gua, dongYao, shiYao, yingYao, liuQin, liuShou, changedGua);
+    var trend = calculateTrend(score);
+
     return {
       gua_name: gua.name,
       original_gua: {
@@ -944,6 +1036,8 @@
       liu_shou: liuShou,
       najia: najia,
       interpretation: interpretation,
+      score: score,
+      trend: trend,
     };
   }
 
