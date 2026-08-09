@@ -1685,6 +1685,18 @@
           '<thead><tr><th>爻位</th><th>阴阳</th><th>变爻</th><th>六亲</th><th>六兽</th><th>纳甲</th></tr></thead>' +
           '<tbody>' + yaoTableRows + '</tbody></table></div>' +
           castingHtml +
+          // 日月建分析
+          (result.ri_jian
+            ? '<div class="interp-block" style="margin-top:16px;"><h3>📅 日月建</h3><div style="font-size:0.85rem;color:var(--text2);line-height:1.85;">今值' + escHtml(result.ri_jian) + '日，' + escHtml(result.yue_jian || '') + '月建。</div></div>'
+            : '') +
+          // 旺衰分析
+          (result.wang_shuai && result.wang_shuai.length > 0
+            ? '<div class="interp-block" style="margin-top:16px;"><h3>⚖️ 爻之旺衰</h3><div style="font-size:0.85rem;color:var(--text2);line-height:1.85;">' + escHtml(result.wang_shuai.map(function (w, i) { return '第' + (i + 1) + '爻(' + (result.najia[i] ? result.najia[i].zhi : '?') + '):' + w; }).join('；')) + '</div></div>'
+            : '') +
+          // 六冲六合
+          (result.chong_he && (result.chong_he.isLiuChong || result.chong_he.isLiuHe)
+            ? '<div class="interp-block" style="margin-top:16px;"><h3>⚡ 六冲六合</h3><div style="font-size:0.85rem;color:var(--text2);line-height:1.85;">' + escHtml(result.chong_he.desc || '') + '</div></div>'
+            : '') +
           (result.interpretation
             ? '<div class="interp-block"><h3>📖 卦象解读</h3><div style="font-size:0.85rem;color:var(--text2);line-height:1.85;">' +
               formatAnalysisText(result.interpretation) +
