@@ -1686,6 +1686,20 @@
         }
       }
 
+      // ===== 六爻基础常量（供 generateLiuyaoAnalysis 使用） =====
+      var ZHI_WUXING = { 子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水' };
+      var WX_SHENG = { 木:'火',火:'土',土:'金',金:'水',水:'木' };
+      var WX_KE = { 木:'土',土:'金',金:'水',水:'火',火:'木' };
+      var GAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+      var ZHI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+      var SIXTY_JIAZI = [], JIAZI_INDEX = {};
+      for (var jzI = 0; jzI < 60; jzI++) { SIXTY_JIAZI.push(GAN[jzI%10]+ZHI[jzI%12]); JIAZI_INDEX[SIXTY_JIAZI[jzI]] = jzI; }
+      var WUHUDUN = { 甲:'丙',己:'丙',乙:'戊',庚:'戊',丙:'庚',辛:'庚',丁:'壬',壬:'壬',戊:'甲',癸:'甲' };
+      function calcYearGZ(year){ var b=JIAZI_INDEX['庚子']; return SIXTY_JIAZI[(((b+year-1900)%60)+60)%60]; }
+      function _getRiGanZhi(date){ var base=new Date(2000,0,1); var d=Math.floor((date-base)/86400000); var idx=((d%60)+60)%60; return {gan:GAN[idx%10],zhi:ZHI[idx%12]}; }
+      function _getYueZhi(year,month,day){ if(month===1) return '丑'; if(month===2&&day<4) return '丑'; if(month>=8&&day>=7) return ZHI[month%12]; if(month>=2&&month<=7) return ZHI[(month+1)%12]; return ZHI[month%12]; }
+      function _getYueGan(yearGan,monthZhi){ var s=WUHUDUN[yearGan]||'丙'; var m=(ZHI.indexOf(monthZhi)-ZHI.indexOf('寅')+12)%12; return GAN[(GAN.indexOf(s)+m)%10]; }
+
       /**
        * 生成六爻分析 — 针对所问之事进行详细拆解，大师风格差异化，输出明确推理链
        * 返回 { opening, overview, specialty, quote, closing }
