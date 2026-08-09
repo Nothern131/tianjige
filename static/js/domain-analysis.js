@@ -2851,6 +2851,30 @@
       '如有跳槽或转岗的念头，可开始准备，但不宜操之过急。',
       '多与行业前辈交流，贵人可能就在身边。',
     ],
+    career_job: [
+      '面试前仔细研究目标公司，展现你的诚意和专业度。',
+      '简历要突出与岗位最匹配的经历，不要泛泛而谈。',
+      '如有多个机会，优先选择平台更大、发展空间更好的。',
+      '求职期间保持规律作息，面试状态直接影响发挥。',
+    ],
+    career_promote: [
+      '近期主动承担关键任务，让领导看到你的担当。',
+      '晋升不只是能力问题，沟通能力同样重要。',
+      '如有竞争对手，专注自身成长比关注对手更有效。',
+      '晋升前后可适当表达上进心，但切忌过于张扬。',
+    ],
+    career_start: [
+      '创业前需有清晰的商业计划和足够的流动资金储备。',
+      '初期宜小步快跑，验证模式后再加大投入。',
+      '合伙之事须先明权责利，避免日后纠纷。',
+      '创业期间保持耐心，前三年是最艰难的时期。',
+    ],
+    career_diff: [
+      '当前阶段不宜强行推进，宜韬光养晦、等待时机。',
+      '如有职场矛盾，先反思自身，再沟通化解。',
+      '暂时受挫不代表能力不足，可能是时机未到。',
+      '可考虑暂时调整方向，不必在一棵树上吊死。',
+    ],
     love: [
       '单身者宜多参加社交活动，扩大交际圈。',
       '有伴侣者需加强沟通，避免小事积累成大矛盾。',
@@ -2902,12 +2926,36 @@
     ],
   };
 
+  /* ========== 事业子分类检测 ========== */
+  function detectCareerSubtype(question) {
+    if (!question) return 'career';
+    var q = question;
+    var jobKeywords = ['找', '面试', '应聘', '求职', '投', '简历', 'offer', '入职', '换工作', '跳槽', '离职', '辞职'];
+    var promoteKeywords = ['升', '晋升', '升职', '提拔', '考核', '绩效', '考核', '评职称', '转正', '调薪', '加薪', '涨薪'];
+    var startKeywords = ['创业', '开', '自己做', '当老板', '合伙', '投资', '做生意', '开公司', '单干', '副业'];
+    var diffKeywords = ['被裁', '失业', '丢', '被辞', '卷', '难', '不顺', '阻碍', '瓶颈', '困境', '压力', '困难'];
+    for (var i = 0; i < diffKeywords.length; i++) {
+      if (q.indexOf(diffKeywords[i]) !== -1) return 'career_diff';
+    }
+    for (var j = 0; j < startKeywords.length; j++) {
+      if (q.indexOf(startKeywords[j]) !== -1) return 'career_start';
+    }
+    for (var k = 0; k < promoteKeywords.length; k++) {
+      if (q.indexOf(promoteKeywords[k]) !== -1) return 'career_promote';
+    }
+    for (var l = 0; l < jobKeywords.length; l++) {
+      if (q.indexOf(jobKeywords[l]) !== -1) return 'career_job';
+    }
+    return 'career';
+  }
+
   /* ========== 五、公开 API ========== */
 
   global.DomainAnalysis = {
     /** 暴露领域检测函数供测试使用 */
     detectDomain: detectDomain,
-
+    /** 暴露事业子分类检测函数 */
+    detectCareerSubtype: detectCareerSubtype,
     /** 暴露领域建议列表供大师分析使用 */
     DOMAIN_ADVICES: DOMAIN_ADVICES,
 

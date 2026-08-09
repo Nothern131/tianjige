@@ -886,6 +886,41 @@
         letter-spacing: 0.04em;
       }
 
+      /* ===== 满意度评分 ===== */
+      .satisfaction-bar {
+        margin-top: 20px;
+        padding: 16px 20px;
+        background: rgba(184, 154, 92, 0.06);
+        border: 1px solid var(--border-gold);
+        border-radius: var(--radius-sm);
+        text-align: center;
+      }
+      .satisfaction-label {
+        font-size: 0.82rem;
+        color: var(--text2);
+        margin-bottom: 10px;
+      }
+      .satisfaction-stars {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+      }
+      .sat-star {
+        font-size: 1.6rem;
+        cursor: pointer;
+        color: var(--text3);
+        transition: color 0.15s, transform 0.15s;
+        user-select: none;
+      }
+      .sat-star:hover {
+        transform: scale(1.25);
+      }
+      .satisfaction-msg {
+        margin-top: 8px;
+        font-size: 0.78rem;
+        color: var(--gold);
+      }
+
       /* ===== Loading ===== */
       .spinner {
         width: 36px;
@@ -1748,9 +1783,11 @@
         var qLevel = score >= 75 ? '大吉' : score >= 60 ? '偏吉' : score >= 40 ? '偏凶' : '大凶';
         var qLevel2 = score >= 75 ? '旺相' : score >= 55 ? '平和' : '衰弱';
 
-        // 优先使用大师自己的 openingTemplates
-        if (master.openingTemplates && master.openingTemplates.length > 0) {
-          var tpl = master.openingTemplates[Math.floor(Math.random() * master.openingTemplates.length)];
+        // 优先使用大师的 liuyao 专属模板（六爻场景用），其次通用模板
+        var openTpls = (master.liuyaoOpeningTemplates && master.liuyaoOpeningTemplates.length > 0)
+          ? master.liuyaoOpeningTemplates : master.openingTemplates;
+        if (openTpls && openTpls.length > 0) {
+          var tpl = openTpls[Math.floor(Math.random() * openTpls.length)];
           opening = tpl
             .replace(/{日主}/g, shiQin)
             .replace(/{日主五行}/g, qLevel2)
@@ -1789,6 +1826,17 @@
         // 2a. 问题拆解：明确问题所属事域及关键要素
         overview += '【问题拆解】\n';
         overview += '汝问「' + question + '」，此事属' + domainName + '，涉及' + judgedName + '之变。\n';
+        // 事业子分类标注
+        var subtypeLabel = '';
+        if (domainKey === 'career') {
+          var subKey = 'career';
+          if (typeof DomainAnalysis !== 'undefined' && DomainAnalysis.detectCareerSubtype) {
+            subKey = DomainAnalysis.detectCareerSubtype(question) || 'career';
+          }
+          var subLabels = { career_job: '求职/面试', career_promote: '晋升/考核', career_start: '创业/投资', career_diff: '受挫/困境' };
+          subtypeLabel = subLabels[subKey] || '';
+          if (subtypeLabel) overview += '事属' + subtypeLabel + '之局。\n';
+        }
 
         // 2b. 卦象总览
         overview += '\n【卦象总览】\n';
@@ -1846,161 +1894,299 @@
         }
 
         // ══════════════════════════════════════════════════════════
-        // SECTION 3: SPECIALTY — 逐条推理链，解释为什么得出这个结论
+        // SECTION 3: SPECIALTY — 深度六爻分析，对标专业解卦水准
         // ══════════════════════════════════════════════════════════
         var specialty = '';
 
-        // 3a. 卦象核心结论
-        specialty += '【核心结论】\n';
-        if (score >= 75) {
-          specialty += qLevel + '之象，' + judgedName + '整体有利。';
-        } else if (score >= 60) {
-          specialty += '偏吉，' + judgedName + '总体向好，但有小阻碍需注意。';
-        } else if (score >= 40) {
-          specialty += '偏凶，' + judgedName + '存在挑战，需谨慎应对。';
-        } else {
-          specialty += '大凶之象，' + judgedName + '当前不宜轻举妄动。';
+        // ── 3a. 取用神：明确此卦中各爻代表什么 ──
+        specialty += '【取用神】\n';
+        var yongShenParts = [];
+        yongShenParts.push('世爻' + yaoPos(shiYao) + '临' + shiQin + '——代表你自己在此事中的状态。');
+        yongShenParts.push('应爻' + yaoPos(yingYao) + '临' + yingQin + '——代表对方或此' + judgedName + '的外部环境。');
+        if (domainKey === 'career') {
+          yongShenParts.push('官鬼爻代表事业运势与职位变动；父母爻代表文书合同与上级认可；妻财爻代表薪资待遇与资源。');
+        } else if (domainKey === 'love') {
+          yongShenParts.push('官鬼爻（女占感情）或妻财爻（男占感情）代表对方；父母爻代表长辈或婚约；子孙爻代表感情中的愉悦感与轻松状态。');
+        } else if (domainKey === 'wealth') {
+          yongShenParts.push('妻财爻代表财运与收入来源；子孙爻代表生财之道与投资机会；兄弟爻代表破财因素与竞争。');
+        } else if (domainKey === 'health') {
+          yongShenParts.push('官鬼爻代表病情所在；子孙爻代表康复与解忧；父母爻代表医疗文书与检查报告。');
+        } else if (domainKey === 'study') {
+          yongShenParts.push('父母爻代表成绩、师长与课本；官鬼爻代表考试压力与竞争；子孙爻代表领悟力与发挥状态。');
         }
-        if (trend === 'up') specialty += ' 趋势向上，顺势可为。';
-        else if (trend === 'down') specialty += ' 趋势下行，宜守正待时。';
-        else specialty += ' 趋势平稳，关键在具体行动。';
+        specialty += yongShenParts.join('\n') + '\n';
 
-        // 3b. 详细推理链 — 针对问题域的明确因果链
-        specialty += '\n\n【推理依据】\n';
-        var reasonNum = 1;
-        specialty += reasonNum + '. 世爻临' + shiQin + '居' + yaoPos(shiYao) + '——你在此事中的角色是「' + (qinMap[shiQin] || shiQin) + '」，这是你当前的基本盘。\n';
-        reasonNum++;
-        specialty += reasonNum + '. 应爻临' + yingQin + '居' + yaoPos(yingYao) + '——此' + judgedName + '本身的性质是「' + (qinMap[yingQin] || yingQin) + '」，是外部环境或对方态度。\n';
-        reasonNum++;
-        specialty += reasonNum + '. ' + distText;
-        reasonNum++;
+        // ── 3b. 你的状态（世爻详细分析）──
+        specialty += '\n【你的状态】\n';
+        var youState = [];
+        youState.push('世爻临' + shiQin + '居' + yaoPos(shiYao) + '——你是这件事的主动参与者，目前你的基本状态是「' + (qinMap[shiQin] || shiQin) + '」。');
+        if (shiShou) youState.push('值' + shiShou + '，' + (shouAdvice(shiShou) || '') + '。');
+        if (dongYao.indexOf(shiYao) >= 0) {
+          var movedQin = liuQin[shiYao - 1] || shiQin;
+          youState.push('世爻发动——你对此事的态度或行为正在发生变化，可能需要主动做出调整。');
+        }
+        // 世爻位置分析
+        if (shiYao === 5) youState.push('世居五爻（君位），此事影响力较大，你的决定关乎全局。');
+        else if (shiYao === 1) youState.push('世居初爻（低位），此事尚在起步阶段，不宜急于求成。');
+        else if (shiYao === 6) youState.push('世居上爻（极位），此事已至末端，要么收尾要么转向。');
+        else if (shiYao === 2) youState.push('世居二爻（家宅位），此事与日常相处密切相关，宜从细节入手。');
+        else if (shiYao === 3) youState.push('世居三爻（人位），此事处于进退之间，需谨慎抉择。');
+        else if (shiYao === 4) youState.push('世居四爻（近臣位），此事接近核心，但需借助外力推进。');
+        specialty += youState.join('\n') + '\n';
 
-        // 3c. 动爻因果链（最重要的推理）
+        // ── 3c. 对方/外部状态（应爻详细分析）──
+        specialty += '\n【对方/外部状态】\n';
+        var otherState = [];
+        otherState.push('应爻临' + yingQin + '居' + yaoPos(yingYao) + '——此事的另一方或外部环境目前的状态是「' + (qinMap[yingQin] || yingQin) + '」。');
+        if (yingYao !== shiYao) {
+          otherState.push('世应不相重叠，说明你与此事/对方并非完全同步，存在理解上的偏差。');
+        } else {
+          otherState.push('世应同爻——你与此事/对方高度同频，但也可能意味着你被此事深深卷入。');
+        }
+        if (dongYao.indexOf(yingYao) >= 0) {
+          otherState.push('应爻发动——对方或外部因素正在变化，你可能需要重新评估形势。');
+        }
+        // 应爻位置
+        if (yingYao === 5) otherState.push('应居五爻，对方处于较主动或有影响力的位置。');
+        else if (yingYao === 1) otherState.push('应居初爻，对方尚在观望，未完全介入。');
+        else if (yingYao === 6) otherState.push('应居上爻，对方的态度可能已经明确或趋于终结。');
+        specialty += otherState.join('\n') + '\n';
+
+        // ── 3d. 动爻详细分析（最重要）──
+        specialty += '\n【动爻分析】\n';
         if (dongYao.length > 0) {
-          specialty += '\n' + reasonNum + '. 动爻分析：';
-          reasonNum++;
-          for (var dli = 0; dli < dongYao.length; dli++) {
-            var dl = dongYao[dli];
-            var dlQin = liuQin[dl - 1] || '—';
-            var dlShou = liuShou[dl - 1] || '';
-            specialty += '\n   · ' + yaoPos(dl) + '动，临' + dlQin + (dlShou ? '值' + dlShou : '');
-            specialty += '——' + dlQin + '在' + domainName + '中代表「' + (qinMap[dlQin] || dlQin) + '」。';
-            if (dl === shiYao) {
-              specialty += ' 此变动在你自身，你需要主动调整。';
-            } else if (dl === yingYao) {
-              specialty += ' 此变动在对方或外部，你需要观察应对。';
+          for (var di2 = 0; di2 < dongYao.length; di2++) {
+            var d2 = dongYao[di2];
+            var dQin = liuQin[d2 - 1] || '—';
+            var dShou = liuShou[d2 - 1] || '';
+            var dDesc = yaoPos(d2) + '动，临' + dQin;
+            if (dShou) dDesc += '值' + dShou;
+            dDesc += '——' + dQin + '在此事中代表「' + (qinMap[dQin] || dQin) + '」。';
+
+            // 动爻对谁的影响
+            if (d2 === shiYao) {
+              dDesc += ' 此变动源于你自身——你的想法、行动或态度正在改变，这是推动此事发展的关键力量。';
+            } else if (d2 === yingYao) {
+              dDesc += ' 此变动来自对方或外部——你需要密切关注变化，被动应对而非主动发起。';
             } else {
-              specialty += ' 此变动在事件的其他方面，需要关注关联因素。';
+              dDesc += ' 此变动在事件的其他层面，提醒你关注关联因素。';
             }
-            if (dlShou) {
-              specialty += ' 值' + dlShou + '，' + (shouAdvice(dlShou) || '') + '。';
-            }
+            // 六兽补充
+            if (dShou) dDesc += ' 值' + dShou + '，' + (shouAdvice(dShou) || '') + '。';
+            specialty += dDesc + '\n';
           }
-          specialty += '\n';
-        }
-
-        // 3d. 静卦提示
-        if (dongYao.length === 0) {
-          specialty += reasonNum + '. 六爻安静，事态稳定——此事当前处于稳态，暂无结构性变化。' + '\n';
-          reasonNum++;
-        }
-
-        // 3e. 世应关系推理
-        var relText = shiYingRelationText(shiQin, yingQin);
-        if (relText) {
-          specialty += reasonNum + '. ' + relText + '\n';
-          reasonNum++;
-        }
-
-        // 3f. 变卦分析
-        if (changedName && dongYao.length > 0) {
-          specialty += '\n' + reasonNum + '. 变卦「' + changedName + '」——此' + judgedName + '的最终走向：';
-          reasonNum++;
-          var cn = changedName;
-          if (domainKey === 'career') {
-            if (cn.indexOf('泰') >= 0 || cn.indexOf('升') >= 0 || cn.indexOf('晋') >= 0) specialty += ' 方向向好，可积极推进。';
-            else if (cn.indexOf('否') >= 0 || cn.indexOf('困') >= 0) specialty += ' 暂时受阻，宜守不宜攻。';
-            else if (cn.indexOf('革') >= 0 || cn.indexOf('鼎') >= 0) specialty += ' 有变革之象，宜顺势调整。';
-            else if (cn.indexOf('谦') >= 0) specialty += ' 宜低调务实，切忌张扬。';
-            else if (cn.indexOf('复') >= 0) specialty += ' 转机将至，宜把握机会。';
-            else specialty += ' 事有变化，需随机应变。';
-          } else if (domainKey === 'love') {
-            if (cn.indexOf('咸') >= 0) specialty += ' 两情相感，宜主动表达。';
-            else if (cn.indexOf('恒') >= 0) specialty += ' 感情稳定长久，宜以诚相待。';
-            else if (cn.indexOf('渐') >= 0) specialty += ' 感情发展循序渐进，不宜操之过急。';
-            else if (cn.indexOf('睽') >= 0) specialty += ' 有分歧之象，需加强沟通。';
-            else if (cn.indexOf('损') >= 0) specialty += ' 需付出更多才能维系，考虑是否值得。';
-            else if (cn.indexOf('益') >= 0) specialty += ' 感情有增益，关系向好。';
-            else specialty += ' 感情之事，顺其自然为佳。';
-          } else if (domainKey === 'wealth') {
-            if (cn.indexOf('大有') >= 0) specialty += ' 财运丰厚，但需防得意忘形。';
-            else if (cn.indexOf('益') >= 0) specialty += ' 有增益，宜把握机会。';
-            else if (cn.indexOf('损') >= 0) specialty += ' 有损耗，需控制支出。';
-            else if (cn.indexOf('噬嗑') >= 0) specialty += ' 财路有阻碍，需克服困难。';
-            else if (cn.indexOf('丰') >= 0) specialty += ' 财源丰盛，但盛极必衰，宜见好就收。';
-            else if (cn.indexOf('小畜') >= 0) specialty += ' 小有积蓄，宜稳步积累。';
-            else specialty += ' 财运有变，量力而行。';
-          } else if (domainKey === 'health') {
-            if (cn.indexOf('复') >= 0) specialty += ' 康复有望，宜坚持调养。';
-            else if (cn.indexOf('豫') >= 0) specialty += ' 身心愉悦，宜放松调理。';
-            else if (cn.indexOf('需') >= 0) specialty += ' 需要耐心等待康复，不可急躁。';
-            else if (cn.indexOf('讼') >= 0) specialty += ' 病情有反复，需仔细检查。';
-            else if (cn.indexOf('无妄') >= 0) specialty += ' 无大碍，顺其自然即可。';
-            else specialty += ' 健康状况有变化，需注意调养。';
-          } else {
-            if (cn.indexOf('泰') >= 0 || cn.indexOf('升') >= 0 || cn.indexOf('大有') >= 0 || cn.indexOf('益') >= 0) specialty += ' 方向向好，可积极为之。';
-            else if (cn.indexOf('否') >= 0 || cn.indexOf('困') >= 0 || cn.indexOf('损') >= 0) specialty += ' 暂时不利，宜守正待时。';
-            else if (cn.indexOf('革') >= 0) specialty += ' 变革在即，宜顺势而为。';
-            else if (cn.indexOf('复') >= 0) specialty += ' 转机将至，宜把握。';
-            else if (cn.indexOf('谦') >= 0) specialty += ' 宜谦虚低调，以退为进。';
-            else if (cn.indexOf('既济') >= 0) specialty += ' 接近完成，慎防功亏一篑。';
-            else if (cn.indexOf('未济') >= 0) specialty += ' 尚未完成，需调整方法再努力。';
-            else specialty += ' 事有变化，宜随机应变。';
-          }
-        }
-
-        // 3f. 直接回答：针对问题的明确判断
-        specialty += '\n\n【针对汝问「' + question + '」】\n';
-        if (score >= 75) {
-          specialty += domainName === '综合' ? '此事可积极为之，结果总体向好，但需注意细节。'
-            : domainKey === 'career' ? '此事事业有转机，宜主动出击，把握机会。'
-            : domainKey === 'love' ? '此事感情有进展，宜坦诚相待，主动沟通。'
-            : domainKey === 'wealth' ? '此事财运不错，正财稳定，偏财需谨慎。'
-            : domainKey === 'health' ? '此事健康状况良好，继续保持调养即可。'
-            : domainKey === 'study' ? '此事学业有成，努力会有回报。'
-            : '此事结果向好，可适当推进。';
-        } else if (score >= 60) {
-          specialty += domainName === '综合' ? '此事吉凶参半，需审时度势，不宜冒进。'
-            : domainKey === 'career' ? '此事事业有小阻碍，需稳扎稳打，不可急于求成。'
-            : domainKey === 'love' ? '此事感情有波折，需多沟通理解，不宜冲动。'
-            : domainKey === 'wealth' ? '此事财运平稳，正财可守，偏财不宜。'
-            : domainKey === 'health' ? '此事健康有小恙，需注意调养，及时就医。'
-            : domainKey === 'study' ? '此事学业有挑战，需加把劲，但不可操之过急。'
-            : '此事结果一般，需谨慎对待。';
-        } else if (score >= 40) {
-          specialty += domainName === '综合' ? '此事需谨慎，不宜强求，等待时机更为明智。'
-            : domainKey === 'career' ? '此事事业有阻力，不宜轻举妄动，宜韬光养晦。'
-            : domainKey === 'love' ? '此事感情有阻碍，不宜强求，需耐心等待。'
-            : domainKey === 'wealth' ? '此事财运不佳，不宜投资，以守财为主。'
-            : domainKey === 'health' ? '此事健康需重视，建议及时就医检查。'
-            : domainKey === 'study' ? '此事学业有压力，需调整方法，不可盲目。'
-            : '此事结果不佳，宜退守。';
         } else {
-          specialty += domainName === '综合' ? '此事大凶，不可轻举妄动，宜静观其变。'
-            : domainKey === 'career' ? '此事事业受阻，不宜有任何动作，静待时机。'
-            : domainKey === 'love' ? '此事感情不顺，不宜主动，需等待对方态度转变。'
-            : domainKey === 'wealth' ? '此事财运大凶，切勿投资，以守财为上。'
-            : domainKey === 'health' ? '此事健康有大碍，需立即就医检查。'
-            : domainKey === 'study' ? '此事学业不顺，需调整方法，不可硬扛。'
-            : '此事结果不利，宜暂停。';
+          specialty += '六爻安静，无动爻——此事当前状态稳定，没有结构性变化。这意味着：\n';
+          specialty += '当前局面不会自行突破，结果取决于你在此稳定态势下的具体行动选择。\n';
+          // 静卦世应关系
+          var rel2 = shiYingRelationText(shiQin, yingQin);
+          if (rel2) specialty += '世应关系：' + rel2 + '\n';
         }
+
+        // ── 3e. 变卦详解 ──
+        if (changedName && dongYao.length > 0) {
+          specialty += '\n【变卦详解】\n';
+          specialty += '本卦「' + guaName + '」变为「' + changedName + '」。\n';
+          specialty += '变卦代表此事的最终走向或深层趋势：\n';
+          // 变卦含义详细解释（按事域）
+          var changedAnalysis = '';
+          if (domainKey === 'career') {
+            if (changedName.indexOf('泰') >= 0) changedAnalysis = '「泰」卦象征通达顺利，天地交泰，阴阳和合。此卦暗示事业方向整体向好，但需防盛极而衰，顺势而为即可。';
+            else if (changedName.indexOf('升') >= 0) changedAnalysis = '「升」卦象征登高上升，积小成大。事业上宜逐步推进，不可急于求成，每一步积累都算数。';
+            else if (changedName.indexOf('晋') >= 0) changedAnalysis = '「晋」卦象征日进有功，光明上进。事业有晋升或拓展之机，但需以正道求取，不可走偏门。';
+            else if (changedName.indexOf('否') >= 0) changedAnalysis = '「否」卦象征闭塞不通，天地不交。当前事业存在结构性障碍，宜守不宜攻，等待时运转变。';
+            else if (changedName.indexOf('困') >= 0) changedAnalysis = '「困」卦象征身处困境， resource有限。事业上可能遇到资源瓶颈或人际阻力，需另寻出路。';
+            else if (changedName.indexOf('革') >= 0) changedAnalysis = '「革」卦象征变革革新，破旧立新。事业有重大调整之象，宜主动求变或接受变革。';
+            else if (changedName.indexOf('鼎') >= 0) changedAnalysis = '「鼎」卦象征鼎新立制，重新确立。事业上可能迎来新的格局或职位，宜把握重建机会。';
+            else if (changedName.indexOf('谦') >= 0) changedAnalysis = '「谦」卦象征谦虚低调，退让有度。事业上宜收敛锋芒，以退为进，切勿骄傲自满。';
+            else if (changedName.indexOf('复') >= 0) changedAnalysis = '「复」卦象征反复归正，转机将至。事业低谷已过，新一轮机会正在酝酿，宜积极准备。';
+            else if (changedName.indexOf('讼') >= 0) changedAnalysis = '「讼」卦象征争讼诉讼，口舌是非。事业上可能面临合同纠纷或人际冲突，宜以和解为上。';
+            else if (changedName.indexOf('乾') >= 0) changedAnalysis = '「乾」卦象征刚健不息，自强不息。事业上宜积极进取，但需防过刚易折。';
+            else if (changedName.indexOf('坤') >= 0) changedAnalysis = '「坤」卦象征柔顺承载，厚德载物。事业上宜顺势而为，以柔克刚，切勿强行推进。';
+            else if (changedName.indexOf('屯') >= 0) changedAnalysis = '「屯」卦象征初生艰难，万事开头难。事业起步阶段困难较多，需坚定信念，逐步突破。';
+            else if (changedName.indexOf('蒙') >= 0) changedAnalysis = '「蒙」卦象征启蒙教育，待时而动。事业上宜虚心学习，向有经验的人请教。';
+            else if (changedName.indexOf('需') >= 0) changedAnalysis = '「需」卦象征等待时机，需有耐心。事业上时机未到，宜积累力量，不可操之过急。';
+            else if (changedName.indexOf('大畜') >= 0) changedAnalysis = '「大畜」卦象征蓄积力量，厚积薄发。事业上宜储备能力与人脉，等待爆发时机。';
+            else if (changedName.indexOf('颐') >= 0) changedAnalysis = '「颐」卦象征颐养身心，修身养性。事业上宜稳扎稳打，注意身体与心态的平衡。';
+            else if (changedName.indexOf('大过') >= 0) changedAnalysis = '「大过」卦象征过度承压，非常之时。事业上压力较大，需寻找新的突破口。';
+            else if (changedName.indexOf('坎') >= 0) changedAnalysis = '「坎」卦象征险陷重重，困难较多。事业上可能遇到反复的挫折，需保持定力。';
+            else if (changedName.indexOf('离') >= 0) changedAnalysis = '「离」卦象征依附光明，顺势借力。事业上宜借助平台或人脉，不可单打独斗。';
+            else if (changedName.indexOf('震') >= 0) changedAnalysis = '「震」卦象征震动突发，变化突然。事业上可能有突发变动，需快速应变。';
+            else if (changedName.indexOf('艮') >= 0) changedAnalysis = '「艮」卦象征止步静止，当止则止。事业上宜暂停当前的激进策略，重新审视方向。';
+            else if (changedName.indexOf('渐') >= 0) changedAnalysis = '「渐」卦象征循序渐进，不可急躁。事业发展需按部就班，每一步都算数。';
+            else if (changedName.indexOf('归妹') >= 0) changedAnalysis = '「归妹」卦象征婚姻归宿，但需警惕名不正言不顺。事业上需注意合规性，避免投机取巧。';
+            else if (changedName.indexOf('睽') >= 0) changedAnalysis = '「睽」卦象征背离分歧，意见不合。事业上可能与人产生分歧，需寻求共识。';
+            else if (changedName.indexOf('蹇') >= 0) changedAnalysis = '「蹇」卦象征步履维艰，前进困难。事业上困难较多，宜寻求他人帮助。';
+            else if (changedName.indexOf('解') >= 0) changedAnalysis = '「解」卦象征解除困难，柳暗花明。事业上的困境即将缓解，宜把握好转机。';
+            else if (changedName.indexOf('损') >= 0) changedAnalysis = '「损」卦象征减损付出，先损后益。事业上可能需要先付出代价，但长远来看是有益的。';
+            else if (changedName.indexOf('益') >= 0) changedAnalysis = '「益」卦象征增益获益，顺势而为。事业上有利可图，宜把握机会扩大成果。';
+            else if (changedName.indexOf('噬嗑') >= 0) changedAnalysis = '「噬嗑」卦象征咬合克服，排除障碍。事业上需要克服困难才能前进，不宜退缩。';
+            else if (changedName.indexOf('贲') >= 0) changedAnalysis = '「贲」卦象征文饰美化，注重外表。事业上需注意形象管理，但也别忽视实质。';
+            else if (changedName.indexOf('夬') >= 0) changedAnalysis = '「夬」卦象征决断清除，当机立断。事业上需要做明确决定，不可犹豫不决。';
+            else if (changedName.indexOf('姤') >= 0) changedAnalysis = '「姤」卦象征意外相遇，机遇暗藏。事业上可能有意外机会出现，需敏锐捕捉。';
+            else if (changedName.indexOf('萃') >= 0) changedAnalysis = '「萃」卦象征聚集合力，众志成城。事业上宜整合资源，借助团队力量。';
+            else if (changedName.indexOf('升') >= 0) changedAnalysis = '「升」卦象征登高上升，积小成大。宜逐步推进，不可急于求成。';
+            else if (changedName.indexOf('困') >= 0) changedAnalysis = '「困」卦象征身处困境，资源有限。宜另寻出路，不可一味蛮干。';
+            else if (changedName.indexOf('井') >= 0) changedAnalysis = '「井」卦象征修井养人，深耕细作。事业上宜在现有领域深耕，不要频繁切换。';
+            else if (changedName.indexOf('革') >= 0) changedAnalysis = '「革」卦象征变革革新，破旧立新。宜主动求变，接受变革。';
+            else if (changedName.indexOf('鼎') >= 0) changedAnalysis = '「鼎」卦象征鼎新立制，重新确立。事业上可能迎来新格局，宜把握重建机会。';
+            else if (changedName.indexOf('震') >= 0) changedAnalysis = '「震」卦象征震动突发，变化突然。宜保持警觉，快速应变。';
+            else if (changedName.indexOf('艮') >= 0) changedAnalysis = '「艮」卦象征止步静止，当止则止。宜重新审视方向，不可一味蛮进。';
+            else if (changedName.indexOf('丰') >= 0) changedAnalysis = '「丰」卦象征丰盛宏大，盛极而衰。事业上可能有阶段性成果，但需防得意忘形。';
+            else if (changedName.indexOf('旅') >= 0) changedAnalysis = '「旅」卦象征羁旅在外，漂泊不定。事业可能涉及外出或变动，需做好适应准备。';
+            else if (changedName.indexOf('巽') >= 0) changedAnalysis = '「巽」卦象征柔顺进入，循序渐进。事业上宜以柔克刚，巧妙推进。';
+            else if (changedName.indexOf('兑') >= 0) changedAnalysis = '「兑」卦象征喜悦沟通，以和为贵。事业上宜加强人际沟通，营造和谐氛围。';
+            else if (changedName.indexOf('涣') >= 0) changedAnalysis = '「涣」卦象征涣散分流，人心不齐。事业上需注意团队凝聚力，防止内耗。';
+            else if (changedName.indexOf('节') >= 0) changedAnalysis = '「节」卦象征节制约束，适度为宜。事业上宜控制节奏，不可过度扩张。';
+            else if (changedName.indexOf('中孚') >= 0) changedAnalysis = '「中孚」卦象征诚信感通，以诚待人。事业上宜以诚信为本，建立长期信任。';
+            else if (changedName.indexOf('小畜') >= 0) changedAnalysis = '「小畜」卦象征小有积蓄，稳步积累。事业上宜稳步发展，不可急于求成。';
+            else if (changedName.indexOf('履') >= 0) changedAnalysis = '「履」卦象征如履薄冰，谨慎前行。事业上宜小心行事，不可冒进。';
+            else if (changedName.indexOf('讼') >= 0) changedAnalysis = '「讼」卦象征争讼口舌，以和为贵。事业上宜避免纠纷，寻求和解。';
+            else if (changedName.indexOf('同人') >= 0) changedAnalysis = '「同人」卦象征志同道合，合作共赢。事业上宜寻求合作伙伴，借助团队力量。';
+            else if (changedName.indexOf('大有') >= 0) changedAnalysis = '「大有」卦象征大有收获，但需防盛极而衰。事业上成果丰硕，但需谨慎守成。';
+            else if (changedName.indexOf('大有') >= 0 || changedName.indexOf('谦') >= 0 || changedName.indexOf('升') >= 0) changedAnalysis += '宜保持谦虚，不可骄傲自满。';
+            else if (changedName.indexOf('未济') >= 0) changedAnalysis = '「未济」卦象征尚未完成，事半未成。事业上还需继续努力，不可半途而废。';
+            else if (changedName.indexOf('既济') >= 0) changedAnalysis = '「既济」卦象征已经成功，慎防功亏一篑。事业上接近目标，但最后一刻最需谨慎。';
+            else changedAnalysis = '「' + changedName + '」卦暗示此事有变化之象，需结合实际情境具体判断。';
+          } else if (domainKey === 'love') {
+            if (changedName.indexOf('咸') >= 0) changedAnalysis = '「咸」卦象征两情相感，心心相印。感情上宜主动表达心意，把握良机。';
+            else if (changedName.indexOf('恒') >= 0) changedAnalysis = '「恒」卦象征持之以恒，长久稳定。感情宜以诚相待，细水长流。';
+            else if (changedName.indexOf('渐') >= 0) changedAnalysis = '「渐」卦象征循序渐进，水到渠成。感情发展不宜操之过急，让缘分自然生长。';
+            else if (changedName.indexOf('睽') >= 0) changedAnalysis = '「睽」卦象征背离分歧，需加强沟通。感情上有不同意见，宜坦诚交流化解。';
+            else if (changedName.indexOf('损') >= 0) changedAnalysis = '「损」卦象征有所付出，先舍后得。感情中可能需要你多做牺牲，但长远看值得。';
+            else if (changedName.indexOf('益') >= 0) changedAnalysis = '「益」卦象征感情增益，关系向好。感情上有积极进展，宜把握时机深化关系。';
+            else if (changedName.indexOf('蹇') >= 0) changedAnalysis = '「蹇」卦象征步履维艰，感情受阻。感情上困难较多，宜寻求外援或调整策略。';
+            else if (changedName.indexOf('解') >= 0) changedAnalysis = '「解」卦象征解除困境，柳暗花明。感情上的问题即将缓解，宜把握好转机。';
+            else if (changedName.indexOf('同人') >= 0) changedAnalysis = '「同人」卦象征志同道合，合作共赢。感情上宜找到共同点，建立深厚连接。';
+            else if (changedName.indexOf('讼') >= 0) changedAnalysis = '「讼」卦象征争讼口舌，以和为贵。感情上不宜争执，宜冷静沟通化解矛盾。';
+            else if (changedName.indexOf('乾') >= 0) changedAnalysis = '「乾」卦象征刚健主动，积极进取。感情上宜主动出击，但需刚柔并济。';
+            else if (changedName.indexOf('坤') >= 0) changedAnalysis = '「坤」卦象征柔顺包容，以静制动。感情上宜以柔克刚，耐心等待对方主动。';
+            else if (changedName.indexOf('屯') >= 0) changedAnalysis = '「屯」卦象征初生艰难，感情起步不易。感情关系尚在萌芽阶段，需耐心培育。';
+            else if (changedName.indexOf('归妹') >= 0) changedAnalysis = '「归妹」卦象征婚嫁归宿，但需谨慎。感情上有结婚意向，但需确保名正言顺。';
+            else if (changedName.indexOf('夬') >= 0) changedAnalysis = '「夬」卦象征决断清除，当机立断。感情上需要做出明确决定，不可拖泥带水。';
+            else if (changedName.indexOf('姤') >= 0) changedAnalysis = '「姤」卦象征意外相遇，机遇暗藏。感情上可能有意外邂逅或新机会。';
+            else if (changedName.indexOf('萃') >= 0) changedAnalysis = '「萃」卦象征聚集合力，社交活跃。感情上宜多参加社交活动，扩大相遇机会。';
+            else if (changedName.indexOf('未济') >= 0) changedAnalysis = '「未济」卦象征尚未完成，缘分未到。感情上还需努力，不可急于求成。';
+            else if (changedName.indexOf('既济') >= 0) changedAnalysis = '「既济」卦象征已经完成，慎防倦怠。感情上关系已定，需用心维系，防止冷却。';
+            else changedAnalysis = '「' + changedName + '」卦暗示感情有变化之象，需结合实际情境具体判断。';
+          } else if (domainKey === 'wealth') {
+            if (changedName.indexOf('大有') >= 0) changedAnalysis = '「大有」卦象征财运丰厚，但盛极必衰，宜见好就收，不可贪得无厌。';
+            else if (changedName.indexOf('益') >= 0) changedAnalysis = '「益」卦象征增益获益，财运向好。宜把握机会扩大收益，但需合理分配风险。';
+            else if (changedName.indexOf('损') >= 0) changedAnalysis = '「损」卦象征有损有得，先付出后回报。财运上可能需要先投入，但长远有利。';
+            else if (changedName.indexOf('噬嗑') >= 0) changedAnalysis = '「噬嗑」卦象征咬合克服，排除障碍。财运上有阻碍需要克服，不可半途而废。';
+            else if (changedName.indexOf('丰') >= 0) changedAnalysis = '「丰」卦象征财源丰盛，但盛极必衰。财运好时需防得意忘形，见好就收。';
+            else if (changedName.indexOf('小畜') >= 0) changedAnalysis = '「小畜」卦象征小有积蓄，稳步积累。财运宜稳步积累，不可投机冒进。';
+            else if (changedName.indexOf('乾') >= 0) changedAnalysis = '「乾」卦象征刚健进取，财运主动可求。宜积极拓展财路，但需刚柔并济。';
+            else if (changedName.indexOf('坤') >= 0) changedAnalysis = '「坤」卦象征柔顺承载，财运顺势可得。宜稳扎稳打，不可强行求财。';
+            else if (changedName.indexOf('未济') >= 0) changedAnalysis = '「未济」卦象征财运未成，还需努力。财运上尚需积累，不可操之过急。';
+            else if (changedName.indexOf('既济') >= 0) changedAnalysis = '「既济」卦象征财运已获，慎防守成。财运已达阶段性目标，需防疏忽破财。';
+            else changedAnalysis = '「' + changedName + '」卦对财运有指引之意，需结合实际情况判断。';
+          } else {
+            // 通用变卦分析
+            if (changedName.indexOf('泰') >= 0 || changedName.indexOf('升') >= 0 || changedName.indexOf('晋') >= 0 || changedName.indexOf('大有') >= 0 || changedName.indexOf('益') >= 0) changedAnalysis = '「' + changedName + '」卦象征向好趋势，事情最终会朝着有利方向发展。';
+            else if (changedName.indexOf('否') >= 0 || changedName.indexOf('困') >= 0 || changedName.indexOf('损') >= 0 || changedName.indexOf('蹇') >= 0) changedAnalysis = '「' + changedName + '」卦象征暂时受阻，需要调整策略、耐心等待时机。';
+            else if (changedName.indexOf('革') >= 0 || changedName.indexOf('鼎') >= 0) changedAnalysis = '「' + changedName + '」卦象征变革更新，事情需要做出改变或调整方向。';
+            else if (changedName.indexOf('谦') >= 0 || changedName.indexOf('艮') >= 0) changedAnalysis = '「' + changedName + '」卦象征宜守不宜攻，当前阶段应以稳重为主。';
+            else if (changedName.indexOf('复') >= 0) changedAnalysis = '「' + changedName + '」卦象征转机将至，新一轮机遇正在酝酿。';
+            else if (changedName.indexOf('既济') >= 0) changedAnalysis = '「' + changedName + '」卦象征接近完成，最后一刻最需谨慎，慎防功亏一篑。';
+            else if (changedName.indexOf('未济') >= 0) changedAnalysis = '「' + changedName + '」卦象征尚未完成，需要调整方法再继续推进。';
+            else changedAnalysis = '「' + changedName + '」卦暗示事情有变化，最终走向需结合实际情境综合判断。';
+          }
+          specialty += changedAnalysis;
+        }
+
+        // ── 3f. 综合判断 ──
+        specialty += '\n\n【综合判断】\n';
+        if (dongYao.length > 0) {
+          specialty += '此卦有动爻，说明' + judgedName + '正处于变动之中，' + (score >= 60 ? '整体趋势偏向有利，但变动带来不确定性，需把握方向。' : '整体趋势存在挑战，变动中的风险需要注意。');
+        } else {
+          specialty += '此卦六爻安静，' + judgedName + '当前处于稳定状态，' + (score >= 60 ? '局面有利，关键在于维持并逐步推进。' : '局面平平，需要主动作为才能改变现状。');
+        }
+        if (dist >= 3) {
+          specialty += '此外，世应相隔较远，此事不会一蹴而就，需要耐心等待和持续努力。';
+        }
+
+        // ── 3g. 针对汝问的直接判断 ──
+        specialty += '\n\n【针对汝问「' + question + '」】\n';
+        var subtypeText = '';
+        if (domainKey === 'career') {
+          var subK = 'career';
+          if (typeof DomainAnalysis !== 'undefined' && DomainAnalysis.detectCareerSubtype) {
+            subK = DomainAnalysis.detectCareerSubtype(question) || 'career';
+          }
+          var subtypeTexts = {
+            career_job: '求职面试之事，',
+            career_promote: '晋升考核之事，',
+            career_start: '创业投资之事，',
+            career_diff: '当前受挫之事，',
+          };
+          subtypeText = subtypeTexts[subK] || '';
+        }
+        if (score >= 75) {
+          specialty += subtypeText + (domainKey === 'career' ? '事业有转机，宜主动出击，把握机会。'
+            : domainKey === 'love' ? '感情有进展，宜坦诚相待，主动沟通。'
+            : domainKey === 'wealth' ? '财运不错，正财稳定，偏财需谨慎。'
+            : domainKey === 'health' ? '健康状况良好，继续保持调养即可。'
+            : domainKey === 'study' ? '学业有成，努力会有回报。'
+            : '此事结果向好，可适当推进。');
+        } else if (score >= 60) {
+          specialty += subtypeText + (domainKey === 'career' ? '事业有小阻碍，需稳扎稳打，不可急于求成。'
+            : domainKey === 'love' ? '感情有波折，需多沟通理解，不宜冲动。'
+            : domainKey === 'wealth' ? '财运平稳，正财可守，偏财不宜。'
+            : domainKey === 'health' ? '健康有小恙，需注意调养，及时就医。'
+            : domainKey === 'study' ? '学业有挑战，需加把劲，但不可操之过急。'
+            : '此事结果一般，需谨慎对待。');
+        } else if (score >= 40) {
+          specialty += subtypeText + (domainKey === 'career' ? '事业有阻力，不宜轻举妄动，宜韬光养晦。'
+            : domainKey === 'love' ? '感情有阻碍，不宜强求，需耐心等待。'
+            : domainKey === 'wealth' ? '财运不佳，不宜投资，以守财为主。'
+            : domainKey === 'health' ? '健康需重视，建议及时就医检查。'
+            : domainKey === 'study' ? '学业有压力，需调整方法，不可盲目。'
+            : '此事结果不佳，宜退守。');
+        } else {
+          specialty += subtypeText + (domainKey === 'career' ? '事业受阻，不宜有任何动作，静待时机。'
+            : domainKey === 'love' ? '感情不顺，不宜主动，需等待对方态度转变。'
+            : domainKey === 'wealth' ? '财运大凶，切勿投资，以守财为上。'
+            : domainKey === 'health' ? '健康有大碍，需立即就医检查。'
+            : domainKey === 'study' ? '学业不顺，需调整方法，不可硬扛。'
+            : '此事结果不利，宜暂停。');
+        }
+
+        // ── 3h. 你的建议：不要做什么 vs 更适合做什么 ──
+        specialty += '\n\n【给你的建议】\n';
+        var doList = [];
+        var dontList = [];
+        if (score >= 60) {
+          doList.push('把握当前有利态势，推进你想做的事');
+          doList.push('多与相关人沟通，获取更多信息');
+          if (dongYao.length > 0) doList.push('动爻提示变化，主动适应而非被动等待');
+          dontList.push('不可因短期顺利而掉以轻心');
+          dontList.push('避免过度自信，保持审慎态度');
+        } else {
+          doList.push('先稳住局面，不要做重大决定');
+          doList.push('利用这段时间反思和积累经验');
+          if (dongYao.length > 0) doList.push('动爻提示变化，密切关注而非忽视');
+          dontList.push('不可在困难时强行推进，以免扩大损失');
+          dontList.push('避免情绪化决策，保持理性判断');
+        }
+        if (domainKey === 'career') {
+          doList.push('多向有经验的前辈请教，少走弯路');
+          dontList.push('避免卷入办公室政治，专注业务本身');
+        } else if (domainKey === 'love') {
+          doList.push('真诚表达你的感受，不要隐藏');
+          dontList.push('不要过度试探或猜疑对方');
+        }
+        specialty += '宜：\n' + doList.map(function (d) { return '  · ' + d; }).join('\n') + '\n\n';
+        specialty += '不宜：\n' + dontList.map(function (d) { return '  · ' + d; }).join('\n') + '\n';
 
         // ══════════════════════════════════════════════════════════
         // SECTION 4: QUOTE — 大师经典引用
         // ══════════════════════════════════════════════════════════
         var quote = '';
-        if (master.quoteTemplates && master.quoteTemplates.length > 0) {
-          var qt = master.quoteTemplates[Math.floor(Math.random() * master.quoteTemplates.length)];
+        var quoteTpls = (master.liuyaoQuoteTemplates && master.liuyaoQuoteTemplates.length > 0)
+          ? master.liuyaoQuoteTemplates : master.quoteTemplates;
+        if (quoteTpls && quoteTpls.length > 0) {
+          var qt = quoteTpls[Math.floor(Math.random() * quoteTpls.length)];
           quote = p + '曰：' + qt;
         } else {
           // 无引用时用通用经典
@@ -2017,13 +2203,22 @@
         // ══════════════════════════════════════════════════════════
         var closing = '';
         var domainAdvices = [];
+        // 事业子分类：优先使用子分类建议
+        var adviceKey = domainKey;
+        if (typeof DomainAnalysis !== 'undefined' && DomainAnalysis.detectCareerSubtype
+          && domainKey === 'career') {
+          adviceKey = DomainAnalysis.detectCareerSubtype(question) || 'career';
+        }
         if (typeof DomainAnalysis !== 'undefined' && DomainAnalysis.DOMAIN_ADVICES) {
-          domainAdvices = DomainAnalysis.DOMAIN_ADVICES[domainKey] || DomainAnalysis.DOMAIN_ADVICES['general'] || [];
+          domainAdvices = DomainAnalysis.DOMAIN_ADVICES[adviceKey] || DomainAnalysis.DOMAIN_ADVICES[domainKey]
+            || DomainAnalysis.DOMAIN_ADVICES['general'] || [];
         }
 
-        if (master.closingTemplates && master.closingTemplates.length > 0) {
-          var ct = master.closingTemplates[Math.floor(Math.random() * master.closingTemplates.length)];
-          // 去掉建议末尾的句号，避免与模板重复
+        // 优先使用 liuyaoClosingTemplates
+        var closeTpls = (master.liuyaoClosingTemplates && master.liuyaoClosingTemplates.length > 0)
+          ? master.liuyaoClosingTemplates : master.closingTemplates;
+        if (closeTpls && closeTpls.length > 0) {
+          var ct = closeTpls[Math.floor(Math.random() * closeTpls.length)];
           var cleanAdv = (domainAdvices[0] || '顺应时势').replace(/[。\.]$/, '');
           closing = ct
             .replace(/{结论}/g, score >= 60 ? '吉' : '凶')
