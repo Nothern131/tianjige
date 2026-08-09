@@ -2025,6 +2025,12 @@
         var guaDe = GUA_DE[guaName] || { 德: '变', 释: '此卦象征变化，需结合实际情境灵活判断。' };
         var guaDeShort = guaDe.德;
 
+        // ── 基础标签（模板占位符用）──
+        var shiPosTxt = yaoPos(shiYao);
+        var yingPosTxt = yingYao ? yaoPos(yingYao) : '—';
+        var dongYaoText = dongYao.length > 0 ? dongYao.length + '处动爻' : '六爻安静';
+        var chongHeText = chongHe && chongHe.isLiuChong ? '六冲卦' : (chongHe && chongHe.isLiuHe ? '六合卦' : '');
+
         // ── 定性判断（替代评分，基于卦象逻辑）──
         function assessSituation(dongCount, shiWang, yongWang, yongGone, yongEmpty) {
           var parts = [];
