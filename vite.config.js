@@ -4,8 +4,10 @@ import path from 'path';
 
 export default defineConfig({
   root: '.',
+  base: './',
   build: {
     outDir: 'dist',
+    assetsDir: 'assets',
     rollupOptions: {
       input: {
         index: 'index.html',
@@ -15,6 +17,8 @@ export default defineConfig({
         architecture: 'architecture.html',
       },
     },
+    cssCodeSplit: false,
+    copyPublicDir: false,
   },
   server: {
     port: 8889,

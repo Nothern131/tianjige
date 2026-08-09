@@ -6,7 +6,7 @@
 (function (global) {
   'use strict';
 
-  var DEBUG = typeof import.meta !== 'undefined' ? import.meta.env?.DEV : false;
+  var DEBUG = false;
   var PREFIX = '[天机阁]';
 
   function timestamp() {
