@@ -1728,6 +1728,7 @@
       function generateLiuyaoAnalysis(master, liuyao, question) {
         var p = master.pronouns || '吾';
         var guaName = liuyao.gua_name || '—';
+        var originalGua = liuyao.original_gua || {};
         var changedGua = liuyao.changed_gua;
         var changedName = changedGua ? changedGua.name : '';
         var dongYao = liuyao.dong_yao || [];
@@ -1912,12 +1913,33 @@
           return null;
         }
 
+        // 六亲分布统计（提前计算，用于模板）
+        var qinCountMap = {};
+        for (var _qc = 0; _qc < liuQin.length; _qc++) {
+          qinCountMap[liuQin[_qc]] = (qinCountMap[liuQin[_qc]] || 0) + 1;
+        }
+        var qinSummary = [];
+        for (var _qk in qinCountMap) {
+          if (qinCountMap.hasOwnProperty(_qk)) {
+            qinSummary.push(_qk + '现' + qinCountMap[_qk] + '处');
+          }
+        }
+        var qinDistributionText = qinSummary.join('，') || '六亲分布完整';
+
         // ══════════════════════════════════════════════════════════
         // SECTION 1: OPENING — 大师风格化开头，直接针对问题
         // ══════════════════════════════════════════════════════════
         var opening = '';
         var qLevel = score >= 75 ? '大吉' : score >= 60 ? '偏吉' : score >= 40 ? '偏凶' : '大凶';
         var qLevel2 = score >= 75 ? '旺相' : score >= 55 ? '平和' : '衰弱';
+        var shiPosTxt = yaoPos(shiYao);
+        var yingPosTxt = yaoPos(yingYao);
+        var dongYaoText = dongYao.length > 0 ? dongYao.length + '处动爻' : '六爻安静';
+        var chongHeText = chongHe && chongHe.isLiuChong ? '六冲卦' : (chongHe && chongHe.isLiuHe ? '六合卦' : '');
+        var conclusionText = score >= 75 ? '此卦大吉，根基稳固，可放心推进'
+          : score >= 60 ? '此卦偏吉，虽有波折但整体向好'
+          : score >= 40 ? '此卦偏凶，需谨慎行事，不宜冒进'
+          : '此卦大凶，宜静不宜动，守成为上';
 
         // 优先使用大师的 liuyao 专属模板（六爻场景用），其次通用模板
         var openTpls = (master.liuyaoOpeningTemplates && master.liuyaoOpeningTemplates.length > 0)
@@ -1930,7 +1952,24 @@
             .replace(/{旺衰}/g, qLevel2)
             .replace(/{吉凶}/g, qLevel)
             .replace(/{纳甲}/g, guaName)
-            .replace(/{命造}/g, guaName);
+            .replace(/{命造}/g, guaName)
+            .replace(/{事域}/g, domainName)
+            .replace(/{世爻}/g, shiQin)
+            .replace(/{应爻}/g, yingQin)
+            .replace(/{世位}/g, shiPosTxt)
+            .replace(/{应位}/g, yingPosTxt)
+            .replace(/{动爻}/g, dongYaoText)
+            .replace(/{变卦}/g, changedName || '无变')
+            .replace(/{冲合}/g, chongHeText)
+            .replace(/{结论}/g, conclusionText)
+            .replace(/{动爻数}/g, dongYao.length + '处')
+            .replace(/{世旺}/g, (wangShuai[shiYao - 1] || '平'))
+            .replace(/{应旺}/g, (yingYao ? (wangShuai[yingYao - 1] || '平') : '平'))
+            .replace(/{分数}/g, score + '分')
+            .replace(/{六亲分布}/g, qinDistributionText)
+            .replace(/{世应距}/g, dist + '爻')
+            .replace(/{世六兽}/g, shiShou)
+            .replace(/{应六兽}/g, (yingYao ? (liuShou[yingYao - 1] || '') : ''));
         } else {
           // 无模板时用大师风格生成
           var style = master.style || '';
@@ -1955,14 +1994,14 @@
         if (shiShou) opening += ' 世值' + shiShou + '，' + (shouAdvice(shiShou) || '') + '。';
 
         // ══════════════════════════════════════════════════════════
-        // SECTION 2: OVERVIEW — 问题拆解 + 核心卦象数据
+        // SECTION 2: OVERVIEW — 叙事式总论，推理链清晰
         // ══════════════════════════════════════════════════════════
         var overview = '';
 
-        // 2a. 问题拆解：明确问题所属事域及关键要素
-        overview += '【问题拆解】\n';
-        overview += '汝问「' + question + '」，此事属' + domainName + '，涉及' + judgedName + '之变。\n';
-        // 事业子分类标注
+        // 2a. 问题定位 — 明确事域 + 取用神方向
+        overview += '【所问何事】\n';
+        overview += '汝问「' + question + '」，此事属「' + domainName + '」之事。';
+        // 事业子分类
         var subtypeLabel = '';
         if (domainKey === 'career') {
           var subKey = 'career';
@@ -1971,77 +2010,113 @@
           }
           var subLabels = { career_job: '求职/面试', career_promote: '晋升/考核', career_start: '创业/投资', career_diff: '受挫/困境' };
           subtypeLabel = subLabels[subKey] || '';
-          if (subtypeLabel) overview += '事属' + subtypeLabel + '之局。\n';
+          if (subtypeLabel) overview += ' 事属' + subtypeLabel + '，非泛泛之问，需聚焦此局。';
         }
+        // 取用神方向
+        var yongShenDirection = '';
+        if (domainKey === 'career') yongShenDirection = '以官鬼爻为用神（事业吉凶），父母爻为次（文书合同），妻财爻为再次（薪资待遇）。';
+        else if (domainKey === 'love') yongShenDirection = '以妻财爻（男占）或官鬼爻（女占）为用神代表对方，子孙爻为感情状态，父母爻为婚约定数。';
+        else if (domainKey === 'wealth') yongShenDirection = '以妻财爻为用神（财运本身），子孙爻为生财之道（财源），兄弟爻为破财之防。';
+        else if (domainKey === 'health') yongShenDirection = '以官鬼爻为用神（病症所在），子孙爻为解忧之神（康复之力），父母爻为医疗文书。';
+        else if (domainKey === 'study') yongShenDirection = '以父母爻为用神（成绩师长），官鬼爻为考试压力，子孙爻为领悟发挥。';
+        else yongShenDirection = '此卦六爻各有所主，以世应关系为核心，动爻为关键变量。';
+        overview += '\n取用神方向：' + yongShenDirection;
+        // 为何这么取用神
+        overview += '（六爻占断中，用神为判断一世吉凶之根，用神旺相则此事根基稳固，休囚则事倍功半。）';
 
-        // 2b. 卦象总览
-        overview += '\n【卦象总览】\n';
-        overview += '本卦「' + guaName + '」，六亲分布：' + liuQin.join('、') + '。';
-        overview += '世爻在' + yaoPos(shiYao) + '（' + shiQin + '），代表' + (qinMap[shiQin] || shiQin) + '；';
-        overview += '应爻在' + yaoPos(yingYao) + '（' + yingQin + '），代表' + (qinMap[yingQin] || yingQin) + '。';
+        // 2b. 卦象骨架 — 本卦 + 变卦 + 世应 + 六亲
+        overview += '\n\n【卦象骨架】——' + guaName + '之格局。';
+        overview += '本卦「' + guaName + '」，属' + (originalGua.gong || '—') + '宫，上' + (originalGua.upper || '—') + '下' + (originalGua.lower || '—') + '。';
+        if (changedName && dongYao.length > 0) {
+          overview += ' 动爻' + dongYao.length + '处，变「' + changedName + '」。';
+          overview += ' 本卦为当前态势，变卦为事态终局——两者对照，可知此事之演变轨迹。';
+        } else {
+          overview += ' 六爻安静，无动变，此事当前呈静态格局，暂无结构性变化。';
+        }
+        overview += '\n六亲分布（自下而上）：' + liuQin.join('、') + '。';
+        overview += ' 即' + qinDistributionText + '。';
 
-        // 2c. 动爻分析 — 这是最关键的变量
+        // 2c. 世应定调 — 这是此卦最核心的关系
+        overview += '\n\n【世应定调：你与外部的关系】\n';
+        overview += '世爻在' + yaoPos(shiYao) + '，临' + shiQin + '——代表汝在此事中的状态，代表「' + (qinMap[shiQin] || shiQin) + '」。';
+        overview += ' 应爻在' + yaoPos(yingYao) + '，临' + yingQin + '——代表此' + judgedName + '之外部环境或对方，代表「' + (qinMap[yingQin] || yingQin) + '」。';
+        // 世应位置关系
+        overview += '\n世应相距' + dist + '爻（' + (dist <= 1 ? '近在咫尺，变化直接波及自身' : dist >= 3 ? '相隔较远，此事需时间方能见分晓，不宜急于求成' : '距离适中，尚在可控范围') + '）。';
+        // 世应六亲关系
+        if (shiQin === yingQin) {
+          overview += ' 世应同临' + shiQin + '——内外一致，你与外部环境同频共振。这意味着：此事上的判断与外部反馈一致，但需警惕"同声相应"带来的信息盲区。';
+        } else if ((shiQin === '妻财' && yingQin === '官鬼') || (shiQin === '官鬼' && yingQin === '妻财')) {
+          overview += ' 世应财官相生——事业与财富相互促进，外因（应爻）能助你（世爻）达成目标。但需注意分工，你负责的层面与外部助力需明确。';
+        } else if ((shiQin === '子孙' && yingQin === '官鬼') || (shiQin === '官鬼' && yingQin === '子孙')) {
+          overview += ' 世应子官相克——【关键冲突】你（世爻）的轻松心态与外部（应爻）的事业压力形成矛盾。这意味着：你需要在"放松"与"进取"之间找到平衡点，过于放松可能错失良机，过于紧张则身心俱疲。';
+        } else if ((shiQin === '兄弟' && yingQin === '妻财') || (shiQin === '妻财' && yingQin === '兄弟')) {
+          overview += ' 世应兄财相克——【关键冲突】你（世爻）与利益（应爻）之间存在竞争关系。这意味着：你需要警惕合作中的利益分配问题，明确权责利。';
+        } else if ((shiQin === '父母' && yingQin === '子孙') || (shiQin === '子孙' && yingQin === '父母')) {
+          overview += ' 世应父子相克——你（世爻）的思虑规划与外部（应爻）的轻松氛围形成张力。需注意：过于思虑则行动迟缓，过于放松则缺乏规划。';
+        }
+        // 世爻位置爻位含义
+        var shiWeiMeanings = {
+          1: '世居初爻（低位）——此事尚在萌芽阶段，不宜急于求成，需从根基做起，一步一个脚印。',
+          2: '世居二爻（家宅位/日常位）——此事与你的日常生活、人际关系密切相关，宜从细节入手，以柔克刚。',
+          3: '世居三爻（人位/进退位）——此事处于进退之间，需要你谨慎抉择，不可犹豫不决也不可贸然行事。',
+          4: '世居四爻（近臣位/外应位）——此事接近核心，但需借助外力或他人帮助方能推进，不宜单打独斗。',
+          5: '世居五爻（君位）——此事影响力较大，你的决定关乎全局，责任重大，但也意味着你有主导权。',
+          6: '世居上爻（极位/终位）——此事已至收尾阶段，要么总结成果，要么及时转向，不宜再投入过多资源。',
+        };
+        if (shiWeiMeanings[shiYao]) overview += '\n' + shiWeiMeanings[shiYao];
+
+        // 2d. 动爻分析 — 最关键的变量
         if (dongYao.length > 0) {
-          overview += '\n【动爻分析】\n';
-          overview += '共有' + dongYao.length + '个动爻，其中：';
+          overview += '\n\n【动爻分析：变局所在】\n';
+          overview += '此卦有' + dongYao.length + '个动爻，' + (dongYao.length === 1 ? '一爻独动，事态核心明确，焦点集中。' : dongYao.length === 2 ? '二爻齐动，事有两端，需权衡轻重。' : '多爻齐动，局势复杂，变化多端，宜静观其变。') + '\n';
           for (var di = 0; di < dongYao.length; di++) {
             var d = dongYao[di];
             var dq = liuQin[d - 1] || '—';
             var ds = liuShou[d - 1] || '';
-            var dDesc = yaoPos(d) + '临' + dq;
-            if (ds) dDesc += '值' + ds;
-            dDesc += '——' + dq + '代表' + (qinMap[dq] || dq) + '，此处有变化。';
-            if (d === shiYao) dDesc += '变在你自己，主动权在你。';
-            else if (d === yingYao) dDesc += '变在对方/外部，你需观察应对。';
-            if (ds) dDesc += shouAdvice(ds);
-            overview += dDesc + ' ';
+            var dNajia = najia[d - 1] || {};
+            overview += '第' + d + '爻（' + yaoPos(d) + '）发动：\n';
+            overview += '  · 六亲：临' + dq + '——代表「' + (qinMap[dq] || dq) + '」在此事中是关键变化因素。';
+            if (ds) overview += ' 六兽：值' + ds + '——' + (shouAdvice(ds) || '') + '。';
+            if (dNajia.gan && dNajia.zhi) overview += ' 纳甲：' + dNajia.gan + dNajia.zhi + '。';
+            // 动爻对谁的影响
+            if (d === shiYao) {
+              overview += '\n  · 此变源于自身——你在此事上的想法、行动或态度正在发生改变，这是推动此事向前发展的关键动力。';
+              // 动爻六亲与世爻六亲的深层关系
+              if (dq === '妻财' && yingQin === '兄弟') overview += ' 但需注意：世爻动而临财，应爻兄弟克财——你的主动求变可能引发利益冲突，宜谨慎推进。';
+              else if (dq === '官鬼' && yingQin === '子孙') overview += ' 但需注意：世爻动而临官鬼，应爻子孙克官鬼——你的主动施压可能被外部轻松化解，需调整策略。';
+            } else if (d === yingYao) {
+              overview += '\n  · 此变来自外部——对方或外部环境正在发生变化，你不是此事的主导者，而是应对者。需密切关注外部动向，灵活调整。';
+            } else {
+              overview += '\n  · 此变在事件的其他层面——提醒你关注相关联的因素，不要只盯着眼前。';
+            }
+            // 动爻旺衰
+            if (wangShuai.length > 0) {
+              var dWang = wangShuai[d - 1] || '平';
+              overview += '\n  · 此爻临月建为「' + dWang + '」——' + (dWang === '旺' ? '旺相有力，变化之势强，应期较快。' : dWang === '相' ? '相生，变化有后续之力。' : dWang === '休' ? '休囚，变化之力不足，需待时。' : dWang === '囚' ? '受囚，变化被压制，暂时难显。' : dWang === '死' ? '死气，变化之力衰微，如强弩之末。' : '平态，变化之力平平。');
+            }
+            overview += '\n';
           }
         } else {
-          overview += '\n【静卦分析】\n';
-          overview += '六爻安静，无动爻，此事当前状态稳定，暂无结构性变化。';
-          // 静卦时看世应关系
+          overview += '\n\n【静卦分析：无变之局】\n';
+          overview += '六爻安静，无动爻——此事当前无结构性变化，核心在于：局面不会自行突破，结果取决于你在此稳定态势下的具体行动。\n';
+          // 静卦更关注世应关系
           var rel = shiYingRelationText(shiQin, yingQin);
-          if (rel) overview += '\n世应关系：' + rel;
+          if (rel) overview += '无动爻时，世应关系为全局关键：' + rel + '\n';
+          overview += '静卦策略：此时不宜做方向性重大调整，宜在现有框架内微调，等待时机。';
         }
 
-        // 2d. 六亲重点标注
-        overview += '\n【关键六亲】\n';
-        var keyQin = [];
-        if (domainKey === 'career') keyQin = ['官鬼', '父母'];
-        else if (domainKey === 'love') keyQin = ['官鬼', '妻财'];
-        else if (domainKey === 'wealth') keyQin = ['妻财', '兄弟'];
-        else if (domainKey === 'health') keyQin = ['官鬼', '子孙'];
-        else if (domainKey === 'study') keyQin = ['父母', '官鬼'];
-        else keyQin = ['官鬼', '妻财', '子孙'];
-
-        for (var ki = 0; ki < keyQin.length; ki++) {
-          var kq = keyQin[ki];
-          var kpos = qinPositions[kq];
-          if (kpos) {
-            var ktext = kq + '在';
-            for (var kp = 0; kp < kpos.length; kp++) {
-              if (kp > 0) ktext += '、';
-              ktext += yaoPos(kpos[kp]);
-              if (dongYao.indexOf(kpos[kp]) >= 0) ktext += '（动）';
-            }
-            ktext += '——' + (qinMap[kq] || kq) + '。';
-            overview += ktext + ' ';
-          }
-        }
-
-        // 2e. 日月建分析（新增）
+        // 2e. 日月建 + 旺衰 + 六冲六合 合并为一个深度分析块
+        overview += '\n\n【时令与卦气】\n';
+        // 日月建
         if (riJian) {
-          overview += '\n【日月建】\n';
           overview += '今值' + riJian + '日，' + yueJian + '月建。';
           var riZhi = riJian[2] || '';
           var yueZhi = yueJian[2] || '';
-          if (riZhi) overview += '日建' + riZhi + '主' + (riZhi === '子' || riZhi === '午' ? '冲动变局' : riZhi === '寅' || riZhi === '申' ? '变动之象' : '平稳守成') + '；';
-          if (yueZhi) overview += '月建' + yueZhi + '主' + (yueZhi === '寅' || yueZhi === '申' ? '变动之月' : yueZhi === '巳' || yueZhi === '亥' ? '冲动之月' : '平和之月') + '。';
+          overview += '\n日建' + riZhi + '：' + (riZhi === '子' || riZhi === '午' ? '冲动之象，今日之事多变动，宜灵活应对。' : riZhi === '寅' || riZhi === '申' ? '变动之象，今日之事有变化之机。' : riZhi === '卯' || riZhi === '酉' ? '冲合之象，今日之事有反复，需耐心。' : '平稳守成之日，今日之事宜静不宜动。');
+          overview += '\n月建' + yueZhi + '：' + (yueZhi === '寅' || yueZhi === '申' ? '变动之月，此月之事变化较多，宜顺势而为。' : yueZhi === '巳' || yueZhi === '亥' ? '冲动之月，此月之事易有突发事件，需做好准备。' : yueZhi === '子' || yueZhi === '午' ? '旺衰转折之月，此月之事过半需重新评估。' : '平和之月，此月之事按部就班即可。');
         }
-
-        // 2f. 旺衰分析（新增）
+        // 旺衰
         if (wangShuai.length > 0) {
-          overview += '\n【爻之旺衰】\n';
           var wangCount = 0, xiangCount = 0, xiuCount = 0, qiuCount = 0, siCount = 0;
           for (var wi = 0; wi < 6; wi++) {
             var w = wangShuai[wi] || '平';
@@ -2051,22 +2126,25 @@
             else if (w === '囚') qiuCount++;
             else if (w === '死') siCount++;
           }
-          overview += '世爻' + yaoPos(shiYao) + '（' + (najia[shiYao - 1] ? najia[shiYao - 1].zhi : '—') + '）临' + (wangShuai[shiYao - 1] || '平') + '；';
-          if (yingYao) overview += '应爻' + yaoPos(yingYao) + '（' + (najia[yingYao - 1] ? najia[yingYao - 1].zhi : '—') + '）临' + (wangShuai[yingYao - 1] || '平') + '；';
-          overview += '本月旺' + wangCount + '爻、相' + xiangCount + '爻、休' + xiuCount + '爻、囚' + qiuCount + '爻、死' + siCount + '爻。';
-          if (wangCount >= 2) overview += '世应得令，局势有利。';
-          else if (siCount >= 2) overview += '世应休囚，需待时运。';
+          overview += '\n爻之旺衰（基于月建）：';
+          overview += '世爻' + yaoPos(shiYao) + '（纳' + (najia[shiYao - 1] ? najia[shiYao - 1].zhi : '—') + '）临' + (wangShuai[shiYao - 1] || '平') + '——';
+          overview += (wangShuai[shiYao - 1] === '旺' ? '你在此事中处于有利位置，能量充足，可主动作为。' : wangShuai[shiYao - 1] === '相' ? '你在此事中次旺，虽非最佳但仍有助力。' : wangShuai[shiYao - 1] === '休' ? '你在此事中能量不足，需借力而非硬来。' : wangShuai[shiYao - 1] === '囚' ? '你在此事中受制，不宜主动出击，宜守待时。' : wangShuai[shiYao - 1] === '死' ? '你在此事中能量衰微，建议暂避锋芒。' : '你在此事中状态平平。');
+          if (yingYao) {
+            overview += '\n应爻' + yaoPos(yingYao) + '（纳' + (najia[yingYao - 1] ? najia[yingYao - 1].zhi : '—') + '）临' + (wangShuai[yingYao - 1] || '平') + '——';
+            overview += (wangShuai[yingYao - 1] === '旺' ? '外部环境有利，对方占据主动。' : wangShuai[yingYao - 1] === '相' ? '外部环境次旺，有合作空间。' : wangShuai[yingYao - 1] === '休' ? '外部环境能量不足，对方或局势处于弱势。' : wangShuai[yingYao - 1] === '囚' ? '外部环境受制，对你有利。' : wangShuai[yingYao - 1] === '死' ? '外部环境衰微，对方或局势已无反击之力。' : '外部环境平平。');
+          }
+          overview += '\n全局：旺' + wangCount + '爻、相' + xiangCount + '爻、休' + xiuCount + '爻、囚' + qiuCount + '爻、死' + siCount + '爻——';
+          if (wangCount + xiangCount >= 3) overview += '整体能量偏旺，此事有根基，可推进。';
+          else if (siCount + qiuCount >= 3) overview += '整体能量偏弱，此事需积蓄力量，不宜冒进。';
+          else overview += '能量分布均衡，此事需综合判断，不可单看旺衰。';
         }
-
-        // 2g. 六冲六合（新增）
-        if (chongHe && chongHe.isLiuChong) {
-          overview += '\n【六冲分析】\n';
-          overview += '本卦「' + guaName + '」为六冲卦，' + (chongHe.desc || '') + ' ';
-          if (chongHe.changedLiuChong) overview += '变卦仍为六冲，主事多反复，不宜久持。';
-        } else if (chongHe && chongHe.isLiuHe) {
-          overview += '\n【六合分析】\n';
-          overview += '本卦「' + guaName + '」为六合卦，' + (chongHe.desc || '') + ' ';
-          if (chongHe.changedLiuHe) overview += '变卦仍为六合，主事成和合，可长期经营。';
+        // 六冲六合
+        if (chongHe && (chongHe.isLiuChong || chongHe.isLiuHe)) {
+          overview += '\n' + (chongHe.isLiuChong ? '【六冲】本卦为六冲卦——' + (chongHe.desc || '') : '【六合】本卦为六合卦——' + (chongHe.desc || ''));
+          if (chongHe.changedLiuChong) overview += ' 变卦仍为六冲，主事多反复，不宜持久战，宜速战速决。';
+          if (chongHe.changedLiuHe) overview += ' 变卦仍为六合，主事终成和合之局，可长期经营。';
+          if (chongHe.isLiuChong && changedName && !chongHe.changedLiuChong) overview += ' 本卦六冲而变卦非六冲——主事虽散乱但终有归宿，先难后易。';
+          if (chongHe.isLiuHe && changedName && !chongHe.changedLiuHe) overview += ' 本卦六合而变卦非六合——主事虽和合但有变数，不可掉以轻心。';
         }
 
         // ══════════════════════════════════════════════════════════
@@ -2271,18 +2349,57 @@
           specialty += changedAnalysis;
         }
 
-        // ── 3f. 综合判断 ──
+        // ── 3f. 综合判断（含推理依据） ──
         specialty += '\n\n【综合判断】\n';
-        if (dongYao.length > 0) {
-          specialty += '此卦有动爻，说明' + judgedName + '正处于变动之中，' + (score >= 60 ? '整体趋势偏向有利，但变动带来不确定性，需把握方向。' : '整体趋势存在挑战，变动中的风险需要注意。');
+        // 综合判断依据：score + 动爻 + 世应 + 旺衰
+        specialty += '此卦综合评分' + score + '分（满分100），';
+        if (score >= 75) {
+          specialty += '属上吉之卦。';
+        } else if (score >= 60) {
+          specialty += '属中吉之卦，总体向好但有局部波折。';
+        } else if (score >= 40) {
+          specialty += '属中凶之卦，整体偏弱但仍有转机。';
         } else {
-          specialty += '此卦六爻安静，' + judgedName + '当前处于稳定状态，' + (score >= 60 ? '局面有利，关键在于维持并逐步推进。' : '局面平平，需要主动作为才能改变现状。');
+          specialty += '属下凶之卦，需谨慎对待。';
         }
-        if (dist >= 3) {
-          specialty += '此外，世应相隔较远，此事不会一蹴而就，需要耐心等待和持续努力。';
+        // 推理依据1：动爻
+        if (dongYao.length > 0) {
+          var dongYaoDetail = dongYao.map(function(d) { return yaoPos(d) + '临' + (liuQin[d-1]||'—'); }).join('、');
+          specialty += '\n依据一（动爻）：此卦有' + dongYao.length + '处动爻，分别为' + dongYaoDetail + '。动爻是卦象变化的关键，' + (dongYao.length === 1 ? '一爻独动，焦点集中，变化方向明确。' + (dongYao[0] === shiYao ? '且动爻在世，变化源于自身，主动为之可成。' : dongYao[0] === yingYao ? '且动爻在应，变化来自外部，需灵活应对。' : '动爻不在世应，变化在辅助层面，需关注全局。') : '多爻齐动，变化复杂，需综合判断。');
+        } else {
+          specialty += '\n依据一（动爻）：六爻安静，无动爻——此事当前无结构性变化，不会自行突破。';
+        }
+        // 推理依据2：世应关系
+        specialty += '\n依据二（世应）：世爻' + shiQin + '在' + yaoPos(shiYao) + '，应爻' + yingQin + '在' + yaoPos(yingYao) + '，';
+        if (shiQin === yingQin) {
+          specialty += '世应同临' + shiQin + '，内外一致，你与外部环境同频共振。这意味着判断与外部反馈一致，但需警惕信息盲区。';
+        } else if ((shiQin === '妻财' && yingQin === '官鬼') || (shiQin === '官鬼' && yingQin === '妻财')) {
+          specialty += '世应财官相生，事业与利益相互促进，外因能助你达成目标。';
+        } else if ((shiQin === '子孙' && yingQin === '官鬼') || (shiQin === '官鬼' && yingQin === '子孙')) {
+          specialty += '世应子官相克——这是此卦的关键冲突：你（世爻）的状态与外部（应爻）的压力形成矛盾，需要在放松与进取之间找到平衡。';
+        } else if ((shiQin === '兄弟' && yingQin === '妻财') || (shiQin === '妻财' && yingQin === '兄弟')) {
+          specialty += '世应兄财相克——这是此卦的关键冲突：你与利益之间存在竞争关系，需警惕合作中的利益分配问题。';
+        } else {
+          specialty += '世应生克关系决定了此事的基本格局，需结合具体事域判断。';
+        }
+        // 推理依据3：旺衰
+        if (wangShuai.length > 0) {
+          var shiWang = wangShuai[shiYao - 1] || '平';
+          specialty += '\n依据三（旺衰）：世爻临月建为「' + shiWang + '」——' + (shiWang === '旺' ? '旺相有力，你在此事中能量充足，可主动作为。' : shiWang === '相' ? '相生次旺，虽非最佳但仍有助力。' : shiWang === '休' ? '休囚，能量不足，需借力而非硬来。' : shiWang === '囚' ? '受囚，受制于人，不宜主动出击。' : shiWang === '死' ? '死气衰微，建议暂避锋芒。' : '状态平平，能量一般。');
+        }
+        // 综合结论
+        specialty += '\n综合以上三点：';
+        if (score >= 60 && dongYao.length > 0 && (wangShuai[shiYao - 1] === '旺' || wangShuai[shiYao - 1] === '相')) {
+          specialty += '动变与旺衰皆利，此事可积极推动，但需注意动爻带来的变化因素。';
+        } else if (score >= 60) {
+          specialty += '整体趋势向好，但动爻或旺衰有不利因素，需谨慎推进，不可冒进。';
+        } else if (score < 40 && dongYao.length === 0) {
+          specialty += '静卦且分数偏低，此事宜静不宜动，等待时机为上策。';
+        } else {
+          specialty += '吉凶参半，需结合具体行动和外部环境综合判断，不可偏信一端。';
         }
 
-        // ── 3g. 针对汝问的直接判断 ──
+        // ── 3g. 针对汝问的直接判断（含推理过程） ──
         specialty += '\n\n【针对汝问「' + question + '」】\n';
         var subtypeText = '';
         if (domainKey === 'career') {
@@ -2291,69 +2408,118 @@
             subK = DomainAnalysis.detectCareerSubtype(question) || 'career';
           }
           var subtypeTexts = {
-            career_job: '求职面试之事，',
-            career_promote: '晋升考核之事，',
-            career_start: '创业投资之事，',
-            career_diff: '当前受挫之事，',
+            career_job: '求职面试之事',
+            career_promote: '晋升考核之事',
+            career_start: '创业投资之事',
+            career_diff: '当前受挫之事',
           };
-          subtypeText = subtypeTexts[subK] || '';
+          var subLabel = subtypeTexts[subK] || '';
+          if (subLabel) subtypeText = '汝问' + subLabel + '，';
         }
+        specialty += subtypeText || '汝问此事，';
+        // 推理过程：用神 + 世应 + 动爻 → 针对此问的具体判断
+        specialty += '以下基于卦象逐步推理：\n';
+        // 用神分析
+        var yongShenText = '';
+        if (domainKey === 'career') yongShenText = '以官鬼爻为用神（事业吉凶），今官鬼爻' + (qinPositions['官鬼'] ? '在' + qinPositions['官鬼'].map(function(p){return yaoPos(p);}).join('、') : '本卦无官鬼爻，取伏神为用') + '。';
+        else if (domainKey === 'love') yongShenText = '以妻财爻（男占）或官鬼爻（女占）为用神，今' + (qinPositions['妻财'] ? '妻财爻在' + qinPositions['妻财'].map(function(p){return yaoPos(p);}).join('、') : '妻财爻不显') + '，' + (qinPositions['官鬼'] ? '官鬼爻在' + qinPositions['官鬼'].map(function(p){return yaoPos(p);}).join('、') : '官鬼爻不显') + '。';
+        else if (domainKey === 'wealth') yongShenText = '以妻财爻为用神（财运本身），今妻财爻' + (qinPositions['妻财'] ? '在' + qinPositions['妻财'].map(function(p){return yaoPos(p);}).join('、') : '本卦无妻财爻，取伏神为用') + '。';
+        else if (domainKey === 'health') yongShenText = '以官鬼爻为用神（病症所在），今官鬼爻' + (qinPositions['官鬼'] ? '在' + qinPositions['官鬼'].map(function(p){return yaoPos(p);}).join('、') : '本卦无官鬼爻，取伏神为用') + '。';
+        else if (domainKey === 'study') yongShenText = '以父母爻为用神（成绩师长），今父母爻' + (qinPositions['父母'] ? '在' + qinPositions['父母'].map(function(p){return yaoPos(p);}).join('、') : '本卦无父母爻，取伏神为用') + '。';
+        if (yongShenText) specialty += '· 用神定位：' + yongShenText + '\n';
+        // 动爻直接关联
+        if (dongYao.length > 0) {
+          var dongYaoRel = [];
+          for (var dk = 0; dk < dongYao.length; dk++) {
+            var dY = dongYao[dk];
+            var dQ = liuQin[dY - 1] || '—';
+            if (dY === shiYao) dongYaoRel.push(yaoPos(dY) + '动（' + dQ + '）——变化源于自身，你对此事的想法或行动正在改变');
+            else if (dY === yingYao) dongYaoRel.push(yaoPos(dY) + '动（' + dQ + '）——变化来自对方或外部环境，需密切关注');
+            else dongYaoRel.push(yaoPos(dY) + '动（' + dQ + '）——变化在辅助层面，提醒关注相关因素');
+          }
+          specialty += '· 动爻关联：' + dongYaoRel.join('；') + '\n';
+        }
+        // 最终判断（基于以上推理）
+        specialty += '· 综合推断：';
         if (score >= 75) {
-          specialty += subtypeText + (domainKey === 'career' ? '事业有转机，宜主动出击，把握机会。'
+          specialty += (domainKey === 'career' ? '事业有转机，宜主动出击，把握机会。'
             : domainKey === 'love' ? '感情有进展，宜坦诚相待，主动沟通。'
             : domainKey === 'wealth' ? '财运不错，正财稳定，偏财需谨慎。'
             : domainKey === 'health' ? '健康状况良好，继续保持调养即可。'
             : domainKey === 'study' ? '学业有成，努力会有回报。'
             : '此事结果向好，可适当推进。');
         } else if (score >= 60) {
-          specialty += subtypeText + (domainKey === 'career' ? '事业有小阻碍，需稳扎稳打，不可急于求成。'
+          specialty += (domainKey === 'career' ? '事业有小阻碍，需稳扎稳打，不可急于求成。'
             : domainKey === 'love' ? '感情有波折，需多沟通理解，不宜冲动。'
             : domainKey === 'wealth' ? '财运平稳，正财可守，偏财不宜。'
             : domainKey === 'health' ? '健康有小恙，需注意调养，及时就医。'
             : domainKey === 'study' ? '学业有挑战，需加把劲，但不可操之过急。'
             : '此事结果一般，需谨慎对待。');
         } else if (score >= 40) {
-          specialty += subtypeText + (domainKey === 'career' ? '事业有阻力，不宜轻举妄动，宜韬光养晦。'
+          specialty += (domainKey === 'career' ? '事业有阻力，不宜轻举妄动，宜韬光养晦。'
             : domainKey === 'love' ? '感情有阻碍，不宜强求，需耐心等待。'
             : domainKey === 'wealth' ? '财运不佳，不宜投资，以守财为主。'
             : domainKey === 'health' ? '健康需重视，建议及时就医检查。'
             : domainKey === 'study' ? '学业有压力，需调整方法，不可盲目。'
             : '此事结果不佳，宜退守。');
         } else {
-          specialty += subtypeText + (domainKey === 'career' ? '事业受阻，不宜有任何动作，静待时机。'
+          specialty += (domainKey === 'career' ? '事业受阻，不宜有任何动作，静待时机。'
             : domainKey === 'love' ? '感情不顺，不宜主动，需等待对方态度转变。'
             : domainKey === 'wealth' ? '财运大凶，切勿投资，以守财为上。'
             : domainKey === 'health' ? '健康有大碍，需立即就医检查。'
             : domainKey === 'study' ? '学业不顺，需调整方法，不可硬扛。'
             : '此事结果不利，宜暂停。');
         }
+        specialty += '\n（以上判断基于' + score + '分综合评分，结合用神定位、动爻指向和世应关系综合推演得出。）';
 
         // ── 3h. 你的建议：不要做什么 vs 更适合做什么 ──
         specialty += '\n\n【给你的建议】\n';
         var doList = [];
         var dontList = [];
+        var reasonList = [];
         if (score >= 60) {
           doList.push('把握当前有利态势，推进你想做的事');
+          if (dongYao.length > 0) {
+            doList.push('动爻提示变化，主动适应而非被动等待——变化中藏有机遇');
+            reasonList.push('动爻是变化之机，主动应对可占先机');
+          }
           doList.push('多与相关人沟通，获取更多信息');
-          if (dongYao.length > 0) doList.push('动爻提示变化，主动适应而非被动等待');
           dontList.push('不可因短期顺利而掉以轻心');
           dontList.push('避免过度自信，保持审慎态度');
+          reasonList.push('分数虽高但动爻提示变化，不可因一时之利而忘长远之虑');
         } else {
           doList.push('先稳住局面，不要做重大决定');
           doList.push('利用这段时间反思和积累经验');
-          if (dongYao.length > 0) doList.push('动爻提示变化，密切关注而非忽视');
+          if (wangShuai.length > 0 && (wangShuai[shiYao - 1] === '休' || wangShuai[shiYao - 1] === '囚' || wangShuai[shiYao - 1] === '死')) {
+            doList.push('世爻值' + (wangShuai[shiYao - 1] || '平') + '，此时能量不足，宜韬光养晦，积蓄力量');
+            reasonList.push('世爻休囚，强行推进只会事倍功半，等待时机更为明智');
+          }
+          if (dongYao.length > 0) {
+            doList.push('动爻提示变化，密切关注而非忽视——变化中可能藏有转机');
+            reasonList.push('动爻虽在凶卦中，但变化本身意味着机会，关键是把握方向');
+          }
           dontList.push('不可在困难时强行推进，以免扩大损失');
           dontList.push('避免情绪化决策，保持理性判断');
+          reasonList.push('分数偏低，此时决策易受情绪影响，宜静不宜动');
         }
         if (domainKey === 'career') {
           doList.push('多向有经验的前辈请教，少走弯路');
           dontList.push('避免卷入办公室政治，专注业务本身');
+          reasonList.push('事业之事，能力和关系并重，但卦象提示以专业为本');
         } else if (domainKey === 'love') {
           doList.push('真诚表达你的感受，不要隐藏');
           dontList.push('不要过度试探或猜疑对方');
+          reasonList.push('感情之事，真诚最为重要，卦象提示以诚相待');
+        } else if (domainKey === 'wealth') {
+          doList.push('正财为主，偏财为辅，稳健投资');
+          dontList.push('避免高风险投机，不可贪图短期暴利');
+        } else if (domainKey === 'health') {
+          doList.push('及时就医检查，不可拖延');
+          dontList.push('避免过度焦虑，保持乐观心态');
         }
         specialty += '宜：\n' + doList.map(function (d) { return '  · ' + d; }).join('\n') + '\n\n';
         specialty += '不宜：\n' + dontList.map(function (d) { return '  · ' + d; }).join('\n') + '\n';
+        specialty += '\n建议依据：\n' + reasonList.map(function (r) { return '  · 理由：' + r; }).join('\n') + '\n';
 
         // ── 3i. 应期推断：动爻冲合 → 何时发生 ──
         if (dongYao.length > 0 && najia) {
@@ -2400,7 +2566,27 @@
           ? master.liuyaoQuoteTemplates : master.quoteTemplates;
         if (quoteTpls && quoteTpls.length > 0) {
           var qt = quoteTpls[Math.floor(Math.random() * quoteTpls.length)];
-          quote = p + '曰：' + qt;
+          quote = p + '曰：' + qt
+            .replace(/{结论}/g, conclusionText)
+            .replace(/{纳甲}/g, guaName)
+            .replace(/{事域}/g, domainName)
+            .replace(/{世爻}/g, shiQin)
+            .replace(/{应爻}/g, yingQin)
+            .replace(/{动爻数}/g, dongYao.length + '处')
+            .replace(/{动爻}/g, dongYaoText)
+            .replace(/{分数}/g, score + '分')
+            .replace(/{世旺}/g, (wangShuai[shiYao - 1] || '平'))
+            .replace(/{应旺}/g, (yingYao ? (wangShuai[yingYao - 1] || '平') : '平'))
+            .replace(/{世位}/g, shiPosTxt)
+            .replace(/{应位}/g, yingPosTxt)
+            .replace(/{世六兽}/g, shiShou)
+            .replace(/{应六兽}/g, (yingYao ? (liuShou[yingYao - 1] || '') : ''))
+            .replace(/{六亲分布}/g, qinDistributionText)
+            .replace(/{世应距}/g, dist + '爻')
+            .replace(/{日主}/g, shiQin)
+            .replace(/{旺衰}/g, qLevel2)
+            .replace(/{冲合}/g, chongHeText)
+            .replace(/{变卦}/g, changedName || '无变');
         } else {
           // 无引用时用通用经典
           var quotes = [
@@ -2427,6 +2613,20 @@
             || DomainAnalysis.DOMAIN_ADVICES['general'] || [];
         }
 
+        // 结论文本细化
+        var closeConclusion = score >= 75 ? '此卦大吉'
+          : score >= 60 ? '此卦偏吉，虽有波折但可成'
+          : score >= 40 ? '此卦偏凶，风险与机会并存'
+          : '此卦大凶，宜静不宜动';
+        var closeWhy = '';
+        if (dongYao.length > 0) {
+          closeWhy = dongYao.length === 1 ? '动爻在' + yaoPos(dongYao[0]) + '，关键变化在此'
+            : '多爻动变，局势复杂，需把握核心';
+        } else {
+          closeWhy = '六爻安静，静待时机，不宜强求';
+        }
+        var closeConclusionFull = closeConclusion + '。' + closeWhy + '。';
+
         // 优先使用 liuyaoClosingTemplates
         var closeTpls = (master.liuyaoClosingTemplates && master.liuyaoClosingTemplates.length > 0)
           ? master.liuyaoClosingTemplates : master.closingTemplates;
@@ -2434,8 +2634,28 @@
           var ct = closeTpls[Math.floor(Math.random() * closeTpls.length)];
           var cleanAdv = (domainAdvices[0] || '顺应时势').replace(/[。\.]$/, '');
           closing = ct
-            .replace(/{结论}/g, score >= 60 ? '吉' : '凶')
-            .replace(/{建议}/g, cleanAdv);
+            .replace(/{结论}/g, closeConclusionFull)
+            .replace(/{建议}/g, cleanAdv)
+            .replace(/{事域}/g, domainName)
+            .replace(/{卦名}/g, guaName)
+            .replace(/{纳甲}/g, guaName)
+            .replace(/{变卦}/g, changedName || '无变')
+            .replace(/{分数}/g, score + '分')
+            .replace(/{动爻数}/g, dongYao.length + '处')
+            .replace(/{动爻}/g, dongYaoText)
+            .replace(/{世旺}/g, (wangShuai[shiYao - 1] || '平'))
+            .replace(/{应旺}/g, (yingYao ? (wangShuai[yingYao - 1] || '平') : '平'))
+            .replace(/{世应距}/g, dist + '爻')
+            .replace(/{世位}/g, shiPosTxt)
+            .replace(/{应位}/g, yingPosTxt)
+            .replace(/{世爻}/g, shiQin)
+            .replace(/{应爻}/g, yingQin)
+            .replace(/{日主}/g, shiQin)
+            .replace(/{旺衰}/g, qLevel2)
+            .replace(/{世六兽}/g, shiShou)
+            .replace(/{应六兽}/g, (yingYao ? (liuShou[yingYao - 1] || '') : ''))
+            .replace(/{六亲分布}/g, qinDistributionText)
+            .replace(/{冲合}/g, chongHeText);
         } else {
           // 无模板时用大师风格生成建议
           var style = master.style || '';
