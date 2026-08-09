@@ -2908,6 +2908,9 @@
     /** 暴露领域检测函数供测试使用 */
     detectDomain: detectDomain,
 
+    /** 暴露领域建议列表供大师分析使用 */
+    DOMAIN_ADVICES: DOMAIN_ADVICES,
+
     /**
      * 统一问事分析入口
      * @param {string} method - 术数方法：bazi/liuyao/meihua/qimen/taiyi/zhuge
