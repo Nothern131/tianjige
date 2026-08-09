@@ -1731,12 +1731,44 @@
         var shiShou = liuShou[shiYao - 1] || '';
         var changedShou = changedGua && changedGua.shou ? (changedGua.shou[shiYao - 1] || '') : '';
 
+        // 日月建与旺衰（新增）
+        var riJian = liuyao.ri_jian || '';
+        var yueJian = liuyao.yue_jian || '';
+        var wangShuai = liuyao.wang_shuai || [];
+        var chongHe = liuyao.chong_he || {};
+        var shenSha = liuyao.shen_sha || [];
+
         function yaoPos(n) {
           return ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'][n - 1] || '第' + n + '爻';
         }
 
         // 地支序（用于应期推断）
         var ZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+
+        // 五行的旺相休囚死（基于月建）
+        var WX_WANG = {
+          '木': { 旺: '木', 相: '火', 休: '水', 囚: '金', 死: '土', 平: '' },
+          '火': { 旺: '火', 相: '土', 休: '木', 囚: '水', 死: '金', 平: '' },
+          '土': { 旺: '土', 相: '金', 休: '火', 囚: '木', 死: '水', 平: '' },
+          '金': { 旺: '金', 相: '水', 休: '土', 囚: '火', 死: '木', 平: '' },
+          '水': { 旺: '水', 相: '木', 休: '金', 囚: '土', 死: '火', 平: '' },
+        };
+
+        // 获取爻的旺衰状态
+        function getYaoWangShuai(idx) {
+          var zhi = najia[idx] ? najia[idx].zhi : '';
+          var yueZhi = yueJian ? yueJian[2] : '';
+          var zhiWx = ZHI_WUXING[zhi] || '';
+          var yueWx = ZHI_WUXING[yueZhi] || '';
+          if (zhiWx === yueWx) return '旺';
+          var shengMap = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
+          if (shengMap[yueWx] === zhiWx) return '相';
+          if (shengMap[zhiWx] === yueWx) return '休';
+          var keMap = { 木: '土', 土: '金', 金: '水', 水: '火', 火: '木' };
+          if (keMap[zhiWx] === yueWx) return '囚';
+          if (keMap[yueWx] === zhiWx) return '死';
+          return '平';
+        }
 
         // ── 应期推断：动爻冲合 → 时间应期 ──
         function inferTiming(shouldDongYao, domainKey) {
@@ -1983,6 +2015,46 @@
             ktext += '——' + (qinMap[kq] || kq) + '。';
             overview += ktext + ' ';
           }
+        }
+
+        // 2e. 日月建分析（新增）
+        if (riJian) {
+          overview += '\n【日月建】\n';
+          overview += '今值' + riJian + '日，' + yueJian + '月建。';
+          var riZhi = riJian[2] || '';
+          var yueZhi = yueJian[2] || '';
+          if (riZhi) overview += '日建' + riZhi + '主' + (riZhi === '子' || riZhi === '午' ? '冲动变局' : riZhi === '寅' || riZhi === '申' ? '变动之象' : '平稳守成') + '；';
+          if (yueZhi) overview += '月建' + yueZhi + '主' + (yueZhi === '寅' || yueZhi === '申' ? '变动之月' : yueZhi === '巳' || yueZhi === '亥' ? '冲动之月' : '平和之月') + '。';
+        }
+
+        // 2f. 旺衰分析（新增）
+        if (wangShuai.length > 0) {
+          overview += '\n【爻之旺衰】\n';
+          var wangCount = 0, xiangCount = 0, xiuCount = 0, qiuCount = 0, siCount = 0;
+          for (var wi = 0; wi < 6; wi++) {
+            var w = wangShuai[wi] || '平';
+            if (w === '旺') wangCount++;
+            else if (w === '相') xiangCount++;
+            else if (w === '休') xiuCount++;
+            else if (w === '囚') qiuCount++;
+            else if (w === '死') siCount++;
+          }
+          overview += '世爻' + yaoPos(shiYao) + '（' + (najia[shiYao - 1] ? najia[shiYao - 1].zhi : '—') + '）临' + (wangShuai[shiYao - 1] || '平') + '；';
+          if (yingYao) overview += '应爻' + yaoPos(yingYao) + '（' + (najia[yingYao - 1] ? najia[yingYao - 1].zhi : '—') + '）临' + (wangShuai[yingYao - 1] || '平') + '；';
+          overview += '本月旺' + wangCount + '爻、相' + xiangCount + '爻、休' + xiuCount + '爻、囚' + qiuCount + '爻、死' + siCount + '爻。';
+          if (wangCount >= 2) overview += '世应得令，局势有利。';
+          else if (siCount >= 2) overview += '世应休囚，需待时运。';
+        }
+
+        // 2g. 六冲六合（新增）
+        if (chongHe && chongHe.isLiuChong) {
+          overview += '\n【六冲分析】\n';
+          overview += '本卦「' + guaName + '」为六冲卦，' + (chongHe.desc || '') + ' ';
+          if (chongHe.changedLiuChong) overview += '变卦仍为六冲，主事多反复，不宜久持。';
+        } else if (chongHe && chongHe.isLiuHe) {
+          overview += '\n【六合分析】\n';
+          overview += '本卦「' + guaName + '」为六合卦，' + (chongHe.desc || '') + ' ';
+          if (chongHe.changedLiuHe) overview += '变卦仍为六合，主事成和合，可长期经营。';
         }
 
         // ══════════════════════════════════════════════════════════

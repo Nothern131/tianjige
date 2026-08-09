@@ -57,6 +57,11 @@ for (const tc of testCases) {
     const lines = tc.lines.map(v => ({ type: v ? 'yang' : 'yin', changing: false }));
     const result = LiuyaoEngine.divine(lines);
     console.log(`  ${tc.name}: score=${result.score}, trend=${result.trend}`);
+    console.log(`    日月建: ${result.ri_jian}/${result.yue_jian}`);
+    console.log(`    旺衰: ${result.wang_shuai ? result.wang_shuai.join(',') : '无'}`);
+    if (result.chong_he) {
+      console.log(`    六冲六合: 六冲=${result.chong_he.isLiuChong}, 六合=${result.chong_he.isLiuHe}`);
+    }
   } catch (e) {
     console.log(`  ${tc.name}: 失败 - ${e.message}`);
   }

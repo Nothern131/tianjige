@@ -1010,7 +1010,10 @@
     var liuQin = getLiuQin(gua);
 
     var today = new Date();
-    var riGan = _getRiGan(today);
+    var riGanZhi = _getRiGanZhi(today);
+    var riGan = riGanZhi.gan;
+    var riZhi = riGanZhi.zhi;
+    var yueZhi = _getYueZhi(today.getMonth() + 1);
     var liuShou = getLiuShou(riGan);
 
     var interpretation = generateInterpretation(gua, dongYao, shiYao, yingYao, liuQin, liuShou, changedGua);
@@ -1018,6 +1021,26 @@
     // 计算吉凶分数和趋势
     var score = calculateScore(gua, dongYao, shiYao, yingYao, liuQin, liuShou, changedGua);
     var trend = calculateTrend(score);
+
+    // 日月建
+    var riJian = riGan + riZhi;
+    var yueJian = _getYueGan(riGan, today.getMonth() + 1) + yueZhi;
+
+    // 六冲六合
+    var chongHe = checkLiuChongLiuHe(gua.name, changedGua);
+
+    // 爻的旺衰
+    var wangShuai = [];
+    for (var wi = 0; wi < 6; wi++) {
+      wangShuai.push(getYaoWangShuai(najia[wi].zhi, yueZhi));
+    }
+
+    // 神煞
+    var shenSha = [];
+    for (var si = 0; si < 6; si++) {
+      var sha = getYaoShenSha(najia[si].zhi, riZhi, yueZhi);
+      if (sha.length > 0) shenSha.push({ yao: si + 1, sha: sha });
+    }
 
     return {
       gua_name: gua.name,
@@ -1035,6 +1058,11 @@
       liu_qin: liuQin,
       liu_shou: liuShou,
       najia: najia,
+      ri_jian: riJian,
+      yue_jian: yueJian,
+      wang_shuai: wangShuai,
+      chong_he: chongHe,
+      shen_sha: shenSha,
       interpretation: interpretation,
       score: score,
       trend: trend,
@@ -1049,6 +1077,115 @@
     var diff = Math.floor((date.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
     var riGanIdx = ((diff % 10) + 10) % 10;
     return GAN[riGanIdx];
+  }
+
+  /* ========== 六、日月建与旺衰 ========== */
+  // 地支序
+  var ZHI_ORDER = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+
+  // 六冲：子午冲、丑未冲、寅申冲、卯酉冲、辰戌冲、巳亥冲
+  var LIUCHONG = { 子: '午', 午: '子', 丑: '未', 未: '丑', 寅: '申', 申: '寅', 卯: '酉', 酉: '卯', 辰: '戌', 戌: '辰', 巳: '亥', 亥: '巳' };
+  // 六合：子丑合、寅亥合、卯戌合、辰酉合、巳申合、午未合
+  var LIUHE = { 子: '丑', 丑: '子', 寅: '亥', 亥: '寅', 卯: '戌', 戌: '卯', 辰: '酉', 酉: '辰', 巳: '申', 申: '巳', 午: '未', 未: '午' };
+
+  // 卦宫归六冲/六合
+  var LUCHONG_GUAS = ['坤为地', '巽为风', '震为雷', '水雷屯', '火雷噬嗑', '山火贲', '山雷颐', '山风蛊', '火地晋', '雷地豫', '泽雷随', '水风井', '泽风大过', '泽山咸', '雷山小过', '雷水解', '天雷无妄', '火泽睽', '山泽损'];
+  var LIUHE_GUAS = ['天地否', '地天泰', '风天小畜', '火天大有', '水天需', '泽天夬', '乾为天', '地水师', '水地比', '风地观', '雷风恒', '天风姤', '泽水困', '火水未济', '山水蒙', '水火既济'];
+
+  // 神煞计算
+  var TAOHUA = { 申子辰: '酉', 亥卯未: '子', 寅午戌: '卯', 巳酉丑: '午' };
+
+  // 日干禄支
+  var GAN_LU = { 甲: '寅', 乙: '卯', 丙: '巳', 丁: '午', 戊: '巳', 己: '午', 庚: '申', 辛: '酉', 壬: '亥', 癸: '子' };
+  // 贵人（天乙贵人）
+  var GUIREN = {
+    甲: ['丑', '未'], 戊: ['丑', '未'],
+    丙: ['申', '子'], 丁: ['亥', '酉'],
+    乙: ['子', '申'], 壬: ['巳', '卯'],
+    辛: ['寅', '午'], 癸: ['巳', '卯'],
+  };
+
+  /**
+   * 计算日干支（公历转干支）
+   */
+  function _getRiGanZhi(date) {
+    var base = new Date(1900, 0, 1); // 1900-01-01 甲戌日
+    var diff = Math.floor((date.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
+    var ganIdx = ((diff + 9) % 10 + 10) % 10; // 甲=0
+    var zhiIdx = ((diff + 10) % 12 + 12) % 12; // 戌=10
+    return { gan: GAN[ganIdx], zhi: ZHI[zhiIdx] };
+  }
+
+  /**
+   * 计算月支（简化：以农历正月为寅月开始）
+   */
+  function _getYueZhi(month) {
+    return ZHI[(month + 1) % 12];
+  }
+
+  /**
+   * 计算月干（以年干为基础推算）
+   */
+  function _getYueGan(yearGan, month) {
+    var baseGanIdx = { 甲: 0, 乙: 1, 丙: 2, 丁: 3, 戊: 4, 己: 5, 庚: 6, 辛: 7, 壬: 8, 癸: 9 }[yearGan] || 0;
+    var monthGanIdx = (baseGanIdx * 2 + month) % 10;
+    return GAN[monthGanIdx];
+  }
+
+  /**
+   * 计算爻的旺衰（基于月建）
+   */
+  function getYaoWangShuai(zhi, yueZhi) {
+    var zhiWx = ZHI_WUXING[zhi] || '';
+    var yueWx = ZHI_WUXING[yueZhi] || '';
+    if (zhiWx === yueWx) return '旺';      // 比和为旺
+    var shengMap = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
+    if (shengMap[yueWx] === zhiWx) return '相';  // 月生日，相
+    if (shengMap[zhiWx] === yueWx) return '休';  // 生月，休
+    var keMap = { 木: '土', 土: '金', 金: '水', 水: '火', 火: '木' };
+    if (keMap[zhiWx] === yueWx) return '囚';  // 克月，囚
+    if (keMap[yueWx] === zhiWx) return '死';  // 月克爻，死
+    return '平';
+  }
+
+  /**
+   * 获取神煞
+   */
+  function getYaoShenSha(zhi, riZhi, yueZhi) {
+    var sha = [];
+    // 驿马
+    var yimaZhi = { 申子辰: '寅', 亥卯未: '巳', 寅午戌: '申', 巳酉丑: '亥' };
+    for (var key in yimaZhi) {
+      if (key.indexOf(riZhi) >= 0 && key.indexOf(yueZhi) >= 0) {
+        if (zhi === yimaZhi[key]) sha.push('驿马');
+      }
+    }
+    // 桃花
+    for (var key2 in TAOHUA) {
+      if (key2.indexOf(riZhi) >= 0 && key2.indexOf(yueZhi) >= 0) {
+        if (zhi === TAOHUA[key2]) sha.push('桃花');
+      }
+    }
+    return sha;
+  }
+
+  /**
+   * 检测卦象是否六冲/六合
+   */
+  function checkLiuChongLiuHe(guaName, changedGua) {
+    var result = { isLiuChong: false, isLiuHe: false, desc: '' };
+    if (LUCHONG_GUAS.indexOf(guaName) >= 0) {
+      result.isLiuChong = true;
+      result.desc = '六冲卦，主事有散乱之象，不宜长期坚守。';
+    } else if (LIUHE_GUAS.indexOf(guaName) >= 0) {
+      result.isLiuHe = true;
+      result.desc = '六合卦，主事有和合之象，宜合作经营。';
+    }
+    if (changedGua) {
+      if (LUCHONG_GUAS.indexOf(changedGua.name) >= 0) result.changedLiuChong = true;
+      if (LIUHE_GUAS.indexOf(changedGua.name) >= 0) result.changedLiuHe = true;
+    }
+    return result;
   }
 
   /**
