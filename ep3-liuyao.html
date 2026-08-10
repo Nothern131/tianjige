@@ -1692,30 +1692,89 @@
         var trendLabel = { '偏吉': '向好', '中性': '平稳', '偏滞': '受阻' }[assessmentDir] || '平稳';
         var trendClass = { '偏吉': 'good', '中性': 'neutral', '偏滞': 'warn' }[assessmentDir] || 'neutral';
 
-        var directAnswer = '';
-        if (assessmentDir === '偏吉') {
-          directAnswer = (domainKey === 'career' ? '可成，宜主动推进，把握时机。'
-            : domainKey === 'love' ? '有进展，宜坦诚沟通，主动表达。'
-            : domainKey === 'wealth' ? '财运尚可，正财稳中有升，偏财需理性。'
-            : domainKey === 'health' ? '健康状况良好，继续保持即可。'
-            : domainKey === 'study' ? '学业有进步，努力会有回报。'
-            : '结果向好，可积极推进。');
-        } else if (assessmentDir === '偏滞') {
-          directAnswer = (domainKey === 'career' ? '有阻力，不宜强求，宜韬光养晦等待时机。'
-            : domainKey === 'love' ? '有阻碍，不宜强求，需耐心等待。'
-            : domainKey === 'wealth' ? '财运不佳，不宜投资，以守财为主。'
-            : domainKey === 'health' ? '健康需重视，建议及时就医检查。'
-            : domainKey === 'study' ? '学业有压力，需调整方法。'
-            : '结果不利，宜暂缓推进。');
-        } else {
-          directAnswer = (domainKey === 'career' ? '平稳，无明显吉凶，可稳步推进但不可急躁。'
-            : domainKey === 'love' ? '感情平稳，无明显变化，需继续观察。'
-            : domainKey === 'wealth' ? '财运平稳，无大起大落，保持现状即可。'
-            : domainKey === 'health' ? '健康无大碍，注意日常保养。'
-            : domainKey === 'study' ? '学业平稳，需持续努力。'
-            : '结果平稳，需根据实际情况灵活应对。');
+        // ── 核心断语生成：基于实际卦象特征组合，避免模板化废话 ──
+        function generateVerdict(assessmentDir, domainKey, yongEmpty, yongWang, shiWang, dongCount, dongHasShi, guaDeShort) {
+          var d = assessmentDir;
+          var area = { career:'事业',love:'感情',wealth:'财运',health:'健康',study:'学业',family:'家庭',social:'人际',travel:'出行',general:'此事' }[domainKey] || '此事';
+          var lines = [];
+          var reason = [];
+
+          // ── 偏吉分支 ──
+          if (d === '偏吉') {
+            if (yongEmpty) {
+              lines.push('时机未到，虽有吉象但尚需等待出空，不宜急于行动。');
+              reason.push('用神旬空——目标虽可成，但目前时机未成熟');
+            } else if (dongCount === 0) {
+              lines.push(area + '稳中有升，可稳步推进，顺其自然即可。');
+              reason.push('六爻安静，局势稳定向好');
+            } else if (dongCount === 1) {
+              lines.push('事有明确转机，宜抓住机遇主动推进。');
+              reason.push('一爻独动——变化聚焦一处，方向明确');
+            } else if (dongCount === 2) {
+              lines.push('多事并发，宜分清主次，先解决最关键的问题。');
+              reason.push('二爻动变——变化涉及两个方面，需逐一处理');
+            } else if (dongHasShi) {
+              lines.push('主动权在己，宜主动出击，不可坐等。');
+              reason.push('世爻发动——变化源于自身，主动权在己');
+            } else {
+              lines.push(area + '向好，可积极推进，顺势而为即可。');
+              reason.push('卦象整体向好，可把握当前机遇');
+            }
+            if (guaDeShort === '进' || guaDeShort === '壮' || guaDeShort === '解' || guaDeShort === '悦') {
+              reason.push('卦德「' + guaDeShort + '」——顺势而为，事态正向发展');
+            } else {
+              reason.push('卦德「' + guaDeShort + '」，' + (GUA_DE[guaDeShort] ? GUA_DE[guaDeShort].释 : '') + '');
+            }
+          }
+
+          // ── 偏滞分支 ──
+          else if (d === '偏滞') {
+            if (yongEmpty) {
+              lines.push('用神旬空，目前此事暂难成，宜静待时机。');
+              reason.push('用神旬空——所求之事目前条件不足');
+            } else if (dongCount >= 3) {
+              lines.push('事态复杂多变，宜暂缓重大决策，静观其变。');
+              reason.push('多爻齐动——局势混乱，不宜轻举妄动');
+            } else if (dongCount === 1 && yongWang !== '旺' && yongWang !== '相') {
+              lines.push('虽有动变，但用神力弱，宜积蓄力量等待时机。');
+              reason.push('用神' + (yongWang || '平') + '——虽有变化但力不足');
+            } else {
+              lines.push(area + '当前受阻，不宜强求，宜守不宜攻。');
+              reason.push('卦象显示当前形势不利，强求必有损耗');
+            }
+            if (guaDeShort === '退' || guaDeShort === '塞' || guaDeShort === '剥' || guaDeShort === '困') {
+              reason.push('卦德「' + guaDeShort + '」——目前宜退不宜进');
+            } else {
+              reason.push('卦德「' + guaDeShort + '」，' + (GUA_DE[guaDeShort] ? GUA_DE[guaDeShort].释 : '') + '');
+            }
+          }
+
+          // ── 中性分支 ──
+          else {
+            if (yongWang === '旺' || yongWang === '相') {
+              lines.push(area + '有潜力，但目前时机未明，需进一步明确方向。');
+              reason.push('用神' + yongWang + '——有基础，但需找准发力点');
+            } else if (shiWang === '旺' || shiWang === '相') {
+              lines.push('自身状态尚可，但外部环境不明朗，宜先稳固根基再图发展。');
+              reason.push('世爻' + shiWang + '——自身有力，但需等待时机');
+            } else if (dongCount === 0) {
+              lines.push(area + '平稳，无大起大落，维持现状即可。');
+              reason.push('六爻安静——局势稳定，暂无明显变化');
+            } else {
+              lines.push(area + '吉凶未定，变化方向不明，需仔细观察后再决定行动。');
+              reason.push('卦象显示当前形势不明朗，不宜急于决策');
+            }
+            if (GUA_DE[guaDeShort]) {
+              reason.push('卦德「' + guaDeShort + '」，' + GUA_DE[guaDeShort].释);
+            }
+          }
+
+          return lines.join('\n');
         }
-        if (yongEmpty) directAnswer += ' 注意：用神旬空，目前此事尚未到落实的时候，需等待出空。';
+
+        var directAnswer = generateVerdict(assessmentDir, domainKey, yongEmpty, yongWangTxt, shiWangTxt, dongYao.length, dongYao.indexOf(shiYao) >= 0, guaDeShort);
+        if (yongEmpty && assessmentDir !== '偏滞') directAnswer += '\n注意：用神旬空，目前此事尚未到落实的时候，需等待出空后再行动。';
+
 
         // ── 六爻明细表 ──
         var yaoTableRows = '';
@@ -1880,11 +1939,21 @@
           '</div>';
 
         // 02 核心断语
+        var trendBadgeClass = { '偏吉':'good', '中性':'neutral', '偏滞':'warn' }[assessmentDir] || 'neutral';
+        var trendBadgeLabel = { '偏吉':'向好', '中性':'平稳', '偏滞':'受阻' }[assessmentDir] || '平稳';
+        var verdictLines = directAnswer.split('\n').filter(function(l){ return l.trim(); });
+        var verdictHtml = verdictLines.map(function(line){
+          return '<div style="margin-bottom:6px;line-height:1.7;">' + escHtml(line) + '</div>';
+        }).join('');
         resultHtml +=
           '<div class="card fade-up fade-up-d1">' +
             '<div class="section-title">核心断语 <span class="num">02</span></div>' +
             '<div class="verdict-card">' +
-              '<div class="verdict-main">' + escHtml(directAnswer) + '</div>' +
+              '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">' +
+                '<span class="trend-badge ' + trendBadgeClass + '" style="font-size:0.88rem;padding:5px 16px;">' + escHtml(trendBadgeLabel) + '</span>' +
+                '<span style="font-size:0.82rem;color:var(--text2);">' + escHtml(domainName) + ' · ' + escHtml(guaName) + '</span>' +
+              '</div>' +
+              '<div class="verdict-main" style="font-size:1.08rem;">' + verdictHtml + '</div>' +
               '<div class="verdict-basis">' +
                 '<div style="color:var(--text2);font-size:0.78rem;margin-bottom:4px;">判断依据</div>' +
                 assessParts.map(function (p, i) {
