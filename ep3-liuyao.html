@@ -598,6 +598,66 @@
         margin: 20px 0;
       }
 
+      /* ===== EP2 风格：关键词高亮 & 趋势标签 ===== */
+      .highlight { color: var(--gold-light); font-weight: 600; }
+      .good       { color: var(--green-light, #6fcf97); }
+      .warn       { color: var(--red-light, #dc503c); }
+      .neutral    { color: var(--text2); }
+
+      .trend-badge {
+        display: inline-block;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+      }
+      .trend-badge.good  { background: rgba(111,207,151,0.15); color: var(--green-light, #6fcf97); }
+      .trend-badge.warn  { background: rgba(220,80,60,0.15);  color: var(--red-light, #dc503c); }
+      .trend-badge.neutral { background: rgba(184,154,92,0.15); color: var(--gold); }
+
+      .yao-tag {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 0.72rem;
+        margin-left: 4px;
+      }
+      .yao-tag.dong   { background: rgba(220,80,60,0.15); color: var(--red-light, #dc503c); }
+      .yao-tag.kong   { background: rgba(100,100,100,0.15); color: var(--text3); text-decoration: line-through; }
+      .yao-tag.wang   { background: rgba(111,207,151,0.12); color: var(--green-light, #6fcf97); }
+      .yao-tag.xiu    { background: rgba(220,80,60,0.10);  color: var(--red-light, #dc503c); }
+
+      .term-tip {
+        font-size: 0.75rem;
+        color: var(--text3);
+        margin-left: 6px;
+        font-weight: 400;
+      }
+
+      /* ===== 断语核心区 ===== */
+      .verdict-card {
+        background: linear-gradient(135deg, rgba(184,154,92,0.10) 0%, rgba(184,154,92,0.03) 100%);
+        border: 1px solid var(--border-gold);
+        border-radius: var(--radius);
+        padding: 24px 28px;
+        margin-bottom: 24px;
+      }
+      .verdict-card .verdict-main {
+        font-family: var(--font-serif);
+        font-size: 1.15rem;
+        color: var(--gold-light);
+        line-height: 1.7;
+        margin-bottom: 12px;
+      }
+      .verdict-card .verdict-basis {
+        font-size: 0.82rem;
+        color: var(--text2);
+        line-height: 1.8;
+        border-top: 1px solid var(--border);
+        padding-top: 12px;
+      }
+
       /* ===== 大师蒸馏 CSS（对齐 EP1/EP2） ===== */
       .glass-card {
         background: var(--card);
@@ -1575,23 +1635,9 @@
         var riJian = result.ri_jian || '';
         var yueJian = result.yue_jian || '';
         var chongHe = result.chong_he || {};
+        var interpretation = result.interpretation || '';
 
-        // ── 卦德 ──
-        var guaDe = GUA_DE[guaName] || { 德: '变', 释: '此卦象征变化，需结合实际情境灵活判断。' };
-        var guaDeShort = guaDe.德;
-        var guaDeHtml =
-          '<div class="interp-block" style="margin-top:0;padding:14px 16px;background:rgba(184,154,92,0.07);border-left:3px solid var(--gold);border-radius:0 var(--radius-sm) var(--radius-sm) 0;">' +
-          '<div style="font-family:var(--font-serif);color:var(--gold);font-size:0.92rem;margin-bottom:6px;">☰ 卦德 · ' + escHtml(guaName) + '</div>' +
-          '<div style="font-size:0.88rem;color:var(--text1);line-height:1.85;">此卦「<strong>' + escHtml(guaDeShort) + '」' + escHtml(guaDe.释) + '</div>' +
-          '</div>';
-
-        // ── 定性判断与断语 ──
-        var shiQin = liuQin[shiYao - 1] || '—';
-        var yingQin = yingYao ? liuQin[yingYao - 1] || '' : '';
-        var shiWangTxt = wangShuai[shiYao - 1] || '平';
-        var dirLabel = '平稳';
-
-        // 旬空计算
+        // ── 辅助计算 ──
         var jiaZiIdx = JIAZI_INDEX[riJian] || 0;
         var xunStart = jiaZiIdx - (jiaZiIdx % 10);
         var kongWang = [ZHI[(xunStart + 10) % 12], ZHI[(xunStart + 11) % 12]];
@@ -1600,7 +1646,14 @@
           yaoKongWang[ki] = kongWang.indexOf(najia[ki] ? najia[ki].zhi : '') >= 0;
         }
 
-        // 事域检测
+        var guaDe = GUA_DE[guaName] || { 德: '变', 释: '此卦象征变化，需结合实际情境灵活判断。' };
+        var guaDeShort = guaDe.德;
+        var shiQin = liuQin[shiYao - 1] || '—';
+        var yingQin = yingYao ? liuQin[yingYao - 1] || '' : '';
+        var shiWangTxt = wangShuai[shiYao - 1] || '平';
+        var shiPosTxt = yaoPos(shiYao);
+        var yingPosTxt = yingYao ? yaoPos(yingYao) : '—';
+
         var domainKey = 'general';
         var yongQin = '';
         if (question && typeof DomainAnalysis !== 'undefined') {
@@ -1611,196 +1664,315 @@
         }
         var domainName = { career: '事业', love: '感情', wealth: '财运', health: '健康', study: '学业', family: '家庭', social: '人际', travel: '出行', general: '综合' }[domainKey] || '综合';
         var judgedName = domainName === '综合' ? '此事' : domainName;
-
-        // 用神
         if (domainKey === 'career') yongQin = '官鬼';
         else if (domainKey === 'love') yongQin = '官鬼';
         else if (domainKey === 'wealth') yongQin = '妻财';
         else if (domainKey === 'health') yongQin = '官鬼';
         else if (domainKey === 'study') yongQin = '父母';
-
         var yongPosArr = [];
         for (var qi = 0; qi < 6; qi++) { if (liuQin[qi] === yongQin) yongPosArr.push(qi + 1); }
         var yongWangTxt = yongPosArr.length > 0 ? (wangShuai[yongPosArr[0] - 1] || '平') : '未知';
         var yongEmpty = yongPosArr.some(function (p) { return yaoKongWang[p - 1]; });
+        var yongPosTxt = yongPosArr.length > 0 ? yongPosArr.map(function (p) { return yaoPos(p); }).join('、') : '未现';
 
-        // 定性判断
         var assessmentDir = '中性';
         var assessParts = [];
-        if (yongEmpty) { assessParts.push('用神旬空，事有虚象'); assessmentDir = '偏滞'; }
-        if (yongWangTxt === '休' || yongWangTxt === '囚' || yongWangTxt === '死') {
-          if (assessmentDir === '中性') assessmentDir = '偏滞';
-          assessParts.push('用神' + yongWangTxt + '，力量不足');
-        } else if (yongWangTxt === '旺' || yongWangTxt === '相') {
-          if (assessmentDir === '中性') assessmentDir = '偏吉';
-          assessParts.push('用神' + yongWangTxt + '，力量充足');
-        }
-        if (shiWangTxt === '旺' || shiWangTxt === '相') {
-          if (assessmentDir === '中性') assessmentDir = '偏吉';
-          assessParts.push('世爻' + shiWangTxt + '，你能量充足');
-        } else if (shiWangTxt === '休' || shiWangTxt === '囚' || shiWangTxt === '死') {
-          if (assessmentDir === '偏吉') assessmentDir = '中性';
-          assessParts.push('世爻' + shiWangTxt + '，你能量不足');
-        }
-        if (dongYao.length === 0) { assessParts.push('六爻安静，局势稳定无大变'); }
-        else if (dongYao.length === 1) { assessParts.push('一爻独动，变化焦点明确'); if (assessmentDir === '中性') assessmentDir = '偏吉'; }
-        else { assessParts.push('多爻动变，局势复杂多变'); }
+        if (yongEmpty) { assessParts.push('用神旬空'); assessmentDir = '偏滞'; }
+        if (yongWangTxt === '休' || yongWangTxt === '囚' || yongWangTxt === '死') { if (assessmentDir === '中性') assessmentDir = '偏滞'; assessParts.push('用神' + yongWangTxt); }
+        else if (yongWangTxt === '旺' || yongWangTxt === '相') { if (assessmentDir === '中性') assessmentDir = '偏吉'; assessParts.push('用神' + yongWangTxt); }
+        if (shiWangTxt === '旺' || shiWangTxt === '相') { if (assessmentDir === '中性') assessmentDir = '偏吉'; assessParts.push('世爻' + shiWangTxt); }
+        else if (shiWangTxt === '休' || shiWangTxt === '囚' || shiWangTxt === '死') { if (assessmentDir === '偏吉') assessmentDir = '中性'; assessParts.push('世爻' + shiWangTxt); }
+        if (dongYao.length === 0) { assessParts.push('六爻安静'); }
+        else if (dongYao.length === 1) { assessParts.push('一爻独动'); if (assessmentDir === '中性') assessmentDir = '偏吉'; }
+        else { assessParts.push('多爻动变'); }
         var deDir = { 健:1,顺:0,始:-1,启蒙:-1,待:-1,争:-1,律:0,亲:1,蓄:-1,慎:0,通:1,塞:-1,合:1,丰:1,退:0,乐:0,随:0,整:-1,临:1,察:0,破:0,饰:0,剥:-1,返:1,诚:0,蓄:0,养:0,越:0,陷:-1,丽:0,感:1,久:0,退:-1,壮:1,进:1,隐:-1,齐:0,乖:-1,止:-1,解:1,减:0,增:1,决:1,遇:0,聚:1,升:1,穷:-1,养:0,变:0,立:1,动:0,止:-1,序:0,嫁:0,悦:1,散:-1,限:0,信:1,越:-1,成:1,未:0 };
         var deVal = deDir[guaDeShort] !== undefined ? deDir[guaDeShort] : 0;
         if (deVal < 0 && assessmentDir === '中性') assessmentDir = '偏滞';
         if (deVal > 0 && assessmentDir === '中性') assessmentDir = '偏吉';
-        dirLabel = { '偏吉':'向好', '中性':'平稳', '偏滞':'受阻' }[assessmentDir] || '平稳';
+        var trendLabel = { '偏吉': '向好', '中性': '平稳', '偏滞': '受阻' }[assessmentDir] || '平稳';
+        var trendClass = { '偏吉': 'good', '中性': 'neutral', '偏滞': 'warn' }[assessmentDir] || 'neutral';
 
-        // 断语
         var directAnswer = '';
         if (assessmentDir === '偏吉') {
-          directAnswer = (domainKey === 'career' ? '此事可成，宜主动推进，把握时机。'
-            : domainKey === 'love' ? '此事有进展，宜坦诚沟通，主动表达。'
+          directAnswer = (domainKey === 'career' ? '可成，宜主动推进，把握时机。'
+            : domainKey === 'love' ? '有进展，宜坦诚沟通，主动表达。'
             : domainKey === 'wealth' ? '财运尚可，正财稳中有升，偏财需理性。'
             : domainKey === 'health' ? '健康状况良好，继续保持即可。'
             : domainKey === 'study' ? '学业有进步，努力会有回报。'
-            : '此事结果向好，可积极推进。');
+            : '结果向好，可积极推进。');
         } else if (assessmentDir === '偏滞') {
-          directAnswer = (domainKey === 'career' ? '此事有阻力，不宜强求，宜韬光养晦等待时机。'
-            : domainKey === 'love' ? '此事有阻碍，不宜强求，需耐心等待对方态度转变。'
+          directAnswer = (domainKey === 'career' ? '有阻力，不宜强求，宜韬光养晦等待时机。'
+            : domainKey === 'love' ? '有阻碍，不宜强求，需耐心等待。'
             : domainKey === 'wealth' ? '财运不佳，不宜投资，以守财为主。'
             : domainKey === 'health' ? '健康需重视，建议及时就医检查。'
-            : domainKey === 'study' ? '学业有压力，需调整方法，不可硬扛。'
-            : '此事结果不利，宜暂缓推进。');
+            : domainKey === 'study' ? '学业有压力，需调整方法。'
+            : '结果不利，宜暂缓推进。');
         } else {
-          directAnswer = (domainKey === 'career' ? '此事平稳，无明显吉凶，可稳步推进但不可急躁。'
-            : domainKey === 'love' ? '感情平稳，无明显变化，需继续观察双方态度。'
+          directAnswer = (domainKey === 'career' ? '平稳，无明显吉凶，可稳步推进但不可急躁。'
+            : domainKey === 'love' ? '感情平稳，无明显变化，需继续观察。'
             : domainKey === 'wealth' ? '财运平稳，无大起大落，保持现状即可。'
             : domainKey === 'health' ? '健康无大碍，注意日常保养。'
             : domainKey === 'study' ? '学业平稳，需持续努力。'
-            : '此事结果平稳，需根据实际情况灵活应对。');
+            : '结果平稳，需根据实际情况灵活应对。');
         }
         if (yongEmpty) directAnswer += ' 注意：用神旬空，目前此事尚未到落实的时候，需等待出空。';
 
-        // 此事宜定位
-        var positionHtml =
-          '<div class="interp-block" style="margin-top:12px;padding:14px 16px;background:rgba(184,154,92,0.05);border:1px solid var(--border-gold);border-radius:var(--radius-sm);">' +
-          '<h3 style="font-family:var(--font-serif);color:var(--gold);font-size:0.92rem;margin-bottom:8px;">🎯 此事定位</h3>' +
-          '<div style="font-size:0.85rem;color:var(--text1);line-height:1.9;">';
-        positionHtml += '汝所问之事，本质上是<strong>' + escHtml(domainName) + '</strong>方面的' + escHtml(judgedName) + '。<br>';
+        // ── 六爻明细表 ──
+        var yaoTableRows = '';
+        for (var ri = 0; ri < 6; ri++) {
+          var v = yaoArr[ri];
+          var isYang2 = v === 1;
+          var isMv = dongYao.indexOf(ri + 1) >= 0;
+          var yaoWang = wangShuai[ri] || '—';
+          var yaoKong = yaoKongWang[ri];
+          var isShi = (ri + 1) === shiYao;
+          var isYing = yingYao && (ri + 1) === yingYao;
+          var tags = '';
+          if (isMv) tags += '<span class="yao-tag dong">动</span>';
+          if (yaoKong) tags += '<span class="yao-tag kong">空</span>';
+          if (yaoWang === '旺' || yaoWang === '相') tags += '<span class="yao-tag wang">' + escHtml(yaoWang) + '</span>';
+          else if (yaoWang === '休' || yaoWang === '囚' || yaoWang === '死') tags += '<span class="yao-tag xiu">' + escHtml(yaoWang) + '</span>';
+          if (isShi) tags += '<span class="yao-tag" style="background:rgba(184,154,92,0.2);color:var(--gold);">世</span>';
+          if (isYing) tags += '<span class="yao-tag" style="background:rgba(100,150,200,0.15);color:#6aafef;">应</span>';
+          yaoTableRows += '<tr>' +
+            '<td style="color:var(--text2);font-size:0.82rem;">' + escHtml(yaoPos(ri + 1)) + '</td>' +
+            '<td><span class="' + (isYang2 ? 'yang' : 'yin') + '">' + (isYang2 ? '⚊' : '⚋') + '</span></td>' +
+            '<td>' + (isMv ? '<span class="highlight">⚡动</span>' : '<span class="neutral">—</span>') + '</td>' +
+            '<td>' + escHtml(liuQin[ri] || '—') + tags + '</td>' +
+            '<td>' + escHtml(liuShou[ri] || '—') + '</td>' +
+            '<td style="font-size:0.82rem;color:var(--text2);">' + escHtml(najia[ri] ? najia[ri].gan + najia[ri].zhi : '—') + '</td>' +
+            '</tr>';
+        }
+
+        // ── 动爻生克链 ──
+        var dongAnalysis = '';
         if (dongYao.length > 0) {
-          var dongDetail = dongYao.map(function (d) { return yaoPos(d) + '临' + (liuQin[d - 1] || '—'); }).join('、');
-          positionHtml += '动爻：' + escHtml(dongDetail) + '——变化来自关键爻位，需重点关注。<br>';
+          var dongTexts = [];
+          for (var di = 0; di < dongYao.length; di++) {
+            var d = dongYao[di];
+            var qi = d - 1;
+            var changedVal = result.changed_gua ? result.changed_gua.yao[qi] : null;
+            var changedLine = changedVal !== null ? (changedVal === 1 ? '阳' : '阴') : '—';
+            var origLine = yaoArr[qi] === 1 ? '阳' : '阴';
+            var changeNote = (origLine !== changedLine)
+              ? '由' + escHtml(origLine) + '变' + escHtml(changedLine)
+              : (origLine === '阳' ? '老阳' : '老阴') + '（动而不变）';
+            dongTexts.push(yaoPos(d) + '·' + escHtml(liuQin[qi]) + '(' + escHtml(najia[qi] ? najia[qi].zhi : '?') + ')：' + escHtml(changeNote) + ' → ' + escHtml(liuShou[qi] || '—'));
+          }
+          dongAnalysis = '<div style="margin-top:12px;font-size:0.85rem;color:var(--text1);line-height:1.9;">' +
+            '<div style="color:var(--text2);font-size:0.78rem;margin-bottom:6px;">📌 动爻说明</div>' +
+            dongTexts.map(function (t, i) {
+              return '<div style="padding:6px 10px;background:rgba(220,80,60,0.05);border-left:2px solid var(--red-light,#dc503c);border-radius:0 4px 4px 0;margin-bottom:6px;">' +
+                '<span style="color:var(--red-light,#dc503c);font-weight:600;">动爻' + (i + 1) + '</span> ' + t + '</div>';
+            }).join('') + '</div>';
         }
-        if (yongPosArr.length > 0) {
-          var yongPosTxt = yongPosArr.map(function (p) { return yaoPos(p); }).join('、');
-          positionHtml += '用神' + escHtml(yongQin) + '在' + escHtml(yongPosTxt) + '，' + escHtml(yongWangTxt) + '——用神' + (yongWangTxt === '旺' || yongWangTxt === '相' ? '有力，此事宜积极推进。' : yongWangTxt === '休' || yongWangTxt === '囚' || yongWangTxt === '死' ? '力弱，需等待时机或借助外力。' : '平，可稳步推进。');
-        }
-        positionHtml += '</div></div>';
 
-        // 断语块
-        var verdictHtml =
-          '<div class="interp-block" style="margin-top:12px;padding:14px 16px;background:rgba(184,154,92,0.08);border-left:3px solid var(--gold);border-radius:0 var(--radius-sm) var(--radius-sm) 0;">' +
-          '<div style="font-family:var(--font-serif);color:var(--gold);font-size:0.92rem;margin-bottom:6px;">✦ 断语 · 就此' + escHtml(judgedName) + '</div>' +
-          '<div style="font-size:0.88rem;color:var(--text1);line-height:1.9;">' + escHtml(directAnswer) + '</div>' +
-          '<div style="font-size:0.78rem;color:var(--text2);margin-top:6px;line-height:1.7;">依据：' + escHtml(assessParts.join('；')) + '</div>' +
-          '</div>';
+        // ── 六亲分布 ──
+        var qinCount = {};
+        for (var qi2 = 0; qi2 < 6; qi2++) { var q = liuQin[qi2] || '—'; qinCount[q] = (qinCount[q] || 0) + 1; }
+        var qinDescArr = Object.keys(qinCount).map(function (q) {
+          var meaning = { '父母': '文书、长辈、保障', '兄弟': '竞争、阻碍、合作', '子孙': '福气、解忧、娱乐', '妻财': '钱财、资源、感情', '官鬼': '事业、压力、官非' }[q] || '';
+          return '<span class="highlight">' + escHtml(q) + '</span>×' + escHtml(String(qinCount[q])) + (meaning ? ' <span class="term-tip">（' + escHtml(meaning) + '）</span>' : '');
+        });
+        var qinDescHtml = '<div class="interp-block" style="margin-top:12px;">' +
+          '<div style="color:var(--text2);font-size:0.78rem;margin-bottom:6px;">六亲分布</div>' +
+          '<div style="font-size:0.88rem;color:var(--text1);line-height:1.9;">' + qinDescArr.join('、') + '</div></div>';
 
-        // 事域分析
-        var questionHtml = '';
-        if (question && typeof DomainAnalysis !== 'undefined') {
+        // ── 世应关系 ──
+        var shiYingHtml = '<div class="interp-block" style="margin-top:12px;">' +
+          '<div style="color:var(--text2);font-size:0.78rem;margin-bottom:6px;">👥 世应关系</div>' +
+          '<div style="font-size:0.88rem;color:var(--text1);line-height:1.9;">' +
+          '世爻（<strong class="highlight">' + escHtml(shiPosTxt) + '</strong>）临 <span class="highlight">' + escHtml(shiQin) + '</span>，纳甲 <span style="font-family:monospace;">' + escHtml(najia[shiYao - 1] ? najia[shiYao - 1].gan + najia[shiYao - 1].zhi : '—') + '</span>' +
+          (yingYao ? '；应爻（<strong>' + escHtml(yingPosTxt) + '</strong>）临 <span class="highlight">' + escHtml(yingQin) + '</span>，纳甲 <span style="font-family:monospace;">' + escHtml(najia[yingYao - 1] ? najia[yingYao - 1].gan + najia[yingYao - 1].zhi : '—') + '</span>' : '') +
+          '。世代表自己，应代表对方或环境。<span class="term-tip">世应相生则顺，相克则争</span>' +
+          '</div></div>';
+
+        // ── 用神分析 ──
+        var yongShenHtml = '<div class="interp-block" style="margin-top:12px;">' +
+          '<div style="color:var(--text2);font-size:0.78rem;margin-bottom:6px;">🎯 用神分析</div>' +
+          '<div style="font-size:0.88rem;color:var(--text1);line-height:1.9;">' +
+          '此事宜以 <strong class="highlight">' + escHtml(yongQin) + '</strong> 为用神（' + escHtml(domainName) + '以' + escHtml(yongQin) + '为核心）。' +
+          '用神在' + escHtml(yongPosTxt) + '，状态<span class="' + (yongWangTxt === '旺' || yongWangTxt === '相' ? 'good' : yongWangTxt === '休' || yongWangTxt === '囚' || yongWangTxt === '死' ? 'warn' : 'neutral') + '">' + escHtml(yongWangTxt) + '</span>' +
+          (yongEmpty ? '，且<span class="warn">旬空</span>——目前此事尚未到落实的时候，需等待出空。' : '。') +
+          '</div></div>';
+
+        // ── 卦象解读 ──
+        var interpretHtml = interpretation
+          ? '<div class="interp-block">' +
+            '<div style="color:var(--text2);font-size:0.78rem;margin-bottom:6px;">📖 卦象解读</div>' +
+            '<div style="font-size:0.88rem;color:var(--text1);line-height:1.9;">' + formatAnalysisText(interpretation) + '</div></div>'
+          : '';
+
+        // ── 事域分析 ──
+        var domainHtml = '';
+        if (typeof DomainAnalysis !== 'undefined') {
           try {
-            var qaResult = DomainAnalysis.analyze('liuyao', result, question);
-            if (qaResult) {
-              questionHtml =
-                '<div class="interp-block" style="margin-top:16px"><h3>' +
-                qaResult.domain.icon +
-                ' ' +
-                qaResult.domain.name +
-                '</h3><div style="font-size:0.85rem;color:var(--text2);line-height:1.85;">' +
-                formatAnalysisText(qaResult.analysis) +
-                '</div></div>';
+            var daResult = DomainAnalysis.analyze('liuyao', result, question);
+            if (daResult && daResult.domain) {
+              var d = daResult.domain;
+              var subHtml = d.sub && d.sub.length > 0
+                ? '<div style="margin-top:8px;font-size:0.85rem;color:var(--text2);">细分：<span class="highlight">' + escHtml(d.sub.join('、')) + '</span></div>'
+                : '';
+              var advHtml = daResult.advice && daResult.advice.length > 0
+                ? '<div style="margin-top:8px;font-size:0.85rem;color:var(--text1);line-height:1.85;">' +
+                  '<div style="color:var(--text2);font-size:0.78rem;margin-bottom:4px;">💡 建议</div>' +
+                  daResult.advice.map(function (a) { return '<div style="padding-left:12px;position:relative;"><span style="position:absolute;left:0;color:var(--gold);">▸</span>' + escHtml(a) + '</div>'; }).join('') +
+                  '</div>' : '';
+              domainHtml = '<div class="card fade-up">' +
+                '<div class="section-title">事域分析 <span class="num">07</span></div>' +
+                '<div class="interp-block" style="margin:0;">' +
+                '<div style="font-size:0.88rem;color:var(--text1);line-height:1.9;">' +
+                '卦象显示，此事属于 <strong class="highlight">' + escHtml(d.name) + '</strong> 范畴（识别置信度 <strong class="highlight">' + escHtml(String(Math.round(d.confidence * 100))) + '%</strong>）。' +
+                '</div>' + subHtml + advHtml + '</div></div>';
             }
           } catch (e) {}
         }
 
-        // 爻线表格
-        var yaoTableRows = '';
-        for (var i = 0; i < 6; i++) {
-          var v = yaoArr[i] !== undefined ? yaoArr[i] : 1;
-          var isYang = v === 1;
-          var isDong = dongYao.indexOf(i + 1) !== -1;
-          var changed = isDong ? (isYang ? '阴' : '阳') : '—';
-          yaoTableRows +=
-            '<tr>' +
-            '<td>第' + (i + 1) + '爻</td>' +
-            '<td>' + (isYang ? '⚊ 阳' : '⚋ 阴') + (isDong ? ' <span class="yao-changing">⚡动</span>' : '') + '</td>' +
-            '<td>' + (isDong ? '<span class="yao-changing">' + changed + '</span>' : '—') + '</td>' +
-            '<td>' + (liuQin[i] || '—') + '</td>' +
-            '<td>' + (liuShou[i] || '—') + '</td>' +
-            '<td>' + (najia[i] ? najia[i].gan + najia[i].zhi : '—') + '</td>' +
-            '</tr>';
+        // ── 摇卦过程 ──
+        var castingHtml = '';
+        if (result.casting && result.casting.length > 0) {
+          var casts = [];
+          for (var ci = 0; ci < result.casting.length; ci++) {
+            var lineVal = result.casting[ci];
+            var isYang2 = lineVal === 1;
+            casts.push('<div style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(184,154,92,0.1);border-radius:4px;font-size:0.82rem;">' +
+              '<span style="color:var(--text3);font-size:0.72rem;">第' + (ci + 1) + '次</span>' +
+              '<span style="font-size:1.1rem;">' + (isYang2 ? '⚊' : '⚋') + '</span>' +
+              '<span style="color:var(--text2);font-size:0.72rem;">' + (isYang2 ? '阳' : '阴') + '</span>' +
+              '</div>');
+          }
+          castingHtml = '<div class="card fade-up">' +
+            '<div class="section-title">摇卦过程 <span class="num">08</span></div>' +
+            '<div class="interp-block" style="margin:0;">' +
+            '<div style="font-size:0.78rem;color:var(--text2);margin-bottom:10px;">古法以三枚铜钱摇六次，每次总和为2(少阴⚋)、3(少阳⚊)、4(老阳⚡)、5(老阴⚡)，老阴老阳为动爻，变为相反之爻。</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + casts.join('') + '</div>' +
+            '<div style="margin-top:8px;font-size:0.82rem;color:var(--text2);">从初爻到上爻：' + casts.map(function (_, i) {
+              return '<span class="' + (result.casting[i] === 1 ? 'yang' : 'yin') + '">' + escHtml(result.casting[i] === 1 ? '阳' : '阴') + '</span>';
+            }).join('，') + '</div>' +
+            '</div></div>';
         }
 
-        // 摇卦过程可视化 HTML
-        var castingHtml = '<div class="casting-process" style="margin-top:20px;padding:16px;background:rgba(184,154,92,0.06);border:1px solid var(--border-gold);border-radius:var(--radius-sm);">';
-        castingHtml += '<h3 style="font-family:var(--font-serif);color:var(--gold);font-size:0.92rem;margin-bottom:12px;">🪙 摇卦过程</h3>';
-        castingHtml += '<p style="font-size:0.78rem;color:var(--text2);margin-bottom:12px;line-height:1.7;">古法以三枚铜钱摇六次，每次总和为2(少阴⚋)、3(少阳⚊)、4(老阳⚡)、5(老阴⚡)，老阴老阳为动爻，变为相反之爻。今以算法模拟此过程，以时辰为种子随机起卦：</p>';
-        castingHtml += '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">';
-        for (var ci = 0; ci < 6; ci++) {
-          var lineVal = yaoArr[ci];
-          var isYang2 = lineVal === 1;
-          var isMv = dongYao.indexOf(ci + 1) >= 0;
-          var yaoSymbol = isYang2 ? '⚊' : '⚋';
-          castingHtml += '<div style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(184,154,92,0.1);border-radius:4px;font-size:0.82rem;">';
-          castingHtml += '<span style="color:var(--text3);font-size:0.72rem;">第' + (ci + 1) + '次</span>';
-          castingHtml += '<span style="font-size:1.1rem;">' + yaoSymbol + '</span>';
-          castingHtml += '<span style="color:var(--text2);font-size:0.72rem;">' + (isYang2 ? '阳' : '阴') + (isMv ? ' ⚡动' : '') + '</span>';
-          castingHtml += '</div>';
-        }
-        castingHtml += '</div></div>';
+        // ── 组装：01-06 编号卡片输出 ──
+        var resultHtml = '';
 
-        area.innerHTML =
-          '<div class="hexagram-display">' +
-          '<div class="hexagram-name">' +
-          escHtml(guaName) +
-          (changedName ? ' <span style="color:var(--text2);font-size:0.8em">→</span> ' + escHtml(changedName) : '') +
-          '</div>' +
-          '</div>' +
-          '<hr class="section-divider">' +
-          '<div class="hexagram-detail">' +
-          '<div class="detail-item"><div class="detail-label">本卦</div><div class="detail-value">' + escHtml(guaName) + '</div></div>' +
-          (changedName ? '<div class="detail-item"><div class="detail-label">之卦</div><div class="detail-value">' + escHtml(changedName) + '</div></div>' : '') +
-          '<div class="detail-item"><div class="detail-label">世爻</div><div class="detail-value">第' + escHtml(String(shiYao)) + '爻</div></div>' +
-          '<div class="detail-item"><div class="detail-label">应爻</div><div class="detail-value">第' + escHtml(String(yingYao)) + '爻</div></div>' +
-          '<div class="detail-item"><div class="detail-label">动爻</div><div class="detail-value">' +
-          (dongYao.length ? dongYao.map(function (d) { return '第' + d + '爻'; }).join('、') : '无') +
-          '</div></div>' +
-          '<div class="detail-item"><div class="detail-label">卦数</div><div class="detail-value">' + escHtml(String(result.gua_number || '—')) + '</div></div>' +
-          '</div>' +
-          '<hr class="section-divider">' +
-          guaDeHtml +
-          verdictHtml +
-          positionHtml +
-          '<hr class="section-divider">' +
-          '<h3 style="font-family:var(--font-serif);color:var(--gold);font-size:1rem;margin-bottom:12px;">六爻明细</h3>' +
-          '<div class="table-wrap"><table class="yao-table">' +
-          '<thead><tr><th>爻位</th><th>阴阳</th><th>变爻</th><th>六亲</th><th>六兽</th><th>纳甲</th></tr></thead>' +
-          '<tbody>' + yaoTableRows + '</tbody></table></div>' +
-          castingHtml +
-          // 日月建分析
-          (result.ri_jian
-            ? '<div class="interp-block" style="margin-top:16px;"><h3>📅 日月建</h3><div style="font-size:0.85rem;color:var(--text2);line-height:1.85;">今值' + escHtml(result.ri_jian) + '日，' + escHtml(result.yue_jian || '') + '月建。</div></div>'
-            : '') +
-          // 旺衰分析
-          (result.wang_shuai && result.wang_shuai.length > 0
-            ? '<div class="interp-block" style="margin-top:16px;"><h3>⚖️ 爻之旺衰</h3><div style="font-size:0.85rem;color:var(--text2);line-height:1.85;">' + escHtml(result.wang_shuai.map(function (w, i) { return '第' + (i + 1) + '爻(' + (result.najia[i] ? result.najia[i].zhi : '?') + '):' + w; }).join('；')) + '</div></div>'
-            : '') +
-          // 六冲六合
-          (result.chong_he && (result.chong_he.isLiuChong || result.chong_he.isLiuHe)
-            ? '<div class="interp-block" style="margin-top:16px;"><h3>⚡ 六冲六合</h3><div style="font-size:0.85rem;color:var(--text2);line-height:1.85;">' + escHtml(result.chong_he.desc || '') + '</div></div>'
-            : '') +
-          (result.interpretation
-            ? '<div class="interp-block"><h3>📖 卦象解读</h3><div style="font-size:0.85rem;color:var(--text2);line-height:1.85;">' +
-              formatAnalysisText(result.interpretation) +
-              '</div></div>'
-            : '') +
-          questionHtml;
+        // 01 卦象总览
+        resultHtml +=
+          '<div class="card fade-up">' +
+            '<div class="section-title">卦象总览 <span class="num">01</span></div>' +
+            '<div class="hexagram-display" style="margin:12px 0 16px;">' +
+              '<div class="hexagram-name">' +
+                escHtml(guaName) +
+                (changedName ? ' <span style="color:var(--text2);font-size:0.8em">→</span> ' + escHtml(changedName) : '') +
+              '</div>' +
+            '</div>' +
+            '<div class="hexagram-detail">' +
+              '<div class="detail-item"><div class="detail-label">本卦</div><div class="detail-value">' + escHtml(guaName) + '</div></div>' +
+              (changedName ? '<div class="detail-item"><div class="detail-label">之卦</div><div class="detail-value">' + escHtml(changedName) + '</div></div>' : '') +
+              '<div class="detail-item"><div class="detail-label">卦德</div><div class="detail-value"><span class="highlight" style="font-size:1.1em;">' + escHtml(guaDeShort) + '</span> <span class="term-tip">——' + escHtml(guaDe.释) + '</span></div></div>' +
+              '<div class="detail-item"><div class="detail-label">整体趋势</div><div class="detail-value"><span class="trend-badge ' + trendClass + '">' + escHtml(trendLabel) + '</span></div></div>' +
+              '<div class="detail-item"><div class="detail-label">世爻</div><div class="detail-value">' + escHtml(shiPosTxt) + ' · ' + escHtml(shiQin) + '（' + escHtml(shiWangTxt) + '）</div></div>' +
+              '<div class="detail-item"><div class="detail-label">应爻</div><div class="detail-value">' + escHtml(yingPosTxt) + ' · ' + escHtml(yingQin) + '</div></div>' +
+              '<div class="detail-item"><div class="detail-label">动爻</div><div class="detail-value">' +
+                (dongYao.length > 0 ? dongYao.map(function (d) { return '第' + d + '爻'; }).join('、') : '<span class="neutral">六爻安静</span>') +
+              '</div></div>' +
+              '<div class="detail-item"><div class="detail-label">卦数</div><div class="detail-value">' + escHtml(String(result.gua_number || '—')) + '</div></div>' +
+            '</div>' +
+          '</div>';
+
+        // 02 核心断语
+        resultHtml +=
+          '<div class="card fade-up fade-up-d1">' +
+            '<div class="section-title">核心断语 <span class="num">02</span></div>' +
+            '<div class="verdict-card">' +
+              '<div class="verdict-main">' + escHtml(directAnswer) + '</div>' +
+              '<div class="verdict-basis">' +
+                '<div style="color:var(--text2);font-size:0.78rem;margin-bottom:4px;">判断依据</div>' +
+                assessParts.map(function (p, i) {
+                  var icon = p.indexOf('旺') >= 0 || p.indexOf('相') >= 0 ? '✅' : p.indexOf('空') >= 0 ? '⚠️' : '▸';
+                  return '<div style="margin-bottom:4px;">' + icon + ' ' + escHtml(p) + '</div>';
+                }).join('') +
+                (dongYao.length > 0 ? '<div>▸ 动爻' + dongYao.length + '处，变化焦点明确</div>' : '<div>▸ 六爻安静，局势稳定</div>') +
+                '<div>▸ 卦德「<span class="highlight">' + escHtml(guaDeShort) + '</span>」，' + escHtml(guaDe.释) + '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        // 03 此事定位
+        resultHtml +=
+          '<div class="card fade-up fade-up-d2">' +
+            '<div class="section-title">此事定位 <span class="num">03</span></div>' +
+            '<div class="interp-block" style="margin:0;">' +
+              '<div style="font-size:0.88rem;color:var(--text1);line-height:1.9;">' +
+              '汝所问之事，本质上是 <strong class="highlight">' + escHtml(domainName) + '</strong> 方面的' + escHtml(judgedName) + '。<br>' +
+              (dongYao.length > 0
+                ? '动爻：' + dongYao.map(function (d) { return yaoPos(d) + '临' + escHtml(liuQin[d - 1] || '—'); }).join('、') +
+                  ' —— 变化来自这些爻位，是事件的关键节点。<br>' : '') +
+              '用神 <span class="highlight">' + escHtml(yongQin) + '</span> 在' + escHtml(yongPosTxt) + '，状态<span class="' + (yongWangTxt === '旺' || yongWangTxt === '相' ? 'good' : yongWangTxt === '休' || yongWangTxt === '囚' || yongWangTxt === '死' ? 'warn' : 'neutral') + '">' + escHtml(yongWangTxt) + '</span>' +
+              (yongEmpty ? '，且<span class="warn">旬空</span>——目前此事尚未到落实的时候，需等待出空。' : '。') +
+              '</div>' +
+              yongShenHtml +
+              shiYingHtml +
+              qinDescHtml
+            '</div>' +
+          '</div>';
+
+        // 04 六爻排盘
+        resultHtml +=
+          '<div class="card fade-up fade-up-d3">' +
+            '<div class="section-title">六爻排盘 <span class="num">04</span></div>' +
+            '<div class="table-wrap"><table class="yao-table">' +
+              '<thead><tr><th>爻位</th><th>阴阳</th><th>动</th><th>六亲</th><th>六兽</th><th>纳甲</th></tr></thead>' +
+              '<tbody>' + yaoTableRows + '</tbody>' +
+            '</table></div>' +
+            '<div style="font-size:0.75rem;color:var(--text3);margin-top:8px;line-height:1.7;">' +
+              '<span class="yao-tag dong">动</span> 动爻　' +
+              '<span class="yao-tag kong">空</span> 旬空　' +
+              '<span class="yao-tag wang">旺相</span> 旺相有力　' +
+              '<span class="yao-tag xiu">休囚死</span> 休囚无力' +
+            '</div>' +
+            dongAnalysis +
+          '</div>';
+
+        // 05 日月建 & 旺衰
+        resultHtml +=
+          '<div class="card fade-up">' +
+            '<div class="section-title">日月建 · 旺衰 <span class="num">05</span></div>' +
+            (riJian
+              ? '<div class="interp-block" style="margin-top:0;"><div style="font-size:0.88rem;color:var(--text1);line-height:1.9;">' +
+                '今值 <strong class="highlight">' + escHtml(riJian) + '</strong> 日，<strong class="highlight">' + escHtml(yueJian || '') + '</strong> 月建。<br>' +
+                '<span class="term-tip">日建代表当天的气场，月建代表当月的时令。爻得日月生扶则旺，受克则衰。</span>' +
+                '</div></div>'
+              : '') +
+            (wangShuai && wangShuai.length > 0
+              ? '<div class="interp-block" style="margin-top:12px;">' +
+                '<div style="color:var(--text2);font-size:0.78rem;margin-bottom:6px;">各爻旺衰状态</div>' +
+                '<div style="font-size:0.85rem;color:var(--text1);line-height:2;">' +
+                wangShuai.map(function (w, i) {
+                  var cls = w === '旺' || w === '相' ? 'good' : w === '休' || w === '囚' || w === '死' ? 'warn' : 'neutral';
+                  return '<div>' + escHtml(yaoPos(i + 1)) + '·' + escHtml(najia[i] ? najia[i].zhi : '?') +
+                    ' · <span class="' + cls + '">' + escHtml(w) + '</span>' +
+                    (liuQin[i] ? ' · ' + escHtml(liuQin[i]) : '') + '</div>';
+                }).join('') +
+                '</div></div>'
+              : '') +
+            (chongHe && (chongHe.isLiuChong || chongHe.isLiuHe)
+              ? '<div class="interp-block" style="margin-top:12px;">' +
+                '<div style="font-size:0.88rem;color:var(--text1);line-height:1.9;">' +
+                '<span class="highlight">⚡ 六冲六合</span>：' + escHtml(chongHe.desc || '') +
+                '</div></div>'
+              : '') +
+          '</div>';
+
+        // 06 卦象解读
+        if (interpretation) {
+          resultHtml +=
+            '<div class="card fade-up">' +
+              '<div class="section-title">卦象解读 <span class="num">06</span></div>' +
+              interpretHtml +
+            '</div>';
+        }
+
+        area.innerHTML = resultHtml + domainHtml + castingHtml;
       }
 
       // ===== 大师点评（使用 renderMastersPanel 组件 + 五段式分析） =====
