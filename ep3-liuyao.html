@@ -3380,10 +3380,20 @@
             { id: 'full', label: '即时占断' },
           ],
           onAnalyze: function (masterId, analysisType) {
-            var master = allMasters[masterId];
-            if (!master || !currentLiuyaoResult) return null;
-            return generateLiuyaoAnalysis(master, currentLiuyaoResult, currentQuestion);
-          },
+          var master = allMasters[masterId];
+          if (!master || !currentLiuyaoResult) {
+            console.error('[天机阁] 大师分析失败: master不存在或result为空');
+            return null;
+          }
+          try {
+            var result = generateLiuyaoAnalysis(master, currentLiuyaoResult, currentQuestion);
+            console.log('[天机阁] 大师分析成功:', masterId, 'sections:', Object.keys(result).join(','));
+            return result;
+          } catch (e) {
+            console.error('[天机阁] 大师分析异常:', masterId, e);
+            throw e;
+          }
+        },
         });
       }
 
