@@ -75,13 +75,13 @@
     html += '<div class="avatar-initial">' + (profile.name ? profile.name.charAt(0).toUpperCase() : '?') + '</div>';
     html += '</div>';
     html += '<div class="profile-info">';
-    html += '<h1 class="profile-name">' + (profile.name ? escapeHtml(profile.name) : '未设置姓名') + '</h1>';
+    html += '<h1 class="profile-name">' + (profile.name ? escapeHtml(profile.name) : '命簿未立') + '</h1>';
     if (profile.birthDate) {
       html += '<p class="profile-meta">出生：' + escapeHtml(profile.birthDate) + (profile.gender==='male'?' · 男':' · 女') + '</p>';
     }
-    html += '<p class="profile-meta">档案建立：' + formatTime(profile.createdAt) + '</p>';
+    html += '<p class="profile-meta">建档时间：' + formatTime(profile.createdAt) + '</p>';
     html += '</div>';
-    html += '<button class="btn-edit-profile" onclick="window._editProfile()">✏️ 编辑</button>';
+    html += '<button class="btn-edit-profile" onclick="window._editProfile()">✏️ 立命</button>';
     html += '</div>';
 
     // 统计卡片
@@ -103,7 +103,7 @@
     html += '</div>';
 
     if (consultations.length === 0) {
-      html += '<div class="empty-state">还没有咨询记录<br><span style="font-size:0.8rem;color:#8a8576">去占卜一次，记录会自动保存</span></div>';
+      html += '<div class="empty-state">🌌 命簿尚空<br><span>请先立命录，再开启占卜之旅</span></div>';
     } else {
       html += '<div class="consult-list">';
       consultations.forEach(function(c) {

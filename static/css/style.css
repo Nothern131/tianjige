@@ -3062,6 +3062,11 @@ textarea {
   .home-node:hover {
     transform: translate(-50%, -50%) rotate(var(--na)) translateY(-155px) scale(1.1);
   }
+  /* 移动端默认显示节点描述 */
+  .node-desc {
+    opacity: 1 !important;
+    max-height: 40px !important;
+  }
   @keyframes nodeAntiRotate {
     to {
       transform: translate(-50%, -50%) rotate(var(--na)) translateY(-155px) rotate(-360deg);
