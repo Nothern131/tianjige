@@ -1664,8 +1664,14 @@
         }
         var domainName = { career: '事业', love: '感情', wealth: '财运', health: '健康', study: '学业', family: '家庭', social: '人际', travel: '出行', general: '综合' }[domainKey] || '综合';
         var judgedName = domainName === '综合' ? '此事' : domainName;
+        // 性别：用于感情领域判断用神（女占用官鬼，男占用妻财）
+        var domainSex = 'male';
+        var genderRadios = document.querySelectorAll('input[name="domainSex"]');
+        for (var ggi = 0; ggi < genderRadios.length; ggi++) {
+          if (genderRadios[ggi].checked) domainSex = genderRadios[ggi].value;
+        }
         if (domainKey === 'career') yongQin = '官鬼';
-        else if (domainKey === 'love') yongQin = '官鬼';
+        else if (domainKey === 'love') yongQin = domainSex === 'female' ? '官鬼' : '妻财';
         else if (domainKey === 'wealth') yongQin = '妻财';
         else if (domainKey === 'health') yongQin = '官鬼';
         else if (domainKey === 'study') yongQin = '父母';
@@ -2332,6 +2338,14 @@
           genderWrap.style.display = (domainKey === 'love' || domainKey === 'general') ? 'block' : 'none';
         }
 
+        // ── 用神确定（用于评估和六亲分析）──
+        var yongQin = '';
+        if (domainKey === 'career') yongQin = '官鬼';
+        else if (domainKey === 'love') yongQin = domainSex === 'female' ? '官鬼' : '妻财';
+        else if (domainKey === 'wealth') yongQin = '妻财';
+        else if (domainKey === 'health') yongQin = '官鬼';
+        else if (domainKey === 'study') yongQin = '父母';
+
         // ── 六亲分布 ──
         var qinPositions = {};
         for (var qi = 0; qi < 6; qi++) {
@@ -2811,12 +2825,6 @@
 
         // ── 3c.5 世爻持用神判断 ──
         specialty += '\n【世爻持用神判断】\n';
-        var yongQin = '';
-        if (domainKey === 'career') yongQin = '官鬼';
-        else if (domainKey === 'love') yongQin = domainSex === 'female' ? '官鬼' : '妻财';
-        else if (domainKey === 'wealth') yongQin = '妻财';
-        else if (domainKey === 'health') yongQin = '官鬼';
-        else if (domainKey === 'study') yongQin = '父母';
         if (yongQin && liuQin[shiYao - 1] === yongQin) {
           specialty += '世爻临' + yongQin + '——此乃「用神持世」，你是此事的核心当事人，事体与自身紧密相连，掌控力最强。';
           if (dongYao.indexOf(shiYao) >= 0) {
@@ -3187,7 +3195,7 @@
           var subLabel = subtypeTexts[subK] || '';
           if (subLabel) specialty += '具体而言，汝问' + subLabel + '——';
         } else if (domainKey === 'love') {
-          var loveSub = DomainAnalysis ? DomainAnalysis.detectLoveSubtype(question) : '';
+          var loveSub = (DomainAnalysis && DomainAnalysis.detectLoveSubtype) ? DomainAnalysis.detectLoveSubtype(question) : '';
           if (loveSub === 'marriage') specialty += '此问涉及婚姻定议——';
           else if (loveSub === 'crush') specialty += '此问涉及暗恋或未确立关系——';
           else if (loveSub === 'breakup') specialty += '此问涉及分手后的走向——';
