@@ -36,7 +36,7 @@
   }
 
   function formatTime(ts) {
-    if (!ts) return '';
+    if (!ts) return '未知';
     var d = new Date(ts);
     var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
     return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes());
@@ -103,7 +103,7 @@
     html += '</div>';
 
     if (consultations.length === 0) {
-      html += '<div class="empty-state">还没有咨询记录<br><span style="font-size:0.8rem;color:var(--text3)">去占卜一次，记录会自动保存</span></div>';
+      html += '<div class="empty-state">还没有咨询记录<br><span style="font-size:0.8rem;color:#8a8576">去占卜一次，记录会自动保存</span></div>';
     } else {
       html += '<div class="consult-list">';
       consultations.forEach(function(c) {

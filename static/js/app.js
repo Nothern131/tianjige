@@ -337,6 +337,9 @@
     fengshui: function () {
       return renderFengshuiComponent();
     },
+    profile: function () {
+      return renderProfileComponent();
+    },
   };
 
   function navigateTo(page) {
