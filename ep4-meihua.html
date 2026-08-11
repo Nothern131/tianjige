@@ -815,6 +815,18 @@
     initMastersPanel();
 
     document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'start'});
+
+    // 自动保存咨询记录到用户档案
+    try {
+      if (typeof UserProfileAPI !== 'undefined') {
+        UserProfileAPI.addRecord({
+          type: 'meihua',
+          question: question || '',
+          score: result.sheng_ke && result.sheng_ke.等级 ? result.sheng_ke.等级 * 25 : 50,
+          result: { originalGua: result.original_gua && result.original_gua.name, changedGua: result.changed_gua && result.changed_gua.name, tiGua: result.ti_gua, yongGua: result.yong_gua }
+        });
+      }
+    } catch(e) {}
   });
 
   // ===== 水墨粒子动画 =====

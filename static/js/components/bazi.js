@@ -194,6 +194,21 @@ async function handleBaziSubmit(container, state) {
 
     // 渲染分析 Tab
     renderAnalysisTabs(container, result, state);
+
+    // 自动保存咨询记录到用户档案
+    try {
+      if (typeof UserProfileAPI !== 'undefined') {
+        UserProfileAPI.addRecord({
+          type: 'bazi',
+          question: '八字排盘',
+          score: 60,
+          result: {
+            pillars: result.pillars || {},
+            name: state.userInfo && state.userInfo.name ? state.userInfo.name : ''
+          }
+        });
+      }
+    } catch(e) {}
   } catch (error) {
     pillarsContent.innerHTML =
       '<div class="error-container">' +

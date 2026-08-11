@@ -3506,6 +3506,18 @@
 
         resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
         isCasting = false;
+
+        // 自动保存咨询记录到用户档案
+        try {
+          if (typeof UserProfileAPI !== 'undefined') {
+            UserProfileAPI.addRecord({
+              type: 'liuyao',
+              question: question || '',
+              score: liuyaoResult && liuyaoResult.analysis && liuyaoResult.analysis.overallLevel ? { '大吉':95,'大吉带凶':85,'吉':80,'平':60,'凶':40,'大凶':20 }[liuyaoResult.analysis.overallLevel] || 50 : 50,
+              result: { mainGua: liuyaoResult && liuyaoResult.mainGua && liuyaoResult.mainGua.name, verdict: liuyaoResult && liuyaoResult.analysis && liuyaoResult.analysis.verdict }
+            });
+          }
+        } catch(e) {}
       }
 
       // ===== 铜钱摇卦模式 =====
