@@ -327,4 +327,4 @@
     getTypeLabel: typeLabel
   };
 
-})();
+})(window);
