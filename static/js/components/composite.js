@@ -7,19 +7,33 @@ function renderCompositeComponent() {
     var container = document.createElement('div');
     container.className = 'fade-in';
 
-    var MASTER_OPTIONS = [
-      { id: 'guiguzi', name: '鬼谷子', emoji: '🧙' },
-      { id: 'shaoyong', name: '邵雍', emoji: '🌸' },
-      { id: 'zhugeliang', name: '诸葛亮', emoji: '🐉' },
-      { id: 'yuanli', name: '袁天罡', emoji: '⭐' },
-      { id: 'lichunfeng', name: '李淳风', emoji: '🌠' },
-      { id: 'xuzile', name: '徐子平', emoji: '📜' },
-      { id: 'liuzhitong', name: '刘伯温', emoji: '🔥' },
-      { id: 'renqiao', name: '任铁樵', emoji: '💧' },
-      { id: 'weixian', name: '韦千里', emoji: '🌿' },
-      { id: 'zhougong', name: '周公', emoji: '🌙' },
-      { id: 'zhangziye', name: '张子业', emoji: '🔮' },
-    ];
+    var MASTER_OPTIONS = [];
+    if (typeof MastersEngine !== 'undefined' && MastersEngine.MASTERS) {
+      var _seen = {};
+      var _masters = MastersEngine.MASTERS;
+      for (var _k in _masters) {
+        if (_masters.hasOwnProperty(_k) && !_seen[_k]) {
+          _seen[_k] = true;
+          var _m = _masters[_k];
+          MASTER_OPTIONS.push({ id: _m.id, name: _m.name, emoji: _m.avatar || '⭐', category: _m.category || '综合' });
+        }
+      }
+    }
+    if (MASTER_OPTIONS.length === 0) {
+      MASTER_OPTIONS = [
+        { id: 'guiguzi', name: '鬼谷子', emoji: '🧙', category: '六爻' },
+        { id: 'shaoyong', name: '邵雍', emoji: '🌸', category: '梅花' },
+        { id: 'zhugeliang', name: '诸葛亮', emoji: '🐉', category: '奇门' },
+        { id: 'yuanli', name: '袁天罡', emoji: '⭐', category: '八字' },
+        { id: 'lichunfeng', name: '李淳风', emoji: '🌠', category: '奇门' },
+        { id: 'xuzile', name: '徐子平', emoji: '📜', category: '八字' },
+        { id: 'liuzhitong', name: '刘伯温', emoji: '🔥', category: '八字' },
+        { id: 'renqiao', name: '任铁樵', emoji: '💧', category: '八字' },
+        { id: 'weixian', name: '韦千里', emoji: '🌿', category: '八字' },
+        { id: 'zhougong', name: '周公', emoji: '🌙', category: '解梦' },
+        { id: 'zhangziye', name: '张子业', emoji: '🔮', category: '六爻' },
+      ];
+    }
 
     var METHOD_CHECKS = [
       { id: 'bazi', name: '八字排盘', icon: '📅', checked: true },
@@ -29,6 +43,9 @@ function renderCompositeComponent() {
       { id: 'taiyi', name: '太乙神数', icon: '🌌', checked: false },
       { id: 'zhuge', name: '诸葛神数', icon: '📜', checked: false },
       { id: 'zhougong', name: '周公解梦', icon: '🌙', checked: false },
+      { id: 'daliuren', name: '大六壬', icon: '🌊', checked: false },
+      { id: 'ziwei', name: '紫微斗数', icon: '⭐', checked: false },
+      { id: 'fengshui', name: '风水格局', icon: '🏔️', checked: false },
     ];
 
     var methodHtml = '';

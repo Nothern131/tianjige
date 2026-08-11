@@ -251,3 +251,186 @@ function renderMasterResult(container, result, master, categoryColors) {
 
   container.innerHTML = html;
 }
+
+/**
+ * 渲染大师蒸馏独立页面（#/masters路由用）
+ * 展示所有大师，可选择分析
+ */
+function renderMastersComponent(userInfo) {
+  'use strict';
+  var el = document.createElement('div');
+  el.className = 'fade-in';
+
+  var mastersData = [];
+  if (typeof MastersEngine !== 'undefined' && MastersEngine.MASTERS) {
+    for (var k in MastersEngine.MASTERS) {
+      if (MastersEngine.MASTERS.hasOwnProperty(k)) {
+        mastersData.push(MastersEngine.MASTERS[k]);
+      }
+    }
+  }
+
+  var categories = {};
+  for (var i = 0; i < mastersData.length; i++) {
+    var c = mastersData[i].category || '综合';
+    if (!categories[c]) categories[c] = [];
+    categories[c].push(mastersData[i]);
+  }
+  var catKeys = Object.keys(categories).sort();
+
+  var html = '<div style="max-width:800px;margin:0 auto;padding:20px 0;">';
+
+  // Header
+  html += '<div class="section-header">';
+  html += '<h2 class="page-title">👨‍🏫 大师蒸馏</h2>';
+  html += '<p class="page-subtitle">融通诸派，群英论道，以古鉴今。</p>';
+  html += '</div>';
+
+  // Category filter
+  html += '<div class="tab-bar" id="master-cat-tabs" style="margin-bottom:20px;">';
+  html += '<button class="tab-btn active" data-cat="all">全部</button>';
+  for (var ci = 0; ci < catKeys.length; ci++) {
+    html += '<button class="tab-btn" data-cat="' + catKeys[ci] + '">' + catKeys[ci] + '</button>';
+  }
+  html += '</div>';
+
+  // Master cards grid
+  html += '<div class="glass-card" style="margin-bottom:20px;">';
+  html += '<div class="master-cat-grid" id="master-page-grid">';
+  for (var j = 0; j < mastersData.length; j++) {
+    var m = mastersData[j];
+    html += '<div class="master-card" data-master-id="' + m.id + '" data-cat="' + (m.category || '综合') + '">';
+    html += '<div class="master-avatar">' + (m.avatar || '⭐') + '</div>';
+    html += '<div class="master-name">' + m.name + '</div>';
+    html += '<div class="master-title">' + (m.title || '') + '</div>';
+    html += '<div class="master-era">' + (m.era || '') + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '</div>';
+
+  // Question + analyze
+  html += '<div class="glass-card" style="margin-bottom:20px;">';
+  html += '<h3 style="font-family:var(--font-serif);color:var(--gold);margin-bottom:12px;font-size:0.95rem;">📝 输入所问之事</h3>';
+  html += '<textarea id="master-question-input" class="question-input" rows="3" placeholder="请输入您想问的问题，例如：最近事业运势如何？" style="width:100%;resize:vertical;font-size:0.88rem;"></textarea>';
+  html += '<div id="master-selected-info" style="font-size:0.8rem;color:var(--text2);margin-top:8px;"></div>';
+  html += '<div style="text-align:center;margin-top:14px;">';
+  html += '<button class="btn-gold" id="master-page-analyze-btn" disabled>请先选择一位大师</button>';
+  html += '</div>';
+  html += '</div>';
+
+  // Result
+  html += '<div id="master-page-result-area" class="hidden">';
+  html += '<div class="glass-card" id="master-page-result-card"></div>';
+  html += '</div>';
+
+  html += '</div>';
+  el.innerHTML = html;
+
+  // Tab filtering
+  var tabs = el.querySelectorAll('#master-cat-tabs .tab-btn');
+  var grid = el.querySelector('#master-page-grid');
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var cat = tab.dataset.cat;
+      var cards = grid.querySelectorAll('.master-card');
+      cards.forEach(function(card) {
+        if (cat === 'all' || card.dataset.cat === cat) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+
+  // Master selection
+  var selectedMaster = null;
+  grid.addEventListener('click', function(e) {
+    var card = e.target.closest('.master-card');
+    if (!card) return;
+    var id = card.dataset.masterId;
+    selectedMaster = null;
+    for (var i = 0; i < mastersData.length; i++) {
+      if (mastersData[i].id === id) {
+        selectedMaster = mastersData[i];
+        break;
+      }
+    }
+    var allCards = grid.querySelectorAll('.master-card');
+    for (var c = 0; c < allCards.length; c++) {
+      allCards[c].classList.remove('selected');
+    }
+    card.classList.add('selected');
+    var info = el.querySelector('#master-selected-info');
+    if (info && selectedMaster) {
+      info.textContent = '已选择：' + selectedMaster.name + ' · ' + (selectedMaster.category || '综合') + ' · ' + (selectedMaster.era || '');
+    }
+    var btn = el.querySelector('#master-page-analyze-btn');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '请 ' + (selectedMaster ? selectedMaster.name : '') + ' 点评';
+    }
+  });
+
+  // Analyze button
+  var analyzeBtn = el.querySelector('#master-page-analyze-btn');
+  if (analyzeBtn) {
+    analyzeBtn.addEventListener('click', function() {
+      if (!selectedMaster) return;
+      var question = (el.querySelector('#master-question-input') || {}).value || '';
+      var resultArea = el.querySelector('#master-page-result-area');
+      var resultCard = el.querySelector('#master-page-result-card');
+      if (!resultArea || !resultCard) return;
+
+      resultArea.classList.remove('hidden');
+      resultCard.innerHTML = '<div class="spinner" style="margin:40px auto;"></div>';
+      analyzeBtn.disabled = true;
+      analyzeBtn.textContent = '分析中...';
+
+      setTimeout(function() {
+        try {
+          var analysis = generateMasterAnalysis(selectedMaster, question, userInfo || {});
+          renderMasterResult(resultCard, analysis, selectedMaster, {});
+        } catch(e) {
+          resultCard.innerHTML = '<div style="padding:20px;color:var(--red);text-align:center;">分析出错：' + (e.message || '未知错误') + '</div>';
+        }
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = '请 ' + selectedMaster.name + ' 点评';
+        resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 800);
+    });
+  }
+
+  return el;
+}
+
+/** 生成大师分析文本（独立页面用） */
+function generateMasterAnalysis(master, question, userInfo) {
+  var opening = '';
+  var overview = '';
+  var specialty = '';
+  var quote = '';
+  var closing = '';
+
+  var name = master.name || '';
+  var pronoun = master.pronouns || '吾';
+  var phrase = master.phrase || '';
+  var catColor = '#b89a5c';
+
+  opening = pronoun + '以' + (master.category || '') + '之术观之：' + (question ? '「' + question + '」' : '今日之事') + '，' + phrase + '。';
+
+  overview = '此' + (master.category || '术数') + '之术，' + name + '观之，当以' + (master.style ? master.style.split('，')[0] : '阴阳之理') + '为纲。';
+
+  specialty = '【推演】' + pronoun + '以' + (master.category || '') + '之法细推之：' + (question || '所问之事') + '，' + (master.era || '') + '之时，' + name + '观之，事有转机。宜守正待时，不可冒进。';
+
+  var quoteTpls = master.quoteTemplates || [];
+  quote = quoteTpls.length > 0 ? quoteTpls[0].replace(/\{[^}]+\}/g, '天理') : name + '尝曰："观天之道，执天之行，尽矣。"';
+
+  closing = pronoun + '断曰：' + (master.category || '') + '之术，贵在顺势。' + (question || '此事') + '，' + (master.era || '') + '之法，可察其机。善自为之。';
+
+  return { opening: opening, overview: overview, specialty: specialty, quote: quote, closing: closing };
+}
+
