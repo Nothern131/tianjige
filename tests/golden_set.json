@@ -1,0 +1,762 @@
+[
+  {
+    "id": "B001",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [1990, 5, 15, 10],
+    "expected": { "年柱": "庚午", "月柱": "辛巳", "日柱": "庚辰", "时柱": "辛巳", "日主": "庚", "日支": "辰", "日主五行": "金", "生肖": "午" },
+    "source": "公历1990年5月15日10时"
+  },
+  {
+    "id": "B002",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2000, 2, 3, 0],
+    "expected": { "年柱": "庚辰", "月柱": "己丑", "日柱": "辛卯", "时柱": "戊子", "日主": "辛", "日支": "卯", "日主五行": "金", "生肖": "辰" },
+    "source": "立春前边界测试"
+  },
+  {
+    "id": "B003",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2000, 2, 4, 0],
+    "expected": { "年柱": "庚辰", "月柱": "戊寅", "日柱": "壬辰", "时柱": "庚子", "日主": "壬", "日支": "辰", "日主五行": "水", "生肖": "辰" },
+    "source": "立春后边界测试"
+  },
+  {
+    "id": "B004",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [1900, 1, 1, 0],
+    "expected": { "年柱": "庚子", "月柱": "己丑", "日柱": "甲戌", "时柱": "甲子", "日主": "甲", "日支": "戌", "日主五行": "木", "生肖": "子" },
+    "source": "基准日期测试"
+  },
+  {
+    "id": "B005",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [1949, 10, 1, 12],
+    "expected": { "年柱": "己丑", "月柱": "甲戌", "日柱": "甲子", "时柱": "庚午", "日主": "甲", "日支": "子", "日主五行": "木", "生肖": "丑" },
+    "source": "建国日测试"
+  },
+  {
+    "id": "B006",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 2, 4, 0],
+    "expected": { "年柱": "甲辰", "月柱": "丙寅", "日柱": "戊戌", "时柱": "壬子", "日主": "戊", "日支": "戌", "日主五行": "土", "生肖": "辰" },
+    "source": "立春当天边界"
+  },
+  {
+    "id": "B007",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [1988, 6, 6, 0],
+    "expected": { "年柱": "戊辰", "月柱": "戊午", "日柱": "壬辰", "时柱": "庚子", "日主": "壬", "日支": "辰", "日主五行": "水", "生肖": "辰" },
+    "source": "端午节边界"
+  },
+  {
+    "id": "B008",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2025, 1, 29, 12],
+    "expected": { "年柱": "乙巳", "月柱": "己丑", "日柱": "戊戌", "时柱": "戊午", "日主": "戊", "日支": "戌", "日主五行": "土", "生肖": "巳" },
+    "source": "春节期间"
+  },
+  {
+    "id": "B009",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [1999, 12, 31, 23],
+    "expected": { "年柱": "己卯", "月柱": "丙子", "日柱": "丁巳", "时柱": "辛亥", "日主": "丁", "日支": "巳", "日主五行": "火", "生肖": "卯" },
+    "source": "年末边界"
+  },
+  {
+    "id": "B010",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2100, 3, 1, 0],
+    "expected": { "年柱": "庚申", "月柱": "己卯", "日柱": "壬寅", "时柱": "庚子", "日主": "壬", "日支": "寅", "日主五行": "水", "生肖": "申" },
+    "source": "非闰年2月测试"
+  },
+  {
+    "id": "B011",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2000, 2, 29, 12],
+    "expected": { "年柱": "庚辰", "月柱": "戊寅", "日柱": "丁巳", "时柱": "丙午", "日主": "丁", "日支": "巳", "日主五行": "火", "生肖": "辰" },
+    "source": "闰年2月29日"
+  },
+  {
+    "id": "B012",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [1800, 1, 1, 0],
+    "expected": { "年柱": "庚申", "月柱": "己丑", "日柱": "甲戌", "时柱": "甲子", "日主": "甲", "日支": "戌", "日主五行": "木", "生肖": "申" },
+    "source": "19世纪基准"
+  },
+  {
+    "id": "B013",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [1900, 3, 1, 0],
+    "expected": { "年柱": "庚子", "月柱": "己卯", "日柱": "癸酉", "时柱": "壬子", "日主": "癸", "日支": "酉", "日主五行": "水", "生肖": "子" },
+    "source": "3月边界"
+  },
+  {
+    "id": "B014",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 6, 10, 12],
+    "expected": { "年柱": "甲辰", "月柱": "庚午", "日柱": "乙巳", "时柱": "壬午", "日主": "乙", "日支": "巳", "日主五行": "木", "生肖": "辰" },
+    "source": "午月测试"
+  },
+  {
+    "id": "B015",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 12, 21, 0],
+    "expected": { "年柱": "甲辰", "月柱": "丙子", "日柱": "己未", "时柱": "甲子", "日主": "己", "日支": "未", "日主五行": "土", "生肖": "辰" },
+    "source": "冬至月测试"
+  },
+  {
+    "id": "B016",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 7, 15, 12],
+    "expected": { "年柱": "甲辰", "月柱": "辛未", "日柱": "庚辰", "时柱": "壬午", "日主": "庚", "日支": "辰", "日主五行": "金", "生肖": "辰" },
+    "source": "未月测试"
+  },
+  {
+    "id": "B017",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 9, 17, 12],
+    "expected": { "年柱": "甲辰", "月柱": "癸酉", "日柱": "甲申", "时柱": "庚午", "日主": "甲", "日支": "申", "日主五行": "木", "生肖": "辰" },
+    "source": "酉月测试"
+  },
+  {
+    "id": "B018",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 11, 22, 12],
+    "expected": { "年柱": "甲辰", "月柱": "乙亥", "日柱": "庚寅", "时柱": "壬午", "日主": "庚", "日支": "寅", "日主五行": "金", "生肖": "辰" },
+    "source": "亥月测试"
+  },
+  {
+    "id": "B019",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 8, 10, 0],
+    "expected": { "年柱": "甲辰", "月柱": "壬申", "日柱": "丙午", "时柱": "戊子", "日主": "丙", "日支": "午", "日主五行": "火", "生肖": "辰" },
+    "source": "申月测试"
+  },
+  {
+    "id": "B020",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 4, 4, 12],
+    "expected": { "年柱": "甲辰", "月柱": "戊辰", "日柱": "戊戌", "时柱": "戊午", "日主": "戊", "日支": "戌", "日主五行": "土", "生肖": "辰" },
+    "source": "清明月测试"
+  },
+  {
+    "id": "B021",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2026, 1, 1, 0],
+    "expected": { "年柱": "丙午", "月柱": "辛丑", "日柱": "乙亥", "时柱": "丙子", "日主": "乙", "日支": "亥", "日主五行": "木", "生肖": "午" },
+    "source": "2026年元旦"
+  },
+  {
+    "id": "B022",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2026, 8, 12, 12],
+    "expected": { "年柱": "丙午", "月柱": "丙申", "日柱": "戊午", "时柱": "戊午", "日主": "戊", "日支": "午", "日主五行": "土", "生肖": "午" },
+    "source": "今天的时间"
+  },
+  {
+    "id": "B023",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2025, 2, 4, 0],
+    "expected": { "年柱": "乙巳", "月柱": "戊寅", "日柱": "甲辰", "时柱": "甲子", "日主": "甲", "日支": "辰", "日主五行": "木", "生肖": "巳" },
+    "source": "立春换年柱"
+  },
+  {
+    "id": "B024",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 3, 5, 12],
+    "expected": { "年柱": "甲辰", "月柱": "丁卯", "日柱": "戊辰", "时柱": "戊午", "日主": "戊", "日支": "辰", "日主五行": "土", "生肖": "辰" },
+    "source": "惊蛰月"
+  },
+  {
+    "id": "B025",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 5, 5, 12],
+    "expected": { "年柱": "甲辰", "月柱": "己巳", "日柱": "己巳", "时柱": "庚午", "日主": "己", "日支": "巳", "日主五行": "土", "生肖": "辰" },
+    "source": "立夏月"
+  },
+  {
+    "id": "B026",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2026, 1, 12, 0],
+    "expected": { "年柱": "丙午", "月柱": "辛丑", "日柱": "丙戌", "时柱": "戊子", "日主": "丙", "日支": "戌", "日主五行": "火", "生肖": "午" },
+    "source": "小寒后测试"
+  },
+  {
+    "id": "B027",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2025, 12, 7, 12],
+    "expected": { "年柱": "乙巳", "月柱": "戊子", "日柱": "庚戌", "时柱": "壬午", "日主": "庚", "日支": "戌", "日主五行": "金", "生肖": "巳" },
+    "source": "冬至月测试"
+  },
+  {
+    "id": "B028",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2025, 6, 21, 12],
+    "expected": { "年柱": "乙巳", "月柱": "壬午", "日柱": "辛酉", "时柱": "甲午", "日主": "辛", "日支": "酉", "日主五行": "金", "生肖": "巳" },
+    "source": "夏至月测试"
+  },
+  {
+    "id": "B029",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [1995, 10, 1, 0],
+    "expected": { "年柱": "乙亥", "月柱": "丙戌", "日柱": "乙丑", "时柱": "丙子", "日主": "乙", "日支": "丑", "日主五行": "木", "生肖": "亥" },
+    "source": "95年国庆"
+  },
+  {
+    "id": "B030",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2024, 11, 11, 12],
+    "expected": { "年柱": "甲辰", "月柱": "乙亥", "日柱": "己卯", "时柱": "庚午", "日主": "己", "日支": "卯", "日主五行": "土", "生肖": "辰" },
+    "source": "双十一测试"
+  },
+  {
+    "id": "B031",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [1900, 2, 4, 0],
+    "expected": { "年柱": "庚子", "月柱": "戊寅", "日柱": "戊申", "时柱": "壬子", "日主": "戊", "日支": "申", "日主五行": "土", "生肖": "子" },
+    "source": "1900年立春"
+  },
+  {
+    "id": "B032",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2026, 2, 4, 0],
+    "expected": { "年柱": "丙午", "月柱": "庚寅", "日柱": "己酉", "时柱": "甲子", "日主": "己", "日支": "酉", "日主五行": "土", "生肖": "午" },
+    "source": "2026年立春"
+  },
+  {
+    "id": "B033",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2026, 8, 11, 23],
+    "expected": { "年柱": "丙午", "月柱": "丙申", "日柱": "丁巳", "时柱": "辛亥", "日主": "丁", "日支": "巳", "日主五行": "火", "生肖": "午" },
+    "source": "昨天23时测试"
+  },
+  {
+    "id": "B034",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2025, 1, 29, 0],
+    "expected": { "年柱": "乙巳", "月柱": "己丑", "日柱": "戊戌", "时柱": "壬子", "日主": "戊", "日支": "戌", "日主五行": "土", "生肖": "巳" },
+    "source": "除夕测试"
+  },
+  {
+    "id": "B035",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2025, 1, 30, 12],
+    "expected": { "年柱": "乙巳", "月柱": "己丑", "日柱": "己亥", "时柱": "庚午", "日主": "己", "日支": "亥", "日主五行": "土", "生肖": "巳" },
+    "source": "春节测试"
+  },
+  {
+    "id": "B036",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2025, 2, 4, 0],
+    "expected": { "年柱": "乙巳", "月柱": "戊寅", "日柱": "甲辰", "时柱": "甲子", "日主": "甲", "日支": "辰", "日主五行": "木", "生肖": "巳" },
+    "source": "立春换年柱"
+  },
+  {
+    "id": "B037",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2026, 7, 15, 12],
+    "expected": { "年柱": "丙午", "月柱": "乙未", "日柱": "庚寅", "时柱": "壬午", "日主": "庚", "日支": "寅", "日主五行": "金", "生肖": "午" },
+    "source": "未月测试"
+  },
+  {
+    "id": "B038",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2026, 1, 12, 23],
+    "expected": { "年柱": "丙午", "月柱": "辛丑", "日柱": "丙戌", "时柱": "己亥", "日主": "丙", "日支": "戌", "日主五行": "火", "生肖": "午" },
+    "source": "23时亥时边界"
+  },
+  {
+    "id": "B039",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2026, 1, 13, 0],
+    "expected": { "年柱": "丙午", "月柱": "辛丑", "日柱": "丁亥", "时柱": "庚子", "日主": "丁", "日支": "亥", "日主五行": "火", "生肖": "午" },
+    "source": "0时子时边界"
+  },
+  {
+    "id": "B040",
+    "engine": "bazi",
+    "method": "paipan",
+    "input": [2026, 1, 13, 23],
+    "expected": { "年柱": "丙午", "月柱": "辛丑", "日柱": "丁亥", "时柱": "辛亥", "日主": "丁", "日支": "亥", "日主五行": "火", "生肖": "午" },
+    "source": "23时亥时=子时"
+  },
+  {
+    "id": "L001",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "地天泰" },
+    "source": "乾上坤下=泰卦"
+  },
+  {
+    "id": "L002",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }]],
+    "expected": { "gua_name": "天地否" },
+    "source": "坤上乾下=否卦"
+  },
+  {
+    "id": "L003",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "水火既济" },
+    "source": "坎下离上=既济卦"
+  },
+  {
+    "id": "L004",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }]],
+    "expected": { "gua_name": "火水未济" },
+    "source": "离下坎上=未济卦"
+  },
+  {
+    "id": "L005",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "坤为地" },
+    "source": "六爻皆阴"
+  },
+  {
+    "id": "L006",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }]],
+    "expected": { "gua_name": "乾为天" },
+    "source": "六爻皆阳"
+  },
+  {
+    "id": "L007",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": true }, { "type": "yang", "changing": false }, { "type": "yin", "changing": true }, { "type": "yang", "changing": false }, { "type": "yin", "changing": true }, { "type": "yang", "changing": false }]],
+    "expected": { "gua_name": "火水未济" },
+    "source": "有动爻的未济卦"
+  },
+  {
+    "id": "L008",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "地山谦" },
+    "source": "坤上艮下=谦卦"
+  },
+  {
+    "id": "L009",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "地山谦" },
+    "source": "坤上艮下=谦卦确认"
+  },
+  {
+    "id": "L010",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "坤为地" },
+    "source": "全阴六爻=坤卦"
+  },
+  {
+    "id": "L011",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "地雷复" },
+    "source": "坤上震下=复卦"
+  },
+  {
+    "id": "L012",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "坤为地" },
+    "source": "全阴六爻=坤卦确认"
+  },
+  {
+    "id": "L013",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }, { "type": "yang", "changing": false }]],
+    "expected": { "gua_name": "乾为天" },
+    "source": "全阳六爻=乾卦确认"
+  },
+  {
+    "id": "L014",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }]],
+    "expected": { "gua_name": "山地剥" },
+    "source": "艮上坤下=剥卦"
+  },
+  {
+    "id": "L015",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "坤为地" },
+    "source": "全阴测试重复验证"
+  },
+  {
+    "id": "L016",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "坤为地" },
+    "source": "全阴六爻=坤卦确认"
+  },
+  {
+    "id": "L017",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "水火既济" },
+    "source": "阴阳交替=既济卦确认"
+  },
+  {
+    "id": "L018",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }]],
+    "expected": { "gua_name": "火水未济" },
+    "source": "阴阳交替反向=未济卦确认"
+  },
+  {
+    "id": "L019",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yang", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }]],
+    "expected": { "gua_name": "地雷复" },
+    "source": "坤上震下=复卦"
+  },
+  {
+    "id": "L020",
+    "engine": "liuyao",
+    "method": "divine",
+    "input": [[{ "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yin", "changing": false }, { "type": "yang", "changing": false }]],
+    "expected": { "gua_name": "山地剥" },
+    "source": "上六爻=剥卦确认"
+  },
+  {
+    "id": "M001",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 3, "lower": 1, "moving": 2 }],
+    "expected": { "gua_name": "火天大有" },
+    "source": "上3下1=大有卦"
+  },
+  {
+    "id": "M002",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 1, "lower": 3, "moving": 3 }],
+    "expected": { "gua_name": "天火同人" },
+    "source": "上1下3=同人卦"
+  },
+  {
+    "id": "M003",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 8, "lower": 8, "moving": 1 }],
+    "expected": { "gua_name": "坤为地" },
+    "source": "纯坤卦"
+  },
+  {
+    "id": "M004",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 1, "lower": 1, "moving": 4 }],
+    "expected": { "gua_name": "乾为天" },
+    "source": "纯乾卦"
+  },
+  {
+    "id": "M005",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 6, "lower": 6, "moving": 3 }],
+    "expected": { "gua_name": "坎为水" },
+    "source": "纯坎卦"
+  },
+  {
+    "id": "M006",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 4, "lower": 4, "moving": 5 }],
+    "expected": { "gua_name": "震为雷" },
+    "source": "纯震卦"
+  },
+  {
+    "id": "M007",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 2, "lower": 2, "moving": 6 }],
+    "expected": { "gua_name": "兑为泽" },
+    "source": "纯兑卦"
+  },
+  {
+    "id": "M008",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 7, "lower": 7, "moving": 2 }],
+    "expected": { "gua_name": "艮为山" },
+    "source": "纯艮卦"
+  },
+  {
+    "id": "M009",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 3, "lower": 5, "moving": 1 }],
+    "expected": { "gua_name": "火风鼎" },
+    "source": "上3下5=鼎卦"
+  },
+  {
+    "id": "M010",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 5, "lower": 3, "moving": 4 }],
+    "expected": { "gua_name": "风火家人" },
+    "source": "上5下3=家人卦"
+  },
+  {
+    "id": "M011",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 4, "lower": 6, "moving": 2 }],
+    "expected": { "gua_name": "雷水解" },
+    "source": "上4下6=解卦"
+  },
+  {
+    "id": "M012",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 2, "lower": 4, "moving": 3 }],
+    "expected": { "gua_name": "泽雷随" },
+    "source": "上2下4=随卦"
+  },
+  {
+    "id": "M013",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 6, "lower": 1, "moving": 1 }],
+    "expected": { "gua_name": "水天需" },
+    "source": "上6下1=需卦"
+  },
+  {
+    "id": "M014",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 1, "lower": 6, "moving": 6 }],
+    "expected": { "gua_name": "天水讼" },
+    "source": "上1下6=讼卦"
+  },
+  {
+    "id": "M015",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 3, "lower": 6, "moving": 4 }],
+    "expected": { "gua_name": "火水未济" },
+    "source": "上3下6=未济卦"
+  },
+  {
+    "id": "M016",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 6, "lower": 3, "moving": 5 }],
+    "expected": { "gua_name": "水火既济" },
+    "source": "上6下3=既济卦"
+  },
+  {
+    "id": "M017",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 7, "lower": 1, "moving": 2 }],
+    "expected": { "gua_name": "山天大畜" },
+    "source": "上7下1=大畜卦"
+  },
+  {
+    "id": "M018",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 1, "lower": 7, "moving": 3 }],
+    "expected": { "gua_name": "天山遁" },
+    "source": "上1下7=遁卦"
+  },
+  {
+    "id": "M019",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 2, "lower": 7, "moving": 1 }],
+    "expected": { "gua_name": "泽山咸" },
+    "source": "上2下7=咸卦"
+  },
+  {
+    "id": "M020",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 7, "lower": 2, "moving": 6 }],
+    "expected": { "gua_name": "山泽损" },
+    "source": "上7下2=损卦"
+  },
+  {
+    "id": "M021",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 4, "lower": 6, "moving": 2 }],
+    "expected": { "gua_name": "雷水解" },
+    "source": "上4下6=解卦确认"
+  },
+  {
+    "id": "M022",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 6, "lower": 4, "moving": 5 }],
+    "expected": { "gua_name": "水雷屯" },
+    "source": "上6下4=屯卦"
+  },
+  {
+    "id": "M023",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 5, "lower": 2, "moving": 1 }],
+    "expected": { "gua_name": "风泽中孚" },
+    "source": "上5下2=中孚卦"
+  },
+  {
+    "id": "M024",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 2, "lower": 5, "moving": 3 }],
+    "expected": { "gua_name": "泽风大过" },
+    "source": "上2下5=大过卦"
+  },
+  {
+    "id": "M025",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 1, "lower": 2, "moving": 6 }],
+    "expected": { "gua_name": "天泽履" },
+    "source": "上1下2=履卦"
+  },
+  {
+    "id": "M026",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 2, "lower": 1, "moving": 4 }],
+    "expected": { "gua_name": "泽天夬" },
+    "source": "上2下1=夬卦"
+  },
+  {
+    "id": "M027",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 3, "lower": 2, "moving": 1 }],
+    "expected": { "gua_name": "火泽睽" },
+    "source": "上3下2=睽卦"
+  },
+  {
+    "id": "M028",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 2, "lower": 3, "moving": 5 }],
+    "expected": { "gua_name": "泽火革" },
+    "source": "上2下3=革卦"
+  },
+  {
+    "id": "M029",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 7, "lower": 5, "moving": 3 }],
+    "expected": { "gua_name": "山风蛊" },
+    "source": "上7下5=蛊卦"
+  },
+  {
+    "id": "M030",
+    "engine": "meihua",
+    "method": "divine",
+    "input": [{ "method": "number", "upper": 5, "lower": 7, "moving": 2 }],
+    "expected": { "gua_name": "风山渐" },
+    "source": "上5下7=渐卦"
+  },
+  {
+    "id": "C001",
+    "engine": "constants",
+    "method": "validate",
+    "input": [],
+    "expected": { "gan_count": 10, "zhi_count": 12, "jiazi_count": 60 },
+    "source": "常量模块完整性"
+  },
+  {
+    "id": "C002",
+    "engine": "constants",
+    "method": "validate_gan_zhi",
+    "input": [],
+    "expected": { "gan0": "甲", "gan9": "癸", "zhi0": "子", "zhi11": "亥" },
+    "source": "干支序数验证"
+  },
+  {
+    "id": "C003",
+    "engine": "constants",
+    "method": "validate_bagua",
+    "input": [],
+    "expected": { "bagua_count": 8 },
+    "source": "八卦完整性"
+  },
+  {
+    "id": "E001",
+    "engine": "engine-registry",
+    "method": "validate",
+    "input": [],
+    "expected": { "engine_count": 10 },
+    "source": "引擎注册完整性"
+  },
+  {
+    "id": "E002",
+    "engine": "engine-registry",
+    "method": "check_keys",
+    "input": [],
+    "expected": { "has_bazi": true, "has_liuyao": true, "has_meihua": true, "has_qimen": true, "has_taiyi": true, "has_zhuge": true, "has_zhougong": true, "has_daliuren": true, "has_ziwei": true, "has_fengshui": true },
+    "source": "引擎key完整性"
+  }
+]

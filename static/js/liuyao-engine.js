@@ -1120,12 +1120,22 @@
   };
 
   /**
-   * 计算日干支（公历转干支，以2000-01-01甲子日为基准）
+   * 计算日干支（公历转干支，以1900-01-01甲戌日为基准，与八字引擎一致）
    */
   function _getRiGanZhi(date) {
-    var base = new Date(2000, 0, 1); // 2000-01-01 甲子日（index 0）
-    var diff = Math.floor((date.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
-    var idx = ((diff % 60) + 60) % 60;
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var baseYear = 1900, baseIdx = JIAZI_INDEX['甲戌'];
+    var days = 0;
+    for (var y = baseYear; y < year; y++) {
+      days += (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 366 : 365;
+    }
+    var monthDays = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) monthDays[2] = 29;
+    for (var m = 1; m < month; m++) days += monthDays[m];
+    days += day - 1;
+    var idx = ((baseIdx + days) % 60 + 60) % 60;
     return { gan: GAN[idx % 10], zhi: ZHI[idx % 12] };
   }
 
