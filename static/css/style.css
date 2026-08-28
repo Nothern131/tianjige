@@ -340,6 +340,23 @@ textarea {
   line-height: 2;
   letter-spacing: 0.1em;
 }
+.ep-series-link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.ep-series-link a {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  padding: 2px 0;
+  transition: color 0.25s;
+}
+.ep-series-link a:hover {
+  color: var(--gold);
+}
 
 /* === Main Content === */
 #main-content {
@@ -3023,46 +3040,145 @@ textarea {
 .sidebar-overlay {
   display: none;
 }
+/* 侧边栏内关闭按钮 */
+.sidebar-close-btn {
+  display: none;
+}
+
+/* 滚动锁定 */
+body.sidebar-locked {
+  overflow: hidden;
+}
 
 @media (max-width: 768px) {
   :root {
     --sidebar-width: 0;
   }
+
+  /* === 汉堡按钮 — 三线icon === */
   .mobile-menu-btn {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     position: fixed;
     top: 14px;
     left: 14px;
     z-index: 200;
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     background: var(--bg-card);
     backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-gold);
     border-radius: var(--radius-sm);
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    color: var(--gold);
+    cursor: pointer;
+    padding: 0;
+    transition:
+      background 0.3s var(--ease-out-expo),
+      border-color 0.3s var(--ease-out-expo),
+      box-shadow 0.3s var(--ease-out-expo);
   }
+  .mobile-menu-btn:hover {
+    border-color: var(--border-gold-light);
+    box-shadow: 0 0 12px var(--gold-glow);
+  }
+  .hamburger-bar {
+    display: block;
+    width: 18px;
+    height: 1.5px;
+    background: var(--gold);
+    border-radius: 1px;
+    transition: all 0.3s var(--ease-out-expo);
+    transform-origin: center;
+  }
+  /* 汉堡 → X 动效 */
+  .mobile-menu-btn.open .hamburger-bar:nth-child(1) {
+    transform: translateY(6.5px) rotate(45deg);
+  }
+  .mobile-menu-btn.open .hamburger-bar:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  .mobile-menu-btn.open .hamburger-bar:nth-child(3) {
+    transform: translateY(-6.5px) rotate(-45deg);
+  }
+
+  /* === 侧边栏抽屉 === */
   #sidebar {
     transform: translateX(-100%);
+    box-shadow: none;
+    transition:
+      transform 0.35s var(--ease-out-expo),
+      box-shadow 0.35s var(--ease-out-expo);
   }
   #sidebar.mobile-open {
     transform: translateX(0);
     width: 270px;
     min-width: 270px;
+    box-shadow:
+      8px 0 40px rgba(0, 0, 0, 0.5),
+      0 0 60px rgba(184, 154, 92, 0.06);
   }
+
+  /* 侧边栏内关闭按钮 */
+  .sidebar-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    background: rgba(184, 154, 92, 0.06);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.25s var(--ease-out-expo);
+  }
+  .sidebar-close-btn:hover {
+    background: rgba(184, 154, 92, 0.14);
+    border-color: var(--border-gold);
+  }
+  .sidebar-close-btn span {
+    display: block;
+    position: absolute;
+    width: 16px;
+    height: 1.5px;
+    background: var(--gold);
+    border-radius: 1px;
+    transition: transform 0.25s var(--ease-out-expo);
+  }
+  .sidebar-close-btn span:nth-child(1) {
+    transform: rotate(45deg);
+  }
+  .sidebar-close-btn span:nth-child(2) {
+    transform: rotate(-45deg);
+  }
+  .sidebar-close-btn:hover span {
+    background: var(--gold-light);
+  }
+
+  /* === 遮罩层 === */
   .sidebar-overlay {
-    display: none;
+    display: block;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.55);
     z-index: 99;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s var(--ease-out-expo);
   }
   .sidebar-overlay.active {
-    display: block;
+    opacity: 1;
+    pointer-events: auto;
   }
+
   #main-content {
     margin-left: 0;
     align-items: flex-start;

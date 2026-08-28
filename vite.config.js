@@ -15,6 +15,7 @@ export default defineConfig({
         'ep2-bazi': 'ep2-bazi.html',
         'ep3-liuyao': 'ep3-liuyao.html',
         'ep4-meihua': 'ep4-meihua.html',
+        'ep5-qimen': 'ep5-qimen.html',
         architecture: 'architecture.html',
       },
     },

@@ -27,6 +27,9 @@
 
     <!-- 侧边栏 -->
     <aside id="sidebar">
+      <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="关闭菜单">
+        <span></span><span></span>
+      </button>
       <div class="sidebar-header">
         <div class="logo">
           <span class="logo-icon">☯</span>
@@ -54,12 +57,23 @@
       </nav>
 
       <div class="sidebar-footer">
+        <div class="ep-series-link">
+          <a href="ep1-fengshui.html" target="_blank" rel="noopener">EP1 风水</a>
+          <a href="ep2-bazi.html" target="_blank" rel="noopener">EP2 八字</a>
+          <a href="ep3-liuyao.html" target="_blank" rel="noopener">EP3 六爻</a>
+          <a href="ep4-meihua.html" target="_blank" rel="noopener">EP4 梅花</a>
+          <a href="ep5-qimen.html" target="_blank" rel="noopener">EP5 奇门</a>
+        </div>
         <p class="footer-text">天机不可尽泄<br />留三分与造化</p>
       </div>
     </aside>
 
     <!-- 移动端 -->
-    <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="打开菜单">
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+    </button>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
     <!-- 主内容区 -->
