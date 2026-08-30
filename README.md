@@ -1,60 +1,115 @@
 # 天机阁 · 传统知识推理系统
 
 > **定位**：多领域传统知识计算引擎 + 结构化规则推理 + 34位大师风格分析
-> **版本**：2.0.0（工程化升级中）
-> **核心技术**：Python / 纯代码计算 / 零外部API依赖
+> **版本**：2.1.0（纯前端架构）
+> **核心技术**：Vanilla JS / Vite / 零依赖 / 零API
 
 ---
 
 ## 项目定位
 
-天机阁是一个**工程级领域知识推理系统**，将中国传统术数（八字命理、紫微斗数、奇门遁甲、六爻纳甲、梅花易数、太乙神数等）的复杂排盘算法封装为自动化计算引擎，并提供：
+天机阁是一个**纯前端传统知识推理系统**，将中国传统术数（八字命理、紫微斗数、奇门遁甲、六爻纳甲、梅花易数、太乙神数等）的复杂排盘算法封装为自动化计算引擎，所有计算在浏览器本地完成，零外部API依赖。
 
-- **多体系排盘**：10种术数引擎，所有算法本地运行，零API调用
+- **多体系排盘**：10种术数引擎，所有算法本地运行
 - **规则推理**：基于天干地支、五行生克、神煞格局的结构化规则系统
-- **多术合参**：跨体系加权融合分析，处理多来源结果的冲突与综合
-- **大师风格**：34位古今大师的断命风格模拟，策略驱动的个性化分析
-- **可解释推理**：每次分析输出完整推理链（输入→计算→规则→知识→解释）
+- **多术合参**：跨体系加权融合分析
+- **大师风格**：34位古今大师的断命风格模拟
+- **黄金测试集**：95组标准用例，100%通过率
 
 ---
 
 ## 系统架构
 
 ```
-用户界面 (HTML5/JS)
+浏览器 (HTML5/CSS3/ES6+)
     │
     ▼
-接入层 (FastAPI / 薄路由)
+引擎层 (Engines)
+    ├── 八字引擎 (bazi-engine.js)     — 四柱排盘、十神、格局、旺衰
+    ├── 六爻引擎 (liuyao-engine.js)   — 铜钱起卦、纳甲装卦、六亲六兽
+    ├── 梅花引擎 (meihua-engine.js)   — 三数起卦、互卦变卦、体用生克
+    ├── 奇门引擎 (qimen-engine.js)    — 地盘天盘人盘神盘、八门九星
+    ├── 太乙引擎 (taiyi-engine.js)    — 太乙积年、十六神
+    ├── 诸葛引擎 (zhuge-engine.js)    — 384签计算、签文解读
+    ├── 周公引擎 (zhougong-engine.js) — 梦境关键词匹配
+    ├── 大六壬引擎 (daliuren-engine.js) — 天地盘、四课三传
+    ├── 紫微引擎 (ziwei-engine.js)    — 命宫安立、十二宫、十四主星
+    └── 风水引擎 (fengshui-engine.js) — 玄空飞星、九宫分析
     │
     ▼
-推理管道 (Reasoning Pipeline)
-    │
-    ├── 引擎层 (Engines) ──────── 八字/紫微/奇门/六爻/梅花/太乙/诸葛/解梦/六壬/风水
-    ├── 规则引擎 (Rules) ──────── 可配置规则、条件匹配、优先级排序
-    ├── 知识库 (Knowledge) ────── 古籍知识、概念定义、规则出处
-    ├── 合参层 (Fusion) ──────── 评分归一化、加权融合、冲突解决
-    ├── 大师层 (Masters) ──────── 34位大师分析策略、人设语言风格
-    └── 语言层 (Language) ─────── 五段式文本生成、模板引擎
+引擎注册中心 (engine-registry.js)
+    │   统一管理所有引擎的注册、参数构建、调度执行
+    ▼
+常量库 (constants.js)
+    │   天干地支、五行生克、纳音、八卦等基础数据
+    ▼
+合参引擎 (composite-engine.js)
+    │   多引擎结果加权融合、冲突解决
+    ▼
+界面层 (components/*.js)
+    │   各术数对应的前端交互组件
 ```
 
 ### 目录结构
 
 ```
 天机阁/
-├── core/             # 基础框架：常量、日历、引擎接口、数据模型
-├── engines/          # 计算引擎：10种术数体系（各含 paipan/analysis/explain）
-├── knowledge/        # 知识库：古籍结构化数据、规则库、大师资料
-├── rules/            # 规则引擎：可配置规则加载、条件匹配、优先级
-├── reasoning/        # 推理层：管道编排、推理链追踪
-├── fusion/           # 合参层：多术数结果融合、冲突解决
-├── masters/          # 大师层：34位大师策略配置、注册中心
-├── language/         # 语言层：五段式生成、模板引擎
-├── api/              # API层：v1路由、依赖注入
-├── database/         # 数据层：SQLite、分析历史
-├── tests/            # 测试：pytest 单元/集成/考试
-├── static/           # 前端：HTML/CSS/JS
-├── docs/             # 文档：架构设计、迁移方案、API文档
-└── scripts/          # 脚本：数据库初始化、知识导入
+├── index.html              # 主页入口
+├── package.json            # 依赖与脚本
+├── vite.config.js          # Vite 构建配置
+├── .eslintrc.cjs           # ESLint 配置
+├── .prettierrc             # Prettier 配置
+├── .github/workflows/      # GitHub Actions 部署
+│   └── deploy.yml
+├── static/
+│   ├── css/
+│   │   └── style.css       # 全局样式
+│   └── js/
+│       ├── constants.js    # 常量库（天干地支五行等）
+│       ├── logger.js       # 日志工具
+│       ├── engine-registry.js  # 引擎注册中心
+│       ├── composite-engine.js   # 多引擎合参
+│       ├── duality-analyzer.js   # 阴阳二气分析
+│       ├── bazi-engine.js    # 八字引擎
+│       ├── liuyao-engine.js  # 六爻引擎
+│       ├── meihua-engine.js  # 梅花易数引擎
+│       ├── qimen-engine.js   # 奇门遁甲引擎
+│       ├── taiyi-engine.js   # 太乙神数引擎
+│       ├── zhuge-engine.js   # 诸葛神数引擎
+│       ├── zhougong-engine.js # 周公解梦引擎
+│       ├── daliuren-engine.js # 大六壬引擎
+│       ├── ziwei-engine.js   # 紫微斗数引擎
+│       ├── fengshui-engine.js # 风水引擎
+│       ├── masters-engine.js # 34位大师引擎
+│       ├── user-profile.js   # 用户命簿
+│       └── components/       # 前端交互组件
+│           ├── bazi.js
+│           ├── liuyao.js
+│           ├── meihua.js
+│           ├── qimen.js
+│           ├── ziwei.js
+│           ├── taiyi.js
+│           ├── zhuge.js
+│           ├── zhougong.js
+│           ├── daliuren.js
+│           ├── fengshui.js
+│           ├── composite.js
+│           ├── masters.js
+│           └── profile.js
+├── tests/
+│   ├── golden_set.json     # 95组黄金测试用例
+│   ├── test_runner.js      # 测试运行器（Node.js + Browser）
+│   ├── run_tests.js        # Node.js 入口
+│   ├── test_browser.js     # Browser 入口
+│   ├── index.html          # Web 测试面板
+│   └── gen_expected.js     # 预期输出生成器
+├── docs/                   # 项目文档
+│   ├── 天机阁工程化架构设计.md
+│   ├── 纯前端工程化改造.md
+│   └── 项目技术总结文档_v1.0.md
+└── kb/                     # 知识库
+    ├── 项目总览.md
+    └── 各引擎文档/
 ```
 
 ---
@@ -63,47 +118,17 @@
 
 | 技术 | 用途 |
 |------|------|
-| Python 3.11+ | 后端语言 |
-| FastAPI | Web框架 |
-| Pydantic | 数据校验 |
-| lunar-python | 农历计算（可选依赖） |
-| YAML/JSON | 规则配置、知识存储 |
-| SQLite | 数据持久化（可选） |
-| pytest | 测试框架 |
-| Docker | 容器化部署 |
-
-### 引擎接口标准
-
-所有计算引擎实现统一的三阶段接口：
-
-```python
-class BaseEngine(ABC):
-    def calculate(input) -> Dict  # 纯算法计算
-    def analyze(input, calc) -> Dict  # 规则匹配与分析
-    def explain(input, calc, analysis) -> str  # 自然语言解释
-    def run(input) -> EngineOutput  # 完整管道（含推理链）
-```
-
-### 引擎覆盖
-
-| 引擎 | 类别 | 核心能力 | 状态 |
-|------|------|----------|------|
-| 八字 | 命盘类 | 四柱排盘、十神、格局、旺衰、用神、大运 | ✅ |
-| 紫微斗数 | 命盘类 | 命宫安立、十二宫、十四主星、四化飞星 | ✅ |
-| 奇门遁甲 | 时空类 | 地盘天盘人盘神盘、八门九星八神 | ✅ |
-| 六爻纳甲 | 即时类 | 铜钱起卦、纳甲装卦、六亲六兽、世应 | ✅ |
-| 梅花易数 | 即时类 | 三数起卦、互卦变卦、体用生克 | ✅ |
-| 太乙神数 | 时空类 | 太乙积年、十六神、五福三基 | ✅ |
-| 诸葛神数 | 即时类 | 384签计算、签文解读 | ✅ |
-| 周公解梦 | 文本类 | 梦境关键词匹配 | ✅ |
-| 大六壬 | 时空类 | 天地盘、四课三传 | ✅ |
-| 风水格局 | 空间类 | 玄空飞星、九宫分析 | ✅ |
+| Vanilla JS (ES6+) | 所有引擎与组件实现 |
+| Vite 5.x | 构建工具与开发服务器 |
+| CSS3 | 响应式布局、动画、玻璃拟态 |
+| Node.js 20+ | 测试运行、本地开发 |
+| GitHub Pages | 静态部署 |
 
 ---
 
 ## 启动方式
 
-### 本地开发（纯前端，需 Node.js 20+）
+### 本地开发（需 Node.js 20+）
 
 ```bash
 npm install
@@ -119,73 +144,70 @@ npm run lint      # ESLint 检查
 npm run format    # Prettier 格式化
 ```
 
+### 测试
+
+```bash
+npm test          # 运行黄金测试集（95组用例）
+```
+
+测试覆盖所有10个引擎：
+- **八字** 40组（含节气边界、早晚子时）
+- **六爻** 20组（铜钱法起卦）
+- **梅花** 30组（数字法起卦）
+- **常量** 3组（天干地支、八卦完整性）
+- **引擎注册** 2组（引擎可用性）
+
 ### 一键部署
 
 直接推送到 `master` 分支，GitHub Actions 会自动构建并部署到 gh-pages。
 
 ---
 
-## 引擎架构
+## 10大计算引擎
 
-### 计算管道
-
-每个引擎执行三阶段管道，所有计算本地完成，零外部依赖：
-
-```
-输入(Input) → calculate() → analyze() → explain() → 输出(Output)
-                  │              │            │
-                  ▼              ▼            ▼
-              排盘计算       规则匹配      文本生成
-             纯算法实现     条件+权重    五段式结构
-                  │              │            │
-                  └──────────────┴────────────┘
-                                 │
-                                 ▼
-                          推理链 (ReasoningChain)
-                     记录每一步的输入/规则/知识/解释
-```
-
-### 10大计算引擎
-
-| 引擎 | 类别 | 核心算法 | 代码位置 |
+| 引擎 | 类别 | 核心算法 | 入口方法 |
 |------|------|----------|----------|
-| 八字 | 命盘 | 四柱排盘、十神、格局、旺衰、用神、大运 | `core/bazi.py` |
-| 紫微斗数 | 命盘 | 命宫安立、十二宫、十四主星、四化飞星 | `core/ziwei.py` |
-| 奇门遁甲 | 时空 | 地盘天盘人盘神盘、八门九星八神 | `core/qimen.py` |
-| 六爻纳甲 | 即时 | 铜钱起卦、纳甲装卦、六亲六兽、世应 | `core/liuyao.py` |
-| 梅花易数 | 即时 | 三数起卦、互卦变卦、体用生克 | `core/meihua.py` |
-| 太乙神数 | 时空 | 太乙积年、十六神、五福三基 | `core/taiyi.py` |
-| 诸葛神数 | 即时 | 384签计算、签文解读 | `static/js/` |
-| 周公解梦 | 文本 | 梦境关键词匹配 | `static/js/` |
-| 大六壬 | 时空 | 天地盘、四课三传 | `static/js/` |
-| 风水格局 | 空间 | 玄空飞星、九宫分析 | `static/js/` |
+| 八字 | 命盘 | 四柱排盘、十神、格局、旺衰、用神、大运 | `BaziEngine.paipan(year, month, day, hour)` |
+| 紫微斗数 | 命盘 | 命宫安立、十二宫、十四主星、四化飞星 | `ZiweiEngine.paipan(...)` |
+| 奇门遁甲 | 时空 | 地盘天盘人盘神盘、八门九星八神 | `QimenEngine.paipan(...)` |
+| 六爻纳甲 | 即时 | 铜钱起卦、纳甲装卦、六亲六兽、世应 | `LiuyaoEngine.divine(yaoArray)` |
+| 梅花易数 | 即时 | 三数起卦、互卦变卦、体用生克 | `MeihuaEngine.divine(params)` |
+| 太乙神数 | 时空 | 太乙积年、十六神、五福三基 | `TaiyiEngine.paipan(...)` |
+| 诸葛神数 | 即时 | 384签计算、签文解读 | `ZhugeEngine.divine(...)` |
+| 周公解梦 | 文本 | 梦境关键词匹配 | `ZhougongEngine.interpret(text)` |
+| 大六壬 | 时空 | 天地盘、四课三传 | `DaLiuRenEngine.paipan(...)` |
+| 风水格局 | 空间 | 玄空飞星、九宫分析 | `FengShuiEngine.analyze(...)` |
 
-### 规则系统
+---
 
-规则以 YAML 配置文件定义，由规则引擎加载、匹配、排序：
+## 常量库 (constants.js)
 
-```yaml
-# rules/configs/bazi_geju.yaml
-version: "1.0"
-engine: bazi
-rules:
-  - id: "bazi.geju.zheng-guan"
-    name: "正官格"
-    category: "格局判断"
-    condition: "month_zhi_canggan_benqi_shishen == '正官' AND zheng_guan_count >= 1"
-    weight: 1.0
-    priority: 10
-    source: "《渊海子平》· 论正官"
-    explanation: "月令本气为正官，且命局中有正官透出，以正官格论。"
+所有引擎共享的基础数据，通过 `Tianjige.Const` 暴露：
+
+| 属性 | 说明 |
+|------|------|
+| `GAN` | 十天干数组 (10) |
+| `ZHI` | 十二地支数组 (12) |
+| `SIXTY_JIAZI` | 六十甲子数组 (60) |
+| `NAYIN_ARR` | 纳音数组 (120) |
+| `BAGUA` | 八卦对象 (8) |
+| `WUXING` | 五行对象 |
+| `WX_SHENG` / `WX_KE` | 五行生克关系 |
+| `JIAZI_INDEX` | 甲子索引表 |
+
+---
+
+## 测试
+
+```bash
+# 运行黄金测试集
+npm test
+
+# 浏览器内运行测试面板
+open tests/index.html
 ```
 
-### 多术合参
-
-`fusion/` 层实现跨引擎结果融合：评分归一化 → 加权融合 → 冲突检测 → 综合研判。
-
-### 34位大师风格
-
-`masters/` 层定义每位大师的 focus_weights（分析重点权重）、analysis_order（分析顺序）、citation_preferences（引用偏好）、expression（表达方式），通过策略模式驱动个性化分析。
+测试运行器兼容 Node.js 和浏览器环境，`tests/test_runner.js` 通过 IIFE 注入到全局上下文后运行。
 
 ---
 
@@ -193,113 +215,37 @@ rules:
 
 ### 新增术数引擎
 
-1. 创建 `engines/<new_engine>/` 目录
-2. 实现 `paipan.py`（计算）、`analysis.py`（分析）、`explain.py`（解释）
-3. 继承 `core.interfaces.BaseEngine`，实现三阶段接口
-4. 在 `core/engine_registry.py` 注册引擎
+1. 在 `static/js/` 下创建引擎文件，使用 IIFE 模式暴露到全局
+2. 在 `engine-registry.js` 中注册引擎配置
+3. 在 `components/` 下创建对应的前端交互组件
+4. 在 `tests/golden_set.json` 中添加测试用例
 
-```python
-# engines/<new_engine>/paipan.py
-from core.interfaces import BaseEngine, EngineInput
+```javascript
+// 引擎文件模板
+(function(global) {
+  'use strict';
 
-class NewEngine(BaseEngine):
-    name = "new_engine"
-    version = "1.0.0"
+  function divine(params) {
+    // 纯算法计算
+    return { ... };
+  }
 
-    def calculate(self, input: EngineInput) -> Dict:
-        # 纯算法计算
-        ...
-
-    def analyze(self, input: EngineInput, calculation: Dict) -> Dict:
-        # 规则匹配与分析
-        ...
-
-    def explain(self, input: EngineInput, calculation: Dict, analysis: Dict) -> str:
-        # 自然语言解释
-        ...
+  global.NewEngine = {
+    divine: divine,
+    // 常量数据
+  };
+})(typeof window !== 'undefined' ? window : this);
 ```
-
-### 新增分析规则
-
-在 `rules/configs/` 下添加或修改YAML文件：
-
-```yaml
-version: "1.0"
-engine: bazi
-rules:
-  - id: "bazi.new_rule"
-    name: "新规则"
-    category: "格局判断"
-    condition: "条件表达式"
-    weight: 1.0
-    priority: 10
-    source: "《古籍》· 出处"
-    explanation: "规则解释"
-```
-
-### 新增大师风格
-
-在 `masters/profiles/` 下添加YAML文件：
-
-```yaml
-id: new_master
-name: 新大师
-title: 称号
-era: 朝代
-category: 八字
-strategy:
-  focus_weights:
-    格局分析: 0.4
-    五行生克: 0.3
-    ...
-  analysis_order: [...]
-  citation_preferences: {...}
-  expression: {...}
-templates:
-  opening: [...]
-  closing: [...]
-  quotes: [...]
-```
-
----
-
-## 测试
-
-```bash
-# 运行所有测试
-pytest tests/ -v
-
-# 运行冒烟测试
-python test_all.py
-
-# 运行考试系统（准确率检查）
-python test_exam.py
-
-# 仅运行单元测试
-pytest tests/unit/ -v
-
-# 仅运行引擎测试
-pytest tests/unit/engines/ -v
-```
-
----
-
-## 文档
-
-- [工程化架构设计](docs/天机阁工程化架构设计.md)
-- [渐进式迁移方案](docs/天机阁渐进式迁移方案.md)
-- [项目技术总结](docs/项目技术总结文档_v1.0.md)
-- [项目总览](kb/项目总览.md)
 
 ---
 
 ## 设计原则
 
-- **纯代码计算**：所有算法本地运行，不依赖外部API
-- **可解释性**：每次分析输出完整推理链
-- **可配置性**：规则和知识以YAML/JSON文件存储，非开发者可调整
-- **可扩展性**：新增引擎只需实现三阶段接口，无需修改核心框架
-- **版本管理**：引擎、规则、知识三层独立版本追踪
+- **纯前端计算**：所有算法在浏览器本地运行，零后端依赖
+- **零外部API**：不依赖任何第三方AI或计算服务
+- **可解释推理**：每次分析输出完整计算过程
+- **模块化引擎**：各引擎独立开发，通过注册中心统一管理
+- **黄金测试集**：95组标准用例覆盖核心算法，确保回归安全
 
 ---
 

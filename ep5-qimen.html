@@ -257,6 +257,12 @@
       .qimen-cell.gong-5 { background: rgba(184,154,92,0.04); }
       .qimen-cell.good-cell { box-shadow: inset 0 0 20px rgba(90,138,90,0.08); }
       .qimen-cell.warn-cell { box-shadow: inset 0 0 20px rgba(184,154,92,0.06); }
+      .qimen-cell .ji-marker {
+        font-size: 0.6rem; color: var(--text3); margin-top: 3px; letter-spacing: 0.03em;
+        border-top: 1px solid var(--border); padding-top: 3px; width: 100%; text-align: center;
+      }
+      .qimen-cell .ji-star { font-size: 0.68rem; color: var(--blue-light); letter-spacing: 0.04em; }
+      .qimen-cell .ji-tian { font-size: 0.72rem; color: var(--text2); font-family: var(--font-serif); }
 
       /* ===== Result Items ===== */
       .result-grid {
@@ -602,6 +608,12 @@
         html += '<div class="star">'+escHtml(cell.star||'')+'</div>';
         html += '<div class="god">'+escHtml(cell.god||'')+'</div>';
       }
+      // 天禽寄宫：天芮落宫附加显示天禽星+中五宫地盘干（转盘法天禽永远寄天芮）
+      if(!isGong5 && cell.ji_star){
+        html += '<div class="ji-marker">寄天禽</div>';
+        html += '<div class="ji-star">'+escHtml(cell.ji_star)+'</div>';
+        html += '<div class="ji-tian">'+escHtml(cell.ji_tian_pan||'')+'</div>';
+      }
       html += '</div>';
     });
 
@@ -611,10 +623,12 @@
     // 基本信息
     info.innerHTML =
       '<div class="result-item"><div class="label">阴阳遁</div><div class="value">'+escHtml(result.period||'')+'</div></div>' +
-      '<div class="result-item"><div class="label">局数</div><div class="value">'+escHtml(result.ju_num||'')+' 局</div></div>' +
+      '<div class="result-item"><div class="label">局数</div><div class="value">'+escHtml(result.ju_num||'')+' 局 · '+escHtml(result.san_yuan||'')+'</div></div>' +
       '<div class="result-item"><div class="label">节气</div><div class="value">'+escHtml(result.jieqi||'')+'</div></div>' +
       '<div class="result-item"><div class="label">日干支</div><div class="value">'+escHtml(result.day_gz||'')+'</div></div>' +
-      '<div class="result-item"><div class="label">时干支</div><div class="value">'+escHtml(result.time_gz||'')+'</div></div>';
+      '<div class="result-item"><div class="label">时干支</div><div class="value">'+escHtml(result.time_gz||'')+'（'+escHtml(result.xun_shou||'')+'旬）</div></div>' +
+      '<div class="result-item"><div class="label">值符</div><div class="value">'+escHtml(result.zhi_fu_star||'')+' 落 '+escHtml(gongNames[result.zhi_fu_gong]||'')+'</div></div>' +
+      '<div class="result-item"><div class="label">值使</div><div class="value">'+escHtml(result.zhi_shi_door||'')+' 落 '+escHtml(gongNames[result.zhi_shi_gong]||'')+'</div></div>';
 
     card.classList.remove('hidden');
   }

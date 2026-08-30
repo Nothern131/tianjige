@@ -7,7 +7,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint static/js",
-    "format": "prettier --write 'static/js/**/*.js' 'static/css/**/*.css' '*.html'"
+    "format": "prettier --write 'static/js/**/*.js' 'static/css/**/*.css' '*.html'",
+    "test": "node tests/run_tests.js",
+    "test:watch": "node tests/run_tests.js --watch"
   },
   "devDependencies": {
     "vite": "^5.4.0",

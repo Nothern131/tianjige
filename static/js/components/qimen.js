@@ -188,7 +188,7 @@ function renderQimenResult(container, result, questionAnalysisHtml) {
     <div class="fade-in">
       <div style="text-align:center;margin-bottom:20px;">
         <h3 style="font-family:var(--font-serif);color:var(--gold-light);">奇门遁甲盘</h3>
-        <p style="font-size:0.85rem;color:var(--text-muted);">${escapeHtml(result.period || '')} · ${escapeHtml(result.ju || '')}局</p>
+        <p style="font-size:0.85rem;color:var(--text-muted);">${escapeHtml(result.period || '')} · ${escapeHtml(result.ju || '')}</p>
       </div>
 
       <div class="qimen-grid">
@@ -202,9 +202,9 @@ function renderQimenResult(container, result, questionAnalysisHtml) {
       <div class="qimen-cell">
         <div style="font-size:0.65rem;color:var(--text-muted);">${label}</div>
         <div class="cell-main">${escapeHtml(cell.di_pan || '—')}</div>
-        <div class="cell-sub">${escapeHtml(cell.tian_pan || '')}</div>
+        <div class="cell-sub">${escapeHtml(cell.tian_pan || '')}${cell.ji_tian_pan ? escapeHtml(cell.ji_tian_pan) : ''}</div>
         <div class="cell-door">${escapeHtml(cell.door || '')}</div>
-        <div class="cell-sub">${escapeHtml(cell.star || '')}</div>
+        <div class="cell-sub">${escapeHtml(cell.star || '')}${cell.ji_star ? '<span style="color:var(--gold);">+' + escapeHtml(cell.ji_star) + '</span>' : ''}</div>
         <div class="cell-sub">${escapeHtml(cell.god || '')}</div>
       </div>
     `;
