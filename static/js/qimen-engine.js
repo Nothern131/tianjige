@@ -475,53 +475,68 @@
     var jieqi = ctx.jieqi;
     var sanYuanName = ['上元', '中元', '下元'][ctx.sanYuan] || '上元';
 
-    // 一、局象概述
+    // 一、局象概述：先给结论，再给依据，最后解释为什么
     lines.push('【局象概述】');
     lines.push(
-      '时值' + jieqi + '节气，' + period + ju + '局（' + sanYuanName + '，拆补法定局）。' +
-        '日柱' + ctx.dayGZ + '，时柱' + ctx.timeGZ + '，' + ctx.xunShou + '旬首遁于' + ctx.dunGan + '下。'
+      '时值' + jieqi + '节气，此起' + period + ju + '局（' + sanYuanName + '，拆补法定局）。' +
+        '排盘依据：日柱' + ctx.dayGZ + '、时柱' + ctx.timeGZ + '，' + ctx.xunShou + '旬首遁于' + ctx.dunGan + '之下。'
+    );
+    lines.push(
+      '白话解释：' + (period === '阳遁'
+        ? '阳遁主"进气"——气场由弱转强、事情处在上升通道，谋事可以借势主动推进。'
+        : '阴遁主"退气"——气场由强转弱、事情趋于收敛，谋事宜稳扎稳打、不宜冒进。') +
+        '局数' + ju + '决定了地盘' + ctx.dunGan + '起于第' + ju + '宫，各宫干支由此排布，是全局吉凶分布的起点。'
     );
 
-    // 二、值符值使
+    // 二、值符值使：先给落点结论，再解释每颗星/门的含义
     lines.push('');
     lines.push('【值符值使】');
     lines.push(
-      '值符' + ctx.zhiFuStar + '落' + GONG_NAMES[ctx.zhiFuGong] + '，值使' + ctx.zhiShiDoor + '落' +
-        GONG_NAMES[ctx.zhiShiGong] + '。值符所临之处为全局枢纽，值使为事之门户。'
+      '结论：全局能量汇聚在' + GONG_NAMES[ctx.zhiFuGong] + '（' + GONG_FANGWEI[ctx.zhiFuGong] + '），' +
+        '事情成败的出入口是' + ctx.zhiShiDoor + '落' + GONG_NAMES[ctx.zhiShiGong] + '（' + GONG_FANGWEI[ctx.zhiShiGong] + '）。'
+    );
+    lines.push(
+      '值符' + ctx.zhiFuStar + '：' + (STAR_MEANING[ctx.zhiFuStar] || '') +
+        '。为什么重要：值符是当下时辰的"当值之星"，它落到哪一宫，哪一宫就是全局力量的枢纽——古人谓之"值符所临，百事可为主"。'
+    );
+    lines.push(
+      '值使' + ctx.zhiShiDoor + '：' + (DOOR_MEANING[ctx.zhiShiDoor] || '') +
+        '。为什么重要：值使是"当值之门"，好比事情必经的门户——门吉则事顺，门凶则多阻。'
     );
 
-    // 三、格局判断
+    // 三、格局判断：每个格局给出吉凶结论 + 白话原因 + 对策
     lines.push('');
     lines.push('【格局判断】');
     var geJu = [];
     if (ctx.tianOffset === 0 && ctx.doorOffset === 0) {
-      geJu.push('星门伏吟——天盘与地盘重叠，主静守拖延、事难推进，宜守不宜攻');
+      geJu.push('星门伏吟（主迟滞）——天盘与地盘完全重叠。为什么：星门原地不动，象征事情原地打转、拖延难进。对策：此局宜守成整理旧事，不宜开新局');
     } else if (ctx.tianOffset === 4) {
-      geJu.push('星盘反吟——天盘与地盘对冲，主事态反复、内外相违、变动剧烈');
+      geJu.push('星盘反吟（主反复）——天盘与地盘对冲。为什么：气场对冲拉扯，象征事态反复、计划易被推翻重来。对策：预留缓冲，重要决定多想一层再落子');
     }
     if (ctx.zhiFuStar === '天禽') {
-      geJu.push('值符天禽——中宫之主寄于坤二，主贵人居中调和、宜托人斡旋');
+      geJu.push('值符天禽（主调和）——中宫之主寄于坤二宫。为什么：天禽为土德中央之星，象征贵人居中斡旋。对策：宜托中间人牵线协调，事反而易成');
     }
     var sanQi = [];
     for (var pos in cells) {
       if (!cells.hasOwnProperty(pos)) continue;
       var c = cells[pos];
-      if (c.tian_pan === '乙') sanQi.push('日奇乙落' + GONG_NAMES[pos]);
-      if (c.tian_pan === '丙') sanQi.push('月奇丙落' + GONG_NAMES[pos]);
-      if (c.tian_pan === '丁') sanQi.push('星奇丁落' + GONG_NAMES[pos]);
+      if (c.tian_pan === '乙') sanQi.push('日奇乙落' + GONG_NAMES[pos] + '（' + GONG_FANGWEI[pos] + '）');
+      if (c.tian_pan === '丙') sanQi.push('月奇丙落' + GONG_NAMES[pos] + '（' + GONG_FANGWEI[pos] + '）');
+      if (c.tian_pan === '丁') sanQi.push('星奇丁落' + GONG_NAMES[pos] + '（' + GONG_FANGWEI[pos] + '）');
     }
     if (sanQi.length) {
-      geJu.push('三奇' + sanQi.join('，') + '。乙奇主贵人调解、丙奇主威权破局、丁奇主文书许诺');
+      geJu.push('三奇得使（吉）——' + sanQi.join('，') + '。为什么：乙丙丁为"日月星"三奇，是天上清贵之气，所临之宫得贵人提携。用法：乙奇方宜求贵人调解、丙奇方宜果断破局、丁奇方宜文书签约许诺');
     }
     if (geJu.length) {
       lines.push(geJu.join('。') + '。');
     } else {
-      lines.push('此局无特殊大格，以门星神之吉凶参断。');
+      lines.push('此局无伏吟反吟等大格，吉凶以各宫门星神的组合参断，详见下文分项。');
     }
 
-    // 四、十干克应（值符宫与吉门宫）
+    // 四、十干克应：值符宫与吉门宫的天盘地盘干组合，每条给出含义
     lines.push('');
     lines.push('【十干克应】');
+    lines.push('（天盘干加地盘干形成的组合，是断事情吉凶最直接的依据）');
     var keyGongs = [ctx.zhiFuGong];
     // 加入三吉门所在宫
     var auspiciousDoors = ['休门', '生门', '开门'];
@@ -539,48 +554,53 @@
       if (!cell2 || !cell2.tian_pan || !cell2.di_pan) continue;
       var duan = lookUpKeYing(cell2.tian_pan, cell2.di_pan) || wuxingDuan(cell2.tian_pan, cell2.di_pan);
       if (duan && keyDuanCount < 3) {
-        lines.push(GONG_NAMES[gp] + '天盘' + cell2.tian_pan + '加地盘' + cell2.di_pan + '：' + duan + '。');
+        lines.push('· ' + GONG_NAMES[gp] + '（' + GONG_FANGWEI[gp] + '）天盘' + cell2.tian_pan + '加地盘' + cell2.di_pan + '：' + duan + '。');
         keyDuanCount++;
       }
     }
     if (keyDuanCount === 0) {
-      lines.push('各宫天盘地盘干以生克论之：相生则事顺，相克则事阻，比和则平稳。');
+      lines.push('各宫天盘地盘干无成格组合，以五行生克论：相生则事顺（有助力）、相克则事阻（有磨折）、比和则平稳（可续行）。');
     }
 
-    // 五、八门吉凶
+    // 五、八门吉凶：每个门给出吉凶 + 含义 + 宜忌
     lines.push('');
     lines.push('【八门吉凶】');
+    lines.push('（八门是事情进出的八条通道，门落哪宫即哪个方位——看你要办的事该走哪扇门）');
     var doorLines = [];
     for (var d = 0; d < RING.length; d++) {
       var dp = RING[d];
       var dc = cells[dp];
       if (!dc || !dc.door) continue;
-      var tag = auspiciousDoors.indexOf(dc.door) >= 0 ? '（吉）' :
-        (dc.door === '死门' || dc.door === '惊门' || dc.door === '伤门' ? '（凶）' : '（平）');
-      doorLines.push(dc.door + '临' + GONG_NAMES[dp] + tag);
+      var tag = auspiciousDoors.indexOf(dc.door) >= 0 ? '【吉】' :
+        (dc.door === '死门' || dc.door === '惊门' || dc.door === '伤门' ? '【凶】' : '【平】');
+      var dMean = DOOR_MEANING[dc.door] || '';
+      doorLines.push(dc.door + '落' + GONG_NAMES[dp] + '（' + GONG_FANGWEI[dp] + '）' + tag + '：' + dMean);
     }
-    lines.push(doorLines.join('，') + '。');
-    lines.push('休生开为三吉门，死惊伤为三凶门，杜景为中平。吉门所临之方，宜行事宜谋事。');
+    lines.push(doorLines.join('；') + '。');
+    lines.push('用法：求财走生门方、谋官求职走开门方、婚恋和解走休门方；死惊伤门之方勿往，杜门宜躲债藏匿、景门宜文书考试。');
 
-    // 六、九星旺衰
+    // 六、九星旺衰：星名 + 性情 + 落宫方位
     lines.push('');
     lines.push('【九星要断】');
+    lines.push('（九星是天盘上的九股气场，星性决定此方位办事的"气质"）');
     var starLines = [];
-    starLines.push('值符' + ctx.zhiFuStar + '（' + (STAR_MEANING[ctx.zhiFuStar] || '').split('。')[0] + '）');
+    starLines.push('值符' + ctx.zhiFuStar + '：' + (STAR_MEANING[ctx.zhiFuStar] || ''));
     // 找三吉门所在宫的星
     for (var s = 0; s < RING.length; s++) {
       var sp = RING[s];
       var sc = cells[sp];
       if (sc && sc.star && auspiciousDoors.indexOf(sc.door) >= 0 && sc.star !== ctx.zhiFuStar) {
-        starLines.push(sc.star + '临' + GONG_NAMES[sp]);
+        starLines.push(sc.star + '临' + GONG_NAMES[sp] + '（' + GONG_FANGWEI[sp] + '）：' + (STAR_MEANING[sc.star] || '').split('。')[0]);
         if (starLines.length >= 4) break;
       }
     }
-    lines.push(starLines.join('；') + '。吉星临吉门之宫，为得位；凶星临凶门，其凶愈甚。');
+    lines.push(starLines.join('；') + '。');
+    lines.push('看法：吉星临吉门为"得位"（好上加好）；凶星临凶门则凶性加倍；吉星临凶门，吉力减半。');
 
-    // 七、八神格局
+    // 七、八神格局：神名 + 吉凶 + 具体宜防
     lines.push('');
     lines.push('【八神格局】');
+    lines.push('（八神是外圈的八股隐性力量——神比门星更"隐性"，主暗地里的小人和贵人）');
     var godLines = [];
     var goodGods = ['值符', '太阴', '六合', '九天', '九地'];
     var badGods = ['螣蛇', '白虎', '玄武'];
@@ -589,7 +609,7 @@
       var gc = cells[gp2];
       if (!gc || !gc.god) continue;
       if (goodGods.indexOf(gc.god) >= 0) {
-        godLines.push(gc.god + '临' + GONG_NAMES[gp2] + '（吉，' + (GOD_MEANING[gc.god] || '').split('，')[1] + '）');
+        godLines.push(gc.god + '临' + GONG_NAMES[gp2] + '（' + GONG_FANGWEI[gp2] + '）：' + (GOD_MEANING[gc.god] || ''));
       }
     }
     var badLine = [];
@@ -597,14 +617,14 @@
       var gp3 = RING[g2];
       var gc2 = cells[gp3];
       if (gc2 && badGods.indexOf(gc2.god) >= 0 && gc2.door && auspiciousDoors.indexOf(gc2.door) < 0) {
-        badLine.push(gc2.god + '临' + GONG_NAMES[gp3]);
+        badLine.push(gc2.god + '临' + GONG_NAMES[gp3] + '（' + GONG_FANGWEI[gp3] + '）——' + (GOD_MEANING[gc2.god] || ''));
       }
     }
-    if (godLines.length) lines.push('吉神：' + godLines.join('；') + '。');
-    if (badLine.length) lines.push('凶神压凶门：' + badLine.join('，') + '，此方不宜谋事出行。');
-    if (!godLines.length && !badLine.length) lines.push('八神以值符所临之宫为尊，各宫吉凶参断门星。');
+    if (godLines.length) lines.push('吉神方位：' + godLines.join('；') + '。');
+    if (badLine.length) lines.push('凶神方位（须避开）：' + badLine.join('；') + '。此等方位谋事易遇欺诈、口舌、伤病，不宜出行谈判。');
+    if (!godLines.length && !badLine.length) lines.push('八神以值符所临之宫为尊，其余各宫吉凶以门星参断。');
 
-    // 八、综合判断
+    // 八、综合判断：明确结论 + 统计依据 + 关键点
     lines.push('');
     lines.push('【综合判断】');
     var auspiciousCount = 0;
@@ -619,19 +639,22 @@
     }
     if (auspiciousCount > inauspiciousCount) {
       lines.push(
-        '此局吉多凶少，' + auspiciousCount + '宫得吉门，' + inauspiciousCount + '宫不吉。' +
-          '总体运势向好，宜把握时机、积极进取，重要事务可在此局时段内推进。'
+        '结论：此局偏吉——外围八宫中' + auspiciousCount + '宫得吉门。' +
+          '意味着：当下时段整体运势向好，宜把握时机、积极进取，重要事务可在此局时间内推进。'
       );
     } else if (auspiciousCount < inauspiciousCount) {
       lines.push(
-        '此局凶多吉少，' + inauspiciousCount + '宫不吉，' + auspiciousCount + '宫得吉门。' +
-          '宜守不宜攻，谨慎行事，重大决策宜暂缓，待吉门旺时再动。'
+        '结论：此局偏凶——' + inauspiciousCount + '宫不吉，仅' + auspiciousCount + '宫得吉门。' +
+          '意味着：宜守不宜攻，重大决策暂缓，待下一个时辰吉门转旺再动。'
       );
     } else {
-      lines.push('此局吉凶参半，宜权衡利弊、取吉避凶。可参考各宫门星神之吉凶，择吉方而动。');
+      lines.push(
+        '结论：此局吉凶参半——成败取决于你选择哪个方位、走哪扇门。' +
+          '意味着：不可盲动，宜权衡利弊、择吉方而动（参考下方趋避建议）。'
+      );
     }
 
-    // 九、趋避建议
+    // 九、趋避建议：最宜/最忌方位，各给依据和具体做法
     lines.push('');
     lines.push('【趋避建议】');
     var bestPos = null;
@@ -651,10 +674,15 @@
       }
     }
     if (bestPos) {
+      var bc = cells[bestPos] || {};
+      lines.push('最宜方位：' + GONG_NAMES[bestPos] + '（' + GONG_FANGWEI[bestPos] + '）');
       lines.push(
-        GONG_NAMES[bestPos] + '（' + GONG_FANGWEI[bestPos] + '）三吉门与吉神相会，为全局最佳方位，' +
-          '宜向此方出行、谈判、谋事。'
+        '依据：此宫' + (bc.door || '') + '（吉门）' + (goodGods.indexOf(bc.god) >= 0 ? '与' + (bc.god || '') + '（吉神）相会' : '') +
+          '，天盘' + (bc.tian_pan || '') + '加地盘' + (bc.di_pan || '') + '，九星为' + (bc.star || '') + '。'
       );
+      lines.push('具体做法：出行、谈判、面试、谋事优先选择' + GONG_FANGWEI[bestPos] + '方向；在室内可面朝此方位办公洽谈。');
+    } else {
+      lines.push('此局无门神俱吉之方，以三吉门所在方位为次优选择（见上文八门吉凶）。');
     }
     // 凶方
     var worstPos = null;
@@ -667,7 +695,12 @@
       }
     }
     if (worstPos) {
-      lines.push('慎往' + GONG_NAMES[worstPos] + '（' + GONG_FANGWEI[worstPos] + '），凶神凶门汇聚，此方谋事多阻、出行慎防口舌病伤。');
+      var wc = cells[worstPos] || {};
+      lines.push('最忌方位：' + GONG_NAMES[worstPos] + '（' + GONG_FANGWEI[worstPos] + '）');
+      lines.push('依据：此宫' + (wc.god || '') + '（凶神）与' + (wc.door || '') + '（凶门）叠加，凶性加倍。');
+      lines.push('具体做法：此局时间内避免往' + GONG_FANGWEI[worstPos] + '方向出行谋事——防口舌是非、病伤、破财。');
+    } else {
+      lines.push('此局无神凶门凶叠加之方，避开死惊伤三门所在方位即可。');
     }
 
     return lines.join('\n');
