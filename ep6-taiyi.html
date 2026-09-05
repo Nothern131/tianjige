@@ -1,0 +1,959 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>天机阁 EP6 · 太乙神数</title>
+    <meta name="description" content="天机阁EP6——太乙神数。太乙积年·十六神·九宫环列，利主利客，推天道以明人事。古籍为经，算法为纬，纯前端实现。">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+      :root {
+        --ink: #0a0806;
+        --parchment: #1a1612;
+        --surface: rgba(20,16,12,0.94);
+        --card: rgba(24,20,14,0.82);
+        --gold: #b89a5c;
+        --gold-light: #d4bb7c;
+        --gold-dim: #8a7040;
+        --gold-glow: rgba(184,154,92,0.15);
+        --red: #c04040;
+        --red-light: #e06060;
+        --green: #5a8a5a;
+        --green-light: #7aaa7a;
+        --blue: #4a6a8a;
+        --blue-light: #6a8aaa;
+        --purple: #7a6aa0;
+        --purple-light: #9a8ac0;
+        --text: #e0dcd0;
+        --text2: #8a8576;
+        --text3: #4a4640;
+        --border: rgba(255,255,255,0.05);
+        --border-gold: rgba(184,154,92,0.18);
+        --font-serif: 'Noto Serif SC','SimSun','KaiTi',serif;
+        --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+        --radius: 14px;
+        --radius-sm: 8px;
+      }
+      html {
+        background: var(--ink);
+        color: var(--text);
+        font-family: var(--font-sans);
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+      }
+      body {
+        min-height: 100vh;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      /* ===== Ink Canvas ===== */
+      #inkCanvas {
+        position: fixed; top:0; left:0; width:100%; height:100%;
+        z-index: 0; pointer-events: none;
+      }
+      .watermark {
+        position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+        font-family:'Ma Shan Zheng',cursive; font-size:18vw;
+        color:rgba(184,154,92,0.03); pointer-events:none; z-index:0; user-select:none;
+      }
+
+      /* ===== Layout ===== */
+      .wrap {
+        position: relative; z-index: 1;
+        max-width: 960px; margin: 0 auto;
+        padding: 0 20px 80px;
+      }
+
+      /* ===== Hero ===== */
+      .hero {
+        text-align: center; padding: 60px 0 32px; position: relative;
+      }
+      .hero .ep-tag {
+        display: inline-block;
+        font-size: 0.7rem; color: var(--gold-dim);
+        letter-spacing: 0.2em; padding: 4px 14px;
+        border: 1px solid var(--border-gold); border-radius: 20px;
+        margin-bottom: 16px;
+      }
+      .hero h1 {
+        font-family: var(--font-serif);
+        font-size: clamp(2rem,5vw,2.8rem);
+        color: var(--gold-light); letter-spacing: 0.12em;
+        font-weight: 700; line-height: 1.2;
+      }
+      .hero .subtitle {
+        font-size: 0.88rem; color: var(--text2);
+        margin-top: 10px; letter-spacing: 0.08em;
+      }
+      .hero .hero-divider {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; margin-top: 18px;
+      }
+      .hero .hero-divider span { width: 40px; height: 1px; background: var(--border-gold); }
+      .hero .hero-divider .diamond {
+        width: 6px; height: 6px; background: var(--gold);
+        transform: rotate(45deg); opacity: 0.6;
+      }
+
+      /* ===== Section Title ===== */
+      .section-title {
+        font-family: var(--font-serif); font-size: 1.1rem;
+        color: var(--gold); letter-spacing: 0.06em;
+        margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+      }
+      .section-title::before {
+        content: ''; width: 3px; height: 16px;
+        background: var(--gold); border-radius: 1px; opacity: 0.5;
+      }
+      .section-title .num {
+        font-size: 0.7rem; color: var(--text3);
+        letter-spacing: 0.1em; margin-left: auto;
+      }
+
+      /* ===== Cards ===== */
+      .card {
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 28px;
+        margin-bottom: 24px; transition: border-color 0.4s, box-shadow 0.4s;
+        position: relative; overflow: hidden;
+      }
+      .card::before {
+        content: ''; position: absolute; top:0; left:0; right:0;
+        height: 1px; background: linear-gradient(90deg,transparent,var(--border-gold),transparent);
+        opacity: 0; transition: opacity 0.4s;
+      }
+      .card:hover { border-color: var(--border-gold); }
+      .card:hover::before { opacity: 1; }
+
+      /* ===== Form ===== */
+      .form-row {
+        display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
+        gap: 14px;
+      }
+      .form-group label {
+        display: block; font-size: 0.72rem; color: var(--text2);
+        margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase;
+      }
+      .form-group input, .form-group select {
+        width: 100%; padding: 11px 14px;
+        background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); color: var(--text); font-size: 0.88rem;
+        outline: none; font-family: var(--font-sans);
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+      .form-group input:focus, .form-group select:focus {
+        border-color: var(--border-gold); box-shadow: 0 0 0 3px var(--gold-glow);
+      }
+      .form-group select {
+        cursor: pointer; appearance: none; -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8576' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 10px center;
+        padding-right: 32px;
+      }
+
+      /* ===== Buttons ===== */
+      .btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 32px; background: rgba(184,154,92,0.1);
+        border: 1px solid var(--border-gold); border-radius: 24px;
+        color: var(--gold-light); font-family: var(--font-serif);
+        font-size: 0.9rem; cursor: pointer; transition: all 0.35s;
+        letter-spacing: 0.06em; position: relative; overflow: hidden;
+      }
+      .btn::after {
+        content: ''; position: absolute; inset: 0;
+        background: radial-gradient(circle at center, var(--gold-glow), transparent);
+        opacity: 0; transition: opacity 0.35s;
+      }
+      .btn:hover {
+        background: rgba(184,154,92,0.18); box-shadow: 0 0 24px var(--gold-glow);
+        transform: translateY(-1px);
+      }
+      .btn:hover::after { opacity: 1; }
+      .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+      .btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+
+      /* ===== Question Input ===== */
+      .question-input {
+        width: 100%; padding: 11px 14px;
+        background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); color: var(--text); font-size: 0.88rem;
+        outline: none; font-family: var(--font-sans);
+        transition: border-color 0.3s, box-shadow 0.3s; margin-bottom: 16px;
+      }
+      .question-input:focus {
+        border-color: var(--border-gold); box-shadow: 0 0 0 3px var(--gold-glow);
+      }
+
+      /* ===== Domain Tags ===== */
+      .domain-tags {
+        display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+      }
+      .domain-tag {
+        padding: 7px 16px; border-radius: 20px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--text2); cursor: pointer; font-family: var(--font-sans);
+        font-size: 0.78rem; transition: all 0.25s; letter-spacing: 0.03em;
+      }
+      .domain-tag:hover { border-color: var(--border-gold); color: var(--gold-light); background: rgba(184,154,92,0.06); }
+      .domain-tag.active {
+        border-color: var(--border-gold); color: var(--gold-light);
+        background: rgba(184,154,92,0.12); box-shadow: 0 0 10px var(--gold-glow);
+      }
+
+      /* ===== Nine Palace Grid (Taiyi) ===== */
+      .taiyi-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px;
+        max-width: 480px;
+        margin: 20px auto;
+        background: var(--border-gold);
+        border: 2px solid var(--border-gold);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .taiyi-cell {
+        background: var(--parchment);
+        padding: 12px 8px;
+        text-align: center;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        transition: background 0.3s;
+        position: relative;
+      }
+      .taiyi-cell:hover { background: rgba(30,24,18,0.95); }
+      .taiyi-cell .gong-label {
+        font-size: 0.62rem; color: var(--text3);
+        letter-spacing: 0.08em; margin-bottom: 3px;
+      }
+      .taiyi-cell .gong-name {
+        font-size: 1.2rem; color: var(--gold);
+        font-family: var(--font-serif); font-weight: 700;
+        line-height: 1;
+      }
+      .taiyi-cell .gong-dir {
+        font-size: 0.65rem; color: var(--text3);
+        letter-spacing: 0.04em;
+      }
+      .taiyi-cell .gong-god {
+        font-size: 0.75rem; color: var(--text);
+        font-family: var(--font-serif);
+      }
+      .taiyi-cell.taiyi-center {
+        background: rgba(184,154,92,0.06);
+        border: 1px solid rgba(184,154,92,0.25);
+      }
+      .taiyi-cell.taiyi-center::after {
+        content: '';
+        position: absolute; inset: 3px;
+        border: 1px solid rgba(184,154,92,0.15);
+        border-radius: 4px; pointer-events: none;
+      }
+      .taiyi-cell.good-cell { box-shadow: inset 0 0 20px rgba(90,138,90,0.08); }
+      .taiyi-cell.warn-cell { box-shadow: inset 0 0 20px rgba(184,154,92,0.06); }
+      .taiyi-cell .god-badge {
+        display: inline-block; font-size: 0.6rem; padding: 1px 6px;
+        border-radius: 8px; margin-top: 3px;
+      }
+      .god-badge.badge-daji { background: rgba(224,96,96,0.15); color: var(--red-light); }
+      .god-badge.badge-ji { background: rgba(90,138,90,0.15); color: var(--green-light); }
+      .god-badge.badge-xiong { background: rgba(184,154,92,0.12); color: var(--gold-dim); }
+
+      /* ===== Gods Bar ===== */
+      .gods-bar {
+        display: flex; flex-wrap: wrap; gap: 8px;
+        justify-content: center; margin: 16px 0;
+      }
+      .god-chip {
+        display: flex; align-items: center; gap: 5px;
+        padding: 5px 12px; border-radius: 16px;
+        border: 1px solid var(--border); background: rgba(10,8,6,0.5);
+        font-size: 0.78rem; color: var(--text);
+        font-family: var(--font-serif); letter-spacing: 0.04em;
+      }
+      .god-chip .wx-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .god-chip.chip-daji { border-color: rgba(224,96,96,0.3); }
+      .god-chip.chip-daji .wx-dot { background: var(--red-light); }
+      .god-chip.chip-ji { border-color: rgba(90,138,90,0.3); }
+      .god-chip.chip-ji .wx-dot { background: var(--green-light); }
+      .god-chip.chip-xiong { border-color: rgba(184,154,92,0.2); }
+      .god-chip.chip-xiong .wx-dot { background: var(--gold-dim); }
+
+      /* ===== Info Panel ===== */
+      .info-panel {
+        display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+        gap: 12px; margin-top: 16px;
+      }
+      .info-item {
+        padding: 14px 16px; background: rgba(10,8,6,0.5);
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        border-left: 3px solid var(--gold);
+      }
+      .info-item .label { font-size: 0.72rem; color: var(--text3); margin-bottom: 4px; letter-spacing: 0.05em; }
+      .info-item .value { font-size: 0.88rem; color: var(--text); font-family: var(--font-serif); line-height: 1.6; }
+      .info-item .value .highlight { color: var(--gold-light); font-weight: 600; }
+      .info-item.info-gold { border-left-color: var(--gold); }
+      .info-item.info-green { border-left-color: var(--green-light); }
+      .info-item.info-purple { border-left-color: var(--purple-light); }
+      .info-item.info-red { border-left-color: var(--red-light); }
+
+      /* ===== Four Gods Panel ===== */
+      .sishen-panel {
+        display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr));
+        gap: 10px; margin-top: 12px;
+      }
+      .sishen-item {
+        padding: 12px 14px; background: rgba(10,8,6,0.5);
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        text-align: center;
+      }
+      .sishen-item .sishen-name { font-size: 0.72rem; color: var(--text3); margin-bottom: 4px; letter-spacing: 0.06em; }
+      .sishen-item .sishen-pos { font-size: 0.88rem; color: var(--purple-light); font-family: var(--font-serif); }
+      .sishen-item .sishen-dir { font-size: 0.68rem; color: var(--text3); margin-top: 2px; }
+
+      /* ===== Interpretation ===== */
+      .interp-block {
+        padding: 16px 20px; background: rgba(10,8,6,0.4); border-radius: var(--radius-sm);
+        border-left: 3px solid var(--gold); margin: 12px 0;
+      }
+      .interp-block .block-label { font-size: 0.72rem; color: var(--gold); margin-bottom: 8px; letter-spacing: 0.08em; }
+      .interp-block .block-content { font-size: 0.88rem; color: var(--text); line-height: 1.9; }
+      .interp-block .block-content p { margin-bottom: 8px; text-indent: 2em; }
+      .interp-block .block-content p:last-child { margin-bottom: 0; }
+      .interp-block .block-content strong { color: var(--gold-light); }
+
+      /* ===== Legend ===== */
+      .legend {
+        display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+        padding: 14px; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm);
+        margin-top: 16px; font-size: 0.75rem; color: var(--text2);
+      }
+      .legend span { display: flex; align-items: center; gap: 6px; }
+      .legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+      .legend .dot-gold { background: var(--gold); }
+      .legend .dot-green { background: var(--green-light); }
+      .legend .dot-blue { background: var(--blue-light); }
+      .legend .dot-purple { background: var(--purple-light); }
+      .legend .dot-red { background: var(--red-light); }
+      .legend .dot-grey { background: var(--text2); }
+
+      /* ===== Disclaimer ===== */
+      .disclaimer {
+        background: rgba(184,154,92,0.04); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 14px 20px; margin-top: 32px;
+        font-size: 0.75rem; color: var(--text3); text-align: center; line-height: 1.8;
+      }
+      .disclaimer strong { color: var(--gold-dim); }
+
+      /* ===== Loading ===== */
+      .spinner {
+        width: 36px; height: 36px; border: 3px solid var(--border);
+        border-top-color: var(--gold); border-radius: 50%;
+        animation: spin 0.8s linear infinite; margin: 36px auto;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* ===== Glass Card (Masters) ===== */
+      .glass-card {
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 28px;
+        transition: border-color 0.4s, box-shadow 0.4s; position: relative; overflow: hidden;
+      }
+      .glass-card:hover { border-color: var(--border-gold); box-shadow: 0 4px 28px rgba(0,0,0,0.3), 0 0 20px var(--gold-glow); }
+      .section-header { margin-bottom: 24px; }
+      .page-title { font-family: var(--font-serif); font-size: 1.55rem; font-weight: 700; color: var(--gold); margin-bottom: 8px; letter-spacing: 0.08em; }
+      .page-subtitle { font-size: 0.85rem; color: var(--text2); line-height: 1.7; }
+      .btn-gold {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 10px 28px; background: linear-gradient(135deg,rgba(138,109,52,0.82),rgba(184,154,92,0.9));
+        color: #0a080f; font-weight: 600; font-size: 0.84rem; border-radius: var(--radius-sm);
+        border: 1px solid rgba(184,154,92,0.28); transition: all 0.25s; cursor: pointer;
+        letter-spacing: 0.05em; font-family: var(--font-sans);
+      }
+      .btn-gold:hover { background: linear-gradient(135deg,var(--gold),var(--gold-light)); box-shadow: 0 0 20px var(--gold-glow); transform: translateY(-1px) scale(1.02); }
+      .btn-gold.lg { padding: 14px 40px; font-size: 0.96rem; }
+      .btn-gold:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+      .mt-8 { margin-top: 8px; }
+      .mb-24 { margin-bottom: 24px; }
+      .hidden { display: none !important; }
+      .master-cat-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(148px,1fr)); gap: 10px; }
+      .master-card {
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+        padding: 14px 10px; background: rgba(10,8,6,0.6); border: 1px solid var(--border);
+        border-radius: var(--radius); cursor: pointer; transition: all 0.25s; position: relative;
+      }
+      .master-card:hover { background: rgba(20,16,12,0.9); border-color: var(--border-gold); box-shadow: 0 0 16px var(--gold-glow); transform: translateY(-2px); }
+      .master-card.selected { background: rgba(184,154,92,0.08); border-color: rgba(184,154,92,0.4); box-shadow: 0 0 20px var(--gold-glow),inset 0 0 20px rgba(184,154,92,0.04); }
+      .master-card.selected::after { content:'✓'; position:absolute; top:6px; right:8px; font-size:0.7rem; color:var(--gold); font-weight:700; }
+      .master-avatar { font-size: 1.8rem; transition: transform 0.3s; }
+      .master-card:hover .master-avatar { transform: scale(1.1); }
+      .master-name { font-family: var(--font-serif); font-size: 0.84rem; font-weight: 600; color: var(--text); transition: color 0.25s; }
+      .master-card:hover .master-name { color: var(--gold-light); }
+      .master-title { font-size: 0.68rem; color: var(--text3); text-align: center; line-height: 1.4; max-width: 130px; }
+      .master-era { font-size: 0.62rem; color: var(--text3); padding: 1px 8px; border-radius: 8px; background: rgba(184,154,92,0.04); border: 1px solid var(--border); }
+      .master-result-header { display: flex; align-items: center; gap: 20px; padding: 8px 0 20px; }
+      .master-result-avatar-wrap { flex-shrink: 0; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; background: rgba(184,154,92,0.06); border: 1px solid var(--border-gold); border-radius: 50%; }
+      .master-result-avatar { font-size: 2rem; }
+      .master-result-info { flex: 1; min-width: 0; }
+      .master-result-name { font-family: var(--font-serif); font-size: 1.2rem; color: var(--gold-light); font-weight: 700; margin: 0 0 4px; display: flex; align-items: baseline; gap: 10px; }
+      .master-result-era { font-size: 0.7rem; color: var(--text3); font-weight: 400; font-family: var(--font-sans); }
+      .master-result-title { font-size: 0.8rem; color: var(--text2); margin: 0 0 8px; }
+      .master-result-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+      .master-result-tag { font-size: 0.65rem; padding: 2px 10px; border: 1px solid var(--border); border-radius: 10px; color: var(--text3); white-space: nowrap; }
+      .master-result-divider { height: 1px; background: linear-gradient(90deg,transparent,var(--border-gold),transparent); margin-bottom: 24px; }
+      .master-result-body { display: flex; flex-direction: column; gap: 0; }
+      .master-result-section { padding: 20px 0; border-bottom: 1px solid var(--border); animation: sectionFadeIn 0.5s ease both; animation-delay: var(--delay,0s); }
+      .master-result-section:last-child { border-bottom: none; }
+      @keyframes sectionFadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+      .master-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+      .master-section-icon { font-size: 1.1rem; flex-shrink: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(184,154,92,0.04); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+      .master-section-title-wrap { flex: 1; min-width: 0; }
+      .master-section-title { font-family: var(--font-serif); font-size: 0.95rem; color: var(--gold); font-weight: 600; display: block; }
+      .master-section-desc { font-size: 0.7rem; color: var(--text3); display: block; margin-top: 2px; }
+      .master-section-num { font-family: var(--font-serif); font-size: 1.4rem; color: var(--text3); opacity: 0.5; letter-spacing: 0.04em; }
+      .master-section-content { font-size: 0.88rem; color: var(--text2); line-height: 1.95; }
+      .master-section-content p { margin-bottom: 10px; text-indent: 2em; }
+      .master-section-content p:last-child { margin-bottom: 0; }
+      .master-section-content strong { color: var(--gold); }
+
+      /* ===== Fade In ===== */
+      .fade-up { animation: fadeUp 0.6s ease-out both; }
+      @keyframes fadeUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+
+      /* ===== Footer ===== */
+      .footer { text-align: center; padding: 40px 0 0; color: var(--text3); font-size: 0.7rem; letter-spacing: 0.06em; }
+      .footer .footer-line { width: 60px; height: 1px; background: var(--border-gold); margin: 12px auto; }
+
+      /* ===== Responsive ===== */
+      @media(max-width:600px){
+        .wrap { padding: 0 12px 60px; }
+        .card, .glass-card { padding: 20px; }
+        .taiyi-grid { max-width: 100%; }
+        .taiyi-cell { min-height: 80px; padding: 8px 5px; }
+        .taiyi-cell .gong-name { font-size: 1rem; }
+        .taiyi-cell .gong-god { font-size: 0.68rem; }
+        .result-grid { grid-template-columns: 1fr; }
+        .master-cat-grid { grid-template-columns: repeat(auto-fill,minmax(110px,1fr)); }
+      }
+    </style>
+    <link rel="stylesheet" crossorigin href="./assets/style-DV2U4jqT.css">
+  </head>
+<body>
+<canvas id="inkCanvas"></canvas>
+<div class="watermark">太乙</div>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero fade-up">
+    <div class="ep-tag">EPISODE 6</div>
+    <h1>太乙神数</h1>
+    <p class="subtitle">三式之首 · 太乙九宫 · 利主利客</p>
+    <div class="hero-divider">
+      <span></span><div class="diamond"></div><span></span>
+    </div>
+  </div>
+
+  <!-- 起局卡片 -->
+  <div class="card fade-up" id="castCard">
+    <div class="section-title">起局参数<span class="num">01</span></div>
+
+    <input type="text" class="question-input" id="question" placeholder="心中所问之事，例如：今日运势吉凶如何？" />
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>日期</label>
+        <input type="date" id="taiyi-date" />
+      </div>
+      <div class="form-group">
+        <label>时辰</label>
+        <select id="taiyi-time">
+          <option value="子时">子时（23:00–01:00）</option>
+          <option value="丑时">丑时（01:00–03:00）</option>
+          <option value="寅时">寅时（03:00–05:00）</option>
+          <option value="卯时">卯时（05:00–07:00）</option>
+          <option value="辰时">辰时（07:00–09:00）</option>
+          <option value="巳时">巳时（09:00–11:00）</option>
+          <option value="午时">午时（11:00–13:00）</option>
+          <option value="未时">未时（13:00–15:00）</option>
+          <option value="申时">申时（15:00–17:00）</option>
+          <option value="酉时">酉时（17:00–19:00）</option>
+          <option value="戌时">戌时（19:00–21:00）</option>
+          <option value="亥时">亥时（21:00–23:00）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:16px;">
+      <label>事域选择</label>
+      <div class="domain-tags" id="domain-tags">
+        <button class="domain-tag" data-domain="事业">💼 事业</button>
+        <button class="domain-tag" data-domain="感情">💕 感情</button>
+        <button class="domain-tag" data-domain="财运">💰 财运</button>
+        <button class="domain-tag" data-domain="健康">🏥 健康</button>
+        <button class="domain-tag" data-domain="出行">✈️ 出行</button>
+        <button class="domain-tag" data-domain="学业">📚 学业</button>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="castBtn">🔭 太乙起局</button>
+    </div>
+    <p style="font-size:0.75rem;color:var(--text3);margin-top:12px;text-align:center;">
+      太乙积年推演，十六神布九宫，观天时地利，知利主利客
+    </p>
+  </div>
+
+  <!-- 九宫格展示 -->
+  <div class="card fade-up hidden" id="gridCard">
+    <div class="section-title">太乙九宫盘<span class="num">02</span></div>
+    <div id="gridDisplay"></div>
+    <div class="legend">
+      <span><i class="dot dot-gold"></i> 太乙落宫</span>
+      <span><i class="dot dot-green"></i> 吉神</span>
+      <span><i class="dot dot-red"></i> 凶神</span>
+      <span><i class="dot dot-purple"></i> 四神</span>
+      <span><i class="dot dot-grey"></i> 间神</span>
+    </div>
+    <div id="gridInfo" class="info-panel" style="margin-top:16px;"></div>
+  </div>
+
+  <!-- 十六神 -->
+  <div class="card fade-up hidden" id="godsCard">
+    <div class="section-title">十六神<span class="num">03</span></div>
+    <div id="godsDisplay" class="gods-bar"></div>
+  </div>
+
+  <!-- 四神 -->
+  <div class="card fade-up hidden" id="sishenCard">
+    <div class="section-title">四神<span class="num">04</span></div>
+    <div id="sishenDisplay" class="sishen-panel"></div>
+  </div>
+
+  <!-- 局象解读 -->
+  <div class="card fade-up hidden" id="interpCard">
+    <div class="section-title">局象解读<span class="num">05</span></div>
+    <div id="interpContent"></div>
+  </div>
+
+  <!-- 大师点评 -->
+  <div class="glass-card fade-up hidden" id="mastersCard">
+    <div id="mastersContent"></div>
+  </div>
+
+  <!-- 免责声明 -->
+  <div class="disclaimer">
+    <strong>声明：</strong>太乙神数是中国传统文化的一部分，属于古典术数和文化遗产范畴。<br>
+    本系统仅供文化研究和娱乐参考，不构成任何人生决策建议。请相信科学，理性看待命运。
+  </div>
+</div>
+
+<script src="static/js/taiyi-engine.js"></script>
+<script src="static/js/masters-engine.js"></script>
+<script src="static/js/components/masters.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var currentResult = null;
+  var currentQuestion = '';
+  var currentDomain = '';
+
+  // ===== 工具函数 =====
+  function escHtml(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // 五行颜色
+  function wxColor(wx){
+    var map = { '木':'#5a9a5a','火':'#c06040','土':'#b89a5c','金':'#a0a0c0','水':'#4a6a9a' };
+    return map[wx] || '#8a8576';
+  }
+
+  // 吉凶徽章类名
+  function badgeClass(aus){
+    if(aus==='大吉') return 'chip-daji';
+    if(aus==='吉') return 'chip-ji';
+    if(aus==='凶') return 'chip-xiong';
+    return '';
+  }
+  function badgeTag(aus){
+    if(aus==='大吉') return 'badge-daji';
+    if(aus==='吉') return 'badge-ji';
+    if(aus==='凶') return 'badge-xiong';
+    return '';
+  }
+  function badgeText(aus){
+    if(aus==='大吉') return '大吉';
+    if(aus==='吉') return '吉';
+    if(aus==='凶') return '凶';
+    return '平';
+  }
+
+  // ===== 事域标签点击 =====
+  var domainBtns = document.querySelectorAll('.domain-tag');
+  domainBtns.forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var isActive = btn.classList.contains('active');
+      domainBtns.forEach(function(b){ b.classList.remove('active'); });
+      if(!isActive){
+        btn.classList.add('active');
+        currentDomain = btn.dataset.domain;
+        document.getElementById('question').value = '请问' + currentDomain + '运势如何？';
+      }
+    });
+  });
+
+  // ===== 设置当前日期时间 =====
+  function setNow(){
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = String(now.getMonth()+1).padStart(2,'0');
+    var d = String(now.getDate()).padStart(2,'0');
+    document.getElementById('taiyi-date').value = y+'-'+m+'-'+d;
+    var h = now.getHours();
+    var shichenMap = ['子时','子时','丑时','丑时','寅时','寅时','卯时','卯时','辰时','辰时','巳时','巳时','午时','午时','未时','未时','申时','申时','酉时','酉时','戌时','戌时','亥时','亥时'];
+    document.getElementById('taiyi-time').value = shichenMap[h] || '子时';
+  }
+  setNow();
+
+  // ===== 九宫格渲染 =====
+  // 太乙九宫布局（后天八卦方位）：
+  //  4巽  9离  2坤
+  //  3震  5中  7兑
+  //  8艮  1坎  6乾
+  var TAIYI_GRID_ORDER = [4,9,2,3,5,7,8,1,6];
+  var TAIYI_GONG_NAMES = {
+    1:'坎一宫',2:'坤二宫',3:'震三宫',4:'巽四宫',5:'中五宫',
+    6:'乾六宫',7:'兑七宫',8:'艮八宫',9:'离九宫'
+  };
+
+  function renderGrid(result){
+    var card = document.getElementById('gridCard');
+    var display = document.getElementById('gridDisplay');
+    var info = document.getElementById('gridInfo');
+
+    var taiyiGong = result.taiyi_gong;
+    var gods = result.gods || [];
+
+    // 构建宫位→太乙神映射
+    var gongGodMap = {};
+    gods.forEach(function(g){
+      // position 形如 "南" 或 "南-东(间)"
+      var posKey = g.position.replace('(间)','');
+      var dirToGong = {};
+      var gongList = ['乾','离','艮','震','中','兑','坤','坎','巽'];
+      gongList.forEach(function(name,i){
+        dirToGong['西北'] = 6; dirToGong['南'] = 9; dirToGong['东北'] = 8;
+        dirToGong['东'] = 3; dirToGong['中'] = 5; dirToGong['西'] = 7;
+        dirToGong['西南'] = 2; dirToGong['北'] = 1; dirToGong['东南'] = 4;
+      });
+      // 直接用宫名索引
+    });
+
+    // 构建宫名→神映射
+    var gongNameToGod = {};
+    gods.forEach(function(g){
+      // position 格式是方位名（如"南"），需要映射回宫名
+      var dirToGongName = {
+        '西北':'乾','南':'离','东北':'艮','东':'震','中':'中',
+        '西':'兑','西南':'坤','北':'坎','东南':'巽'
+      };
+      var gName = dirToGongName[g.position] || '中';
+      if(!gongNameToGod[gName]) gongNameToGod[gName] = [];
+      gongNameToGod[gName].push(g);
+    });
+
+    // 计算五福宫和四神宫
+    var wufuMatch = result.wufu ? result.wufu.match(/五福入(.+?)宫/) : null;
+    var wufuGong = wufuMatch ? wufuMatch[1] : null;
+    var sishenMap = result.sishen || {};
+    var sishenGongs = {};
+    ['tianyi','diyi','zhifu','sishen'].forEach(function(key){
+      var val = sishenMap[key];
+      if(val && val.position){
+        var m = val.position.match(/(.+?)宫/);
+        if(m) sishenGongs[key] = m[1];
+      }
+    });
+
+    var html = '<div class="taiyi-grid">';
+
+    TAIYI_GRID_ORDER.forEach(function(pos){
+      var gName = [null,'坎','坤','震','巽','中','乾','兑','艮','离'][pos];
+      var cellGods = gongNameToGod[gName] || [];
+      var isTaiyiCenter = (gName === taiyiGong);
+      var isWufu = (gName === wufuGong);
+      var cellClass = 'taiyi-cell';
+      if(isTaiyiCenter) cellClass += ' taiyi-center';
+      else if(isWufu) cellClass += ' good-cell';
+
+      html += '<div class="'+cellClass+'">';
+      html += '<div class="gong-label">'+escHtml(TAIYI_GONG_NAMES[pos]||'宫'+pos)+'</div>';
+      html += '<div class="gong-name">'+escHtml(gName)+'</div>';
+      html += '<div class="gong-dir">'+escHtml({'坎':'北','坤':'西南','震':'东','巽':'东南','中':'中','乾':'西北','兑':'西','艮':'东北','离':'南'}[gName]||'')+'</div>';
+
+      // 太乙标记
+      if(isTaiyiCenter){
+        html += '<div style="font-size:0.6rem;color:var(--gold);margin-top:3px;letter-spacing:0.04em;">◈ 太乙落此</div>';
+      }
+      if(isWufu){
+        html += '<div style="font-size:0.6rem;color:var(--green-light);margin-top:2px;letter-spacing:0.04em;">福</div>';
+      }
+
+      // 神
+      cellGods.forEach(function(g){
+        html += '<div class="gong-god">'+escHtml(g.name)+'</div>';
+        html += '<span class="god-badge '+badgeTag(g.auspicious)+'">'+escHtml(badgeText(g.auspicious))+'</span>';
+      });
+
+      html += '</div>';
+    });
+
+    html += '</div>';
+    display.innerHTML = html;
+
+    // 基本信息
+    var eraInfo = result.epoch || '';
+    var juShu = result.ju_shu || 0;
+    var isYang = (juShu % 2 === 1);
+    info.innerHTML =
+      '<div class="info-item info-gold"><div class="label">纪元</div><div class="value"><span class="highlight">'+escHtml(eraInfo)+'</span></div></div>' +
+      '<div class="info-item info-gold"><div class="label">太乙积年</div><div class="value">'+escHtml(result.ji_nian||'—')+'</div></div>' +
+      '<div class="info-item info-gold"><div class="label">局数</div><div class="value">'+escHtml(juShu)+' 局 · '+escHtml(isYang?'阳局':'阴局')+'</div></div>' +
+      '<div class="info-item info-green"><div class="label">太乙落宫</div><div class="value"><span class="highlight">'+escHtml(taiyiGong)+'</span>宫（'+escHtml(TaiyiEngine.GONG_DIR[taiyiGong]||'中')+'）</div></div>' +
+      '<div class="info-item info-purple"><div class="label">五福所落</div><div class="value">'+escHtml(wufuGong||'—')+'宫</div></div>' +
+      '<div class="info-item info-red"><div class="label">节气参考</div><div class="value">太乙重积年推历，不限节气</div></div>';
+
+    card.classList.remove('hidden');
+  }
+
+  // ===== 十六神渲染 =====
+  function renderGods(result){
+    var card = document.getElementById('godsCard');
+    var display = document.getElementById('godsDisplay');
+    var gods = result.gods || [];
+
+    var html = '';
+    gods.forEach(function(g){
+      html += '<div class="god-chip '+badgeClass(g.auspicious)+'">';
+      html += '<span class="wx-dot" style="background:'+wxColor(g.wuxing)+'"></span>';
+      html += '<span>'+escHtml(g.name)+'</span>';
+      html += '<span style="font-size:0.65rem;color:var(--text3);">'+escHtml(g.wuxing)+'</span>';
+      html += '<span style="font-size:0.6rem;color:var(--text3);">'+escHtml(g.position)+'</span>';
+      html += '</div>';
+    });
+    display.innerHTML = html;
+    card.classList.remove('hidden');
+  }
+
+  // ===== 四神渲染 =====
+  function renderSishen(result){
+    var card = document.getElementById('sishenCard');
+    var display = document.getElementById('sishenDisplay');
+    var sishen = result.sishen || {};
+
+    var items = [
+      {key:'tianyi', label:'天乙', desc:'主天时'},
+      {key:'diyi',   label:'地乙', desc:'主地利'},
+      {key:'zhifu',  label:'直符', desc:'主人和'},
+      {key:'sishen', label:'四神', desc:'主神助'},
+    ];
+
+    var html = '';
+    items.forEach(function(item){
+      var val = sishen[item.key];
+      var pos = val ? val.position : '—';
+      var dirMatch = pos.match(/[（(](.+?)[)）]/);
+      var dir = dirMatch ? dirMatch[1] : '';
+      html += '<div class="sishen-item">';
+      html += '<div class="sishen-name">'+escHtml(item.label)+'</div>';
+      html += '<div class="sishen-pos">'+escHtml(pos.replace(/[（(].+?[)）]/,''))+'</div>';
+      html += '<div class="sishen-dir">'+escHtml(item.desc)+(dir?' · '+escHtml(dir):'')+'</div>';
+      html += '</div>';
+    });
+    display.innerHTML = html;
+    card.classList.remove('hidden');
+  }
+
+  // ===== 渲染局象解读 =====
+  function renderInterp(result){
+    var card = document.getElementById('interpCard');
+    var content = document.getElementById('interpContent');
+    var interp = result.interpretation || '';
+    if(interp){
+      var lines = interp.split('\n').filter(function(l){ return l.trim(); });
+      var html = '';
+      lines.forEach(function(line){
+        if(line.match(/^【/)){
+          html += '<div class="interp-block"><div class="block-label">'+escHtml(line)+'</div></div>';
+        }else{
+          html += '<div class="interp-block"><div class="block-content"><p>'+escHtml(line)+'</p></div></div>';
+        }
+      });
+      content.innerHTML = html;
+    }else{
+      content.innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px;">暂无局象解读</p>';
+    }
+    card.classList.remove('hidden');
+  }
+
+  // ===== 太乙神数大师分析 =====
+  function generateTaiyiAnalysis(master, result, question){
+    var interp = result.interpretation || '';
+    var opening = '', overview = '', specialty = '', quote = '', closing = '';
+    var gods = result.gods || [];
+    var taiyiGong = result.taiyi_gong || '中';
+    var juShu = result.ju_shu || 0;
+
+    var taiyiQuotes = {
+      '王朴': '《太乙金镜式经》云："太乙者，天地之神也，运行于九宫之间，察天时之变，定人事之机。"',
+    };
+
+    // 开口
+    opening = '太乙积年'+escHtml(String(result.ji_nian||''))+'，局数'+escHtml(String(juShu))+'，太乙落'+escHtml(taiyiGong)+'宫（'+escHtml(TaiyiEngine.GONG_DIR[taiyiGong]||'中')+'）。';
+    if(question) opening += '所问者：'+escHtml(question)+'。';
+
+    // 总论
+    var jiCount = gods.filter(function(g){ return g.auspicious==='大吉'||g.auspicious==='吉'; }).length;
+    var xiongCount = gods.filter(function(g){ return g.auspicious==='凶'; }).length;
+    var verdict = jiCount >= 10 ? '大吉' : jiCount >= 7 ? '平吉' : jiCount >= 4 ? '平' : '凶';
+    overview = '此局总断为'+verdict+'。十六神中，吉神'+jiCount+'尊，凶神'+xiongCount+'尊。太乙落'+taiyiGong+'宫，当察其卦象与神煞之交感。';
+
+    // 专论
+    specialty = interp;
+    if(specialty){
+      specialty = '【局象详析】\n' + specialty;
+    }
+
+    // 引经据典
+    quote = taiyiQuotes[master.name] || '《太乙金镜式经》云："太乙巡行九宫，吉凶自见，顺势者昌，逆势者亡。"';
+
+    // 结语
+    if(verdict==='大吉'){
+      closing = '综合而论，太乙得位，吉神众多，此乃上上之局。所问之事，顺势而为，可成。然盛极必衰，当思警惕，见好就收。';
+    }else if(verdict==='平吉'){
+      closing = '综合而论，吉多凶少，运势平稳向好。所问之事，宜择太乙落宫方位而行，趋吉避凶，可得其利。';
+    }else if(verdict==='平'){
+      closing = '综合而论，吉凶参半，局势胶着。所问之事，宜守正待时，不可冒进，先稳根基再图进取。';
+    }else{
+      closing = '综合而论，凶神较盛，时运未至。所问之事，短期内多阻，宜韬光养晦，积蓄力量，待下一轮太乙巡行再图大事。';
+    }
+
+    return {opening:opening, overview:overview, specialty:specialty, quote:quote, closing:closing};
+  }
+
+  // ===== 大师点评面板 =====
+  function initMastersPanel(){
+    var mastersArea = document.getElementById('mastersContent');
+    if(!mastersArea || !currentResult) return;
+    mastersArea.innerHTML = '';
+
+    var taiyiMasters = [];
+    if(window.MastersEngine && MastersEngine.MASTERS){
+      var allMasters = MastersEngine.MASTERS;
+      for(var key in allMasters){
+        if(allMasters.hasOwnProperty(key)){
+          var m = allMasters[key];
+          if(m.category === '太乙' || m.category === '综合'){
+            taiyiMasters.push(m);
+          }
+        }
+      }
+    }
+
+    renderMastersPanel(mastersArea, {
+      category: '太乙',
+      masters: taiyiMasters,
+      analysisTypes: [{id:'full',label:'即时占断'}],
+      onAnalyze: function(masterId, analysisType){
+        var master = window.MastersEngine.MASTERS[masterId];
+        if(!master || !currentResult){ console.error('[天机阁] 太乙大师分析失败: master不存在或result为空'); return null; }
+        try {
+          var result = generateTaiyiAnalysis(master, currentResult, currentQuestion);
+          console.log('[天机阁] 太乙大师分析成功:', masterId, 'sections:', Object.keys(result).join(','));
+          return result;
+        } catch(e){ console.error('[天机阁] 太乙大师分析异常:', masterId, e); throw e; }
+      }
+    });
+  }
+
+  // ===== 起局 =====
+  document.getElementById('castBtn').addEventListener('click',function(){
+    var question = document.getElementById('question').value.trim();
+    var dateStr = document.getElementById('taiyi-date').value;
+    var shichen = document.getElementById('taiyi-time').value;
+
+    if(!dateStr){ alert('请选择日期'); return; }
+    if(!shichen){ alert('请选择时辰'); return; }
+
+    var result = TaiyiEngine.divine(dateStr, shichen);
+    if(!result || result.error){
+      alert('起局失败：'+(result?result.error:'未知错误'));
+      return;
+    }
+
+    currentResult = result;
+    currentQuestion = question;
+    renderGrid(result);
+    renderGods(result);
+    renderSishen(result);
+    renderInterp(result);
+
+    var mastersCard = document.getElementById('mastersCard');
+    mastersCard.classList.remove('hidden');
+    initMastersPanel();
+
+    document.getElementById('gridCard').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+
+  // ===== 水墨粒子动画 =====
+  (function(){
+    var canvas = document.getElementById('inkCanvas');
+    var ctx = canvas.getContext('2d');
+    var w,h;
+    var particles = [];
+    function resize(){ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
+    resize();
+    window.addEventListener('resize',resize);
+    for(var i=0;i<50;i++){
+      particles.push({
+        x:Math.random()*w, y:Math.random()*h,
+        vx:(Math.random()-0.5)*0.3, vy:-Math.random()*0.5-0.1,
+        r:Math.random()*2+1, o:Math.random()*0.3+0.1,
+        age:0, life:Math.random()*400+200
+      });
+    }
+    function draw(){
+      ctx.clearRect(0,0,w,h);
+      particles.forEach(function(p){
+        p.age++;
+        if(p.age>p.life){ p.x=Math.random()*w; p.y=h+20; p.age=0; p.life=Math.random()*400+200; }
+        p.x+=p.vx; p.y+=p.vy;
+        var alpha=p.o*Math.sin((p.age/p.life)*Math.PI);
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        var grad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*2);
+        grad.addColorStop(0,'rgba(184,154,92,'+alpha+')');
+        grad.addColorStop(1,'rgba(184,154,92,0)');
+        ctx.fillStyle=grad; ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+})();
+</script>
+</body>
+</html>
