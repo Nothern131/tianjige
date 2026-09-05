@@ -16,6 +16,7 @@ export default defineConfig({
         'ep3-liuyao': 'ep3-liuyao.html',
         'ep4-meihua': 'ep4-meihua.html',
         'ep5-qimen': 'ep5-qimen.html',
+        'ep6-taiyi': 'ep6-taiyi.html',
         architecture: 'architecture.html',
       },
     },
