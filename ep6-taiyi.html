@@ -821,7 +821,7 @@
     };
 
     // 开口
-    opening = '太乙积年'+escHtml(String(result.ji_nian||''))+'，局数'+escHtml(String(juShu))+'，太乙落'+escHtml(taiyiGong)+'宫（'+escHtml(GONG_DIR[taiyiGong]||'中')+'）。';
+    opening = '太乙积年'+escHtml(String(result.ji_nian||''))+'，局数'+escHtml(String(juShu))+'，太乙落'+escHtml(taiyiGong)+'宫（'+escHtml(TaiyiEngine.GONG_DIR[taiyiGong]||'中')+'）。';
     if(question) opening += '所问者：'+escHtml(question)+'。';
 
     // 总论
