@@ -535,6 +535,7 @@
   /* ========== 四、公开API ========== */
 
   global.TaiyiEngine = {
+    GONG_DIR: GONG_DIR,
     /**
      * 太乙神数起算
      * @param {string} date - 日期字符串 YYYY-MM-DD
