@@ -17,6 +17,7 @@ export default defineConfig({
         'ep4-meihua': 'ep4-meihua.html',
         'ep5-qimen': 'ep5-qimen.html',
         'ep6-taiyi': 'ep6-taiyi.html',
+        'ep7-zhuge': 'ep7-zhuge.html',
         architecture: 'architecture.html',
       },
     },

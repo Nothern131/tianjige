@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>天机阁 EP7 · 诸葛神数</title>
+    <meta name="description" content="天机阁EP7——诸葛神数。诸葛武侯传世秘法，三百八十四签，报字·报数·随机三种起卦，签诗解读，趋吉避凶。纯前端实现。">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+      :root {
+        --ink: #0a0806;
+        --parchment: #1a1612;
+        --surface: rgba(20,16,12,0.94);
+        --card: rgba(24,20,14,0.82);
+        --gold: #b89a5c;
+        --gold-light: #d4bb7c;
+        --gold-dim: #8a7040;
+        --gold-glow: rgba(184,154,92,0.15);
+        --red: #c04040;
+        --red-light: #e06060;
+        --green: #5a8a5a;
+        --green-light: #7aaa7a;
+        --blue: #4a6a8a;
+        --blue-light: #6a8aaa;
+        --purple: #7a6aa0;
+        --purple-light: #9a8ac0;
+        --text: #e0dcd0;
+        --text2: #8a8576;
+        --text3: #4a4640;
+        --border: rgba(255,255,255,0.05);
+        --border-gold: rgba(184,154,92,0.18);
+        --font-serif: 'Noto Serif SC','SimSun','KaiTi',serif;
+        --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+        --radius: 14px;
+        --radius-sm: 8px;
+      }
+      html {
+        background: var(--ink);
+        color: var(--text);
+        font-family: var(--font-sans);
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+      }
+      body {
+        min-height: 100vh;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      /* ===== Ink Canvas ===== */
+      #inkCanvas {
+        position: fixed; top:0; left:0; width:100%; height:100%;
+        z-index: 0; pointer-events: none;
+      }
+      .watermark {
+        position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+        font-family:'Ma Shan Zheng',cursive; font-size:18vw;
+        color:rgba(184,154,92,0.03); pointer-events:none; z-index:0; user-select:none;
+      }
+
+      /* ===== Layout ===== */
+      .wrap {
+        position: relative; z-index: 1;
+        max-width: 960px; margin: 0 auto;
+        padding: 0 20px 80px;
+      }
+
+      /* ===== Hero ===== */
+      .hero {
+        text-align: center; padding: 60px 0 32px; position: relative;
+      }
+      .hero .ep-tag {
+        display: inline-block;
+        font-size: 0.7rem; color: var(--gold-dim);
+        letter-spacing: 0.2em; padding: 4px 14px;
+        border: 1px solid var(--border-gold); border-radius: 20px;
+        margin-bottom: 16px;
+      }
+      .hero h1 {
+        font-family: var(--font-serif);
+        font-size: clamp(2rem,5vw,2.8rem);
+        color: var(--gold-light); letter-spacing: 0.12em;
+        font-weight: 700; line-height: 1.2;
+      }
+      .hero .subtitle {
+        font-size: 0.88rem; color: var(--text2);
+        margin-top: 10px; letter-spacing: 0.08em;
+      }
+      .hero .hero-divider {
+        display: flex; align-items: center; justify-content: center;
+        gap: 10px; margin-top: 18px;
+      }
+      .hero .hero-divider span { width: 40px; height: 1px; background: var(--border-gold); }
+      .hero .hero-divider .diamond {
+        width: 6px; height: 6px; background: var(--gold);
+        transform: rotate(45deg); opacity: 0.6;
+      }
+
+      /* ===== Section Title ===== */
+      .section-title {
+        font-family: var(--font-serif); font-size: 1.1rem;
+        color: var(--gold); letter-spacing: 0.06em;
+        margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+      }
+      .section-title::before {
+        content: ''; width: 3px; height: 16px;
+        background: var(--gold); border-radius: 1px; opacity: 0.5;
+      }
+      .section-title .num {
+        font-size: 0.7rem; color: var(--text3);
+        letter-spacing: 0.1em; margin-left: auto;
+      }
+
+      /* ===== Cards ===== */
+      .card {
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 28px;
+        margin-bottom: 24px; transition: border-color 0.4s, box-shadow 0.4s;
+        position: relative; overflow: hidden;
+      }
+      .card::before {
+        content: ''; position: absolute; top:0; left:0; right:0;
+        height: 1px; background: linear-gradient(90deg,transparent,var(--border-gold),transparent);
+        opacity: 0; transition: opacity 0.4s;
+      }
+      .card:hover { border-color: var(--border-gold); }
+      .card:hover::before { opacity: 1; }
+
+      /* ===== Form ===== */
+      .form-row {
+        display: grid; grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
+        gap: 14px;
+      }
+      .form-group label {
+        display: block; font-size: 0.72rem; color: var(--text2);
+        margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase;
+      }
+      .form-group input, .form-group select {
+        width: 100%; padding: 11px 14px;
+        background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); color: var(--text); font-size: 0.88rem;
+        outline: none; font-family: var(--font-sans);
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+      .form-group input:focus, .form-group select:focus {
+        border-color: var(--border-gold); box-shadow: 0 0 0 3px var(--gold-glow);
+      }
+
+      /* ===== Buttons ===== */
+      .btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 12px 32px; background: rgba(184,154,92,0.1);
+        border: 1px solid var(--border-gold); border-radius: 24px;
+        color: var(--gold-light); font-family: var(--font-serif);
+        font-size: 0.9rem; cursor: pointer; transition: all 0.35s;
+        letter-spacing: 0.06em; position: relative; overflow: hidden;
+      }
+      .btn::after {
+        content: ''; position: absolute; inset: 0;
+        background: radial-gradient(circle at center, var(--gold-glow), transparent);
+        opacity: 0; transition: opacity 0.35s;
+      }
+      .btn:hover {
+        background: rgba(184,154,92,0.18); box-shadow: 0 0 24px var(--gold-glow);
+        transform: translateY(-1px);
+      }
+      .btn:hover::after { opacity: 1; }
+      .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+      .btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+
+      /* ===== Method Tabs ===== */
+      .method-tabs {
+        display: flex; gap: 6px; margin-bottom: 20px;
+        background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 4px;
+      }
+      .method-tab {
+        flex: 1; padding: 10px 14px; border: none; background: transparent;
+        color: var(--text2); font-family: var(--font-serif); font-size: 0.82rem;
+        cursor: pointer; border-radius: 6px; transition: all 0.3s;
+        letter-spacing: 0.04em;
+      }
+      .method-tab:hover { color: var(--gold-light); }
+      .method-tab.active {
+        background: rgba(184,154,92,0.12); color: var(--gold-light);
+        box-shadow: 0 0 12px var(--gold-glow);
+      }
+      .method-content { display: none; }
+      .method-content.active { display: block; }
+
+      /* ===== Question Input ===== */
+      .question-input {
+        width: 100%; padding: 11px 14px;
+        background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); color: var(--text); font-size: 0.88rem;
+        outline: none; font-family: var(--font-sans);
+        transition: border-color 0.3s, box-shadow 0.3s; margin-bottom: 16px;
+      }
+      .question-input:focus {
+        border-color: var(--border-gold); box-shadow: 0 0 0 3px var(--gold-glow);
+      }
+
+      /* ===== Domain Tags ===== */
+      .domain-tags {
+        display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+      }
+      .domain-tag {
+        padding: 7px 16px; border-radius: 20px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--text2); cursor: pointer; font-family: var(--font-sans);
+        font-size: 0.78rem; transition: all 0.25s; letter-spacing: 0.03em;
+      }
+      .domain-tag:hover { border-color: var(--border-gold); color: var(--gold-light); background: rgba(184,154,92,0.06); }
+      .domain-tag.active {
+        border-color: var(--border-gold); color: var(--gold-light);
+        background: rgba(184,154,92,0.12); box-shadow: 0 0 10px var(--gold-glow);
+      }
+
+      /* ===== Qian Seal Display ===== */
+      .qian-seal {
+        text-align: center; padding: 32px 20px;
+        background: rgba(10,8,6,0.45); border: 1px solid var(--border);
+        border-radius: var(--radius); margin-bottom: 20px;
+        position: relative; overflow: hidden;
+      }
+      .qian-seal::before {
+        content: ''; position: absolute; top:0; left:0; right:0;
+        height: 1px; background: linear-gradient(90deg,transparent,var(--border-gold),transparent);
+      }
+      .qian-number {
+        font-family: var(--font-serif); font-size: 0.75rem;
+        color: var(--text3); letter-spacing: 0.15em; margin-bottom: 8px;
+      }
+      .qian-level {
+        display: inline-block; font-family: var(--font-serif);
+        font-size: 1rem; padding: 4px 18px; border-radius: 16px;
+        letter-spacing: 0.08em; margin-bottom: 16px;
+      }
+      .qian-level.level-auspicious { background: rgba(90,138,90,0.12); color: var(--green-light); border: 1px solid rgba(90,138,90,0.25); }
+      .qian-level.level-neutral { background: rgba(184,154,92,0.1); color: var(--gold-light); border: 1px solid rgba(184,154,92,0.2); }
+      .qian-level.level-inauspicious { background: rgba(192,64,64,0.1); color: var(--red-light); border: 1px solid rgba(192,64,64,0.25); }
+      .qian-poem {
+        font-family: var(--font-serif); font-size: 1.15rem;
+        color: var(--text); line-height: 2.1; letter-spacing: 0.1em;
+      }
+
+      /* ===== Interpretation ===== */
+      .interp-block {
+        padding: 16px 20px; background: rgba(10,8,6,0.4); border-radius: var(--radius-sm);
+        border-left: 3px solid var(--gold); margin: 12px 0;
+      }
+      .interp-block .block-label { font-size: 0.72rem; color: var(--gold); margin-bottom: 8px; letter-spacing: 0.08em; }
+      .interp-block .block-content { font-size: 0.88rem; color: var(--text); line-height: 1.9; }
+      .interp-block .block-content p { margin-bottom: 8px; text-indent: 2em; }
+      .interp-block .block-content p:last-child { margin-bottom: 0; }
+      .interp-block .block-content strong { color: var(--gold-light); }
+
+      /* ===== Verdict ===== */
+      .verdict-block {
+        padding: 18px 22px; margin-top: 16px;
+        background: rgba(184,154,92,0.05); border: 1px solid var(--border-gold);
+        border-radius: var(--radius-sm);
+      }
+      .verdict-block .verdict-label {
+        font-size: 0.72rem; color: var(--gold-dim);
+        letter-spacing: 0.1em; margin-bottom: 8px;
+      }
+      .verdict-block .verdict-text {
+        font-family: var(--font-serif); font-size: 1rem;
+        color: var(--gold-light); line-height: 1.8;
+      }
+
+      /* ===== Stroke Display ===== */
+      .stroke-display {
+        display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+        margin: 16px 0;
+      }
+      .stroke-char {
+        text-align: center; padding: 12px 16px;
+        background: rgba(10,8,6,0.5); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); min-width: 64px;
+      }
+      .stroke-char .char {
+        font-family: var(--font-serif); font-size: 1.4rem;
+        color: var(--text); margin-bottom: 4px;
+      }
+      .stroke-char .count {
+        font-size: 0.7rem; color: var(--gold); letter-spacing: 0.06em;
+      }
+
+      /* ===== Info Panel ===== */
+      .info-panel {
+        display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+        gap: 12px; margin-top: 16px;
+      }
+      .info-item {
+        padding: 14px 16px; background: rgba(10,8,6,0.5);
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        border-left: 3px solid var(--gold);
+      }
+      .info-item .label { font-size: 0.72rem; color: var(--text3); margin-bottom: 4px; letter-spacing: 0.05em; }
+      .info-item .value { font-size: 0.88rem; color: var(--text); font-family: var(--font-serif); line-height: 1.6; }
+      .info-item .value .highlight { color: var(--gold-light); font-weight: 600; }
+      .info-item.info-gold { border-left-color: var(--gold); }
+      .info-item.info-green { border-left-color: var(--green-light); }
+      .info-item.info-purple { border-left-color: var(--purple-light); }
+      .info-item.info-red { border-left-color: var(--red-light); }
+
+      /* ===== Disclaimer ===== */
+      .disclaimer {
+        background: rgba(184,154,92,0.04); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); padding: 14px 20px; margin-top: 32px;
+        font-size: 0.75rem; color: var(--text3); text-align: center; line-height: 1.8;
+      }
+      .disclaimer strong { color: var(--gold-dim); }
+
+      /* ===== Loading ===== */
+      .spinner {
+        width: 36px; height: 36px; border: 3px solid var(--border);
+        border-top-color: var(--gold); border-radius: 50%;
+        animation: spin 0.8s linear infinite; margin: 36px auto;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* ===== Glass Card (Masters) ===== */
+      .glass-card {
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 28px;
+        transition: border-color 0.4s, box-shadow 0.4s; position: relative; overflow: hidden;
+      }
+      .glass-card:hover { border-color: var(--border-gold); box-shadow: 0 4px 28px rgba(0,0,0,0.3), 0 0 20px var(--gold-glow); }
+      .section-header { margin-bottom: 24px; }
+      .page-title { font-family: var(--font-serif); font-size: 1.55rem; font-weight: 700; color: var(--gold); margin-bottom: 8px; letter-spacing: 0.08em; }
+      .page-subtitle { font-size: 0.85rem; color: var(--text2); line-height: 1.7; }
+      .btn-gold {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 10px 28px; background: linear-gradient(135deg,rgba(138,109,52,0.82),rgba(184,154,92,0.9));
+        color: #0a080f; font-weight: 600; font-size: 0.84rem; border-radius: var(--radius-sm);
+        border: 1px solid rgba(184,154,92,0.28); transition: all 0.25s; cursor: pointer;
+        letter-spacing: 0.05em; font-family: var(--font-sans);
+      }
+      .btn-gold:hover { background: linear-gradient(135deg,var(--gold),var(--gold-light)); box-shadow: 0 0 20px var(--gold-glow); transform: translateY(-1px) scale(1.02); }
+      .btn-gold.lg { padding: 14px 40px; font-size: 0.96rem; }
+      .btn-gold:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+      .mt-8 { margin-top: 8px; }
+      .mb-24 { margin-bottom: 24px; }
+      .hidden { display: none !important; }
+      .master-cat-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(148px,1fr)); gap: 10px; }
+      .master-card {
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+        padding: 14px 10px; background: rgba(10,8,6,0.6); border: 1px solid var(--border);
+        border-radius: var(--radius); cursor: pointer; transition: all 0.25s; position: relative;
+      }
+      .master-card:hover { background: rgba(20,16,12,0.9); border-color: var(--border-gold); box-shadow: 0 0 16px var(--gold-glow); transform: translateY(-2px); }
+      .master-card.selected { background: rgba(184,154,92,0.08); border-color: rgba(184,154,92,0.4); box-shadow: 0 0 20px var(--gold-glow),inset 0 0 20px rgba(184,154,92,0.04); }
+      .master-card.selected::after { content:'✓'; position:absolute; top:6px; right:8px; font-size:0.7rem; color:var(--gold); font-weight:700; }
+      .master-avatar { font-size: 1.8rem; transition: transform 0.3s; }
+      .master-card:hover .master-avatar { transform: scale(1.1); }
+      .master-name { font-family: var(--font-serif); font-size: 0.84rem; font-weight: 600; color: var(--text); transition: color 0.25s; }
+      .master-card:hover .master-name { color: var(--gold-light); }
+      .master-title { font-size: 0.68rem; color: var(--text3); text-align: center; line-height: 1.4; max-width: 130px; }
+      .master-era { font-size: 0.62rem; color: var(--text3); padding: 1px 8px; border-radius: 8px; background: rgba(184,154,92,0.04); border: 1px solid var(--border); }
+      .master-result-header { display: flex; align-items: center; gap: 20px; padding: 8px 0 20px; }
+      .master-result-avatar-wrap { flex-shrink: 0; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; background: rgba(184,154,92,0.06); border: 1px solid var(--border-gold); border-radius: 50%; }
+      .master-result-avatar { font-size: 2rem; }
+      .master-result-info { flex: 1; min-width: 0; }
+      .master-result-name { font-family: var(--font-serif); font-size: 1.2rem; color: var(--gold-light); font-weight: 700; margin: 0 0 4px; display: flex; align-items: baseline; gap: 10px; }
+      .master-result-era { font-size: 0.7rem; color: var(--text3); font-weight: 400; font-family: var(--font-sans); }
+      .master-result-title { font-size: 0.8rem; color: var(--text2); margin: 0 0 8px; }
+      .master-result-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+      .master-result-tag { font-size: 0.65rem; padding: 2px 10px; border: 1px solid var(--border); border-radius: 10px; color: var(--text3); white-space: nowrap; }
+      .master-result-divider { height: 1px; background: linear-gradient(90deg,transparent,var(--border-gold),transparent); margin-bottom: 24px; }
+      .master-result-body { display: flex; flex-direction: column; gap: 0; }
+      .master-result-section { padding: 20px 0; border-bottom: 1px solid var(--border); animation: sectionFadeIn 0.5s ease both; animation-delay: var(--delay,0s); }
+      .master-result-section:last-child { border-bottom: none; }
+      @keyframes sectionFadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+      .master-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+      .master-section-icon { font-size: 1.1rem; flex-shrink: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(184,154,92,0.04); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+      .master-section-title-wrap { flex: 1; min-width: 0; }
+      .master-section-title { font-family: var(--font-serif); font-size: 0.95rem; color: var(--gold); font-weight: 600; display: block; }
+      .master-section-desc { font-size: 0.7rem; color: var(--text3); display: block; margin-top: 2px; }
+      .master-section-num { font-family: var(--font-serif); font-size: 1.4rem; color: var(--text3); opacity: 0.5; letter-spacing: 0.04em; }
+      .master-section-content { font-size: 0.88rem; color: var(--text2); line-height: 1.95; }
+      .master-section-content p { margin-bottom: 10px; text-indent: 2em; }
+      .master-section-content p:last-child { margin-bottom: 0; }
+      .master-section-content strong { color: var(--gold); }
+
+      /* ===== Fade In ===== */
+      .fade-up { animation: fadeUp 0.6s ease-out both; }
+      @keyframes fadeUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+
+      /* ===== Footer ===== */
+      .footer { text-align: center; padding: 40px 0 0; color: var(--text3); font-size: 0.7rem; letter-spacing: 0.06em; }
+      .footer .footer-line { width: 60px; height: 1px; background: var(--border-gold); margin: 12px auto; }
+
+      /* ===== Responsive ===== */
+      @media(max-width:600px){
+        .wrap { padding: 0 12px 60px; }
+        .card, .glass-card { padding: 20px; }
+        .qian-poem { font-size: 1rem; }
+        .master-cat-grid { grid-template-columns: repeat(auto-fill,minmax(110px,1fr)); }
+      }
+    </style>
+  </head>
+<body>
+<canvas id="inkCanvas"></canvas>
+<div class="watermark">诸葛</div>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero fade-up">
+    <div class="ep-tag">EPISODE 7</div>
+    <h1>诸葛神数</h1>
+    <p class="subtitle">武侯秘法 · 三百八十四签 · 三数测事</p>
+    <div class="hero-divider">
+      <span></span><div class="diamond"></div><span></span>
+    </div>
+  </div>
+
+  <!-- 起卦卡片 -->
+  <div class="card fade-up" id="castCard">
+    <div class="section-title">起卦参数<span class="num">01</span></div>
+
+    <input type="text" class="question-input" id="question" placeholder="心中所问之事，例如：近日财运如何？" />
+
+    <!-- 事域选择 -->
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>事域选择</label>
+      <div class="domain-tags" id="domain-tags">
+        <button class="domain-tag" data-domain="事业">💼 事业</button>
+        <button class="domain-tag" data-domain="感情">💕 感情</button>
+        <button class="domain-tag" data-domain="财运">💰 财运</button>
+        <button class="domain-tag" data-domain="健康">🏥 健康</button>
+        <button class="domain-tag" data-domain="出行">✈️ 出行</button>
+        <button class="domain-tag" data-domain="学业">📚 学业</button>
+      </div>
+    </div>
+
+    <!-- 起卦方式 Tab -->
+    <div class="form-group">
+      <label>起卦方式</label>
+      <div class="method-tabs" id="methodTabs">
+        <button class="method-tab active" data-method="random">🎲 随机</button>
+        <button class="method-tab" data-method="word">📝 报字</button>
+        <button class="method-tab" data-method="number">🔢 报数</button>
+      </div>
+
+      <div class="method-content active" id="method-random">
+        <p style="color:var(--text2);font-size:0.82rem;margin-bottom:12px;line-height:1.7;">
+          心诚则灵，点击按钮随机生成一签。无需任何输入，最自然的起卦方式。
+        </p>
+        <button class="btn" id="randomBtn" style="width:100%;justify-content:center;">🎲 随机求签</button>
+      </div>
+
+      <div class="method-content" id="method-word">
+        <div class="form-group">
+          <label>报字法 · 请输入三个汉字</label>
+          <input type="text" id="zhuge-words" placeholder="如：问前程" maxlength="10" style="margin-bottom:12px;" />
+          <p style="font-size:0.72rem;color:var(--text3);line-height:1.6;margin-bottom:14px;">
+            取前三个字笔画数之和，对应 384 签之一。内置 2000+ 常用字笔画表。
+          </p>
+          <button class="btn" id="wordBtn" style="width:100%;justify-content:center;">📝 报字求签</button>
+        </div>
+      </div>
+
+      <div class="method-content" id="method-number">
+        <div class="form-group">
+          <label>报数法 · 请输入三个数字</label>
+          <div class="form-row">
+            <div class="form-group">
+              <label style="text-transform:none;">第一个数</label>
+              <input type="number" id="zhuge-num1" placeholder="1-999" min="1" max="999" />
+            </div>
+            <div class="form-group">
+              <label style="text-transform:none;">第二个数</label>
+              <input type="number" id="zhuge-num2" placeholder="1-999" min="1" max="999" />
+            </div>
+            <div class="form-group">
+              <label style="text-transform:none;">第三个数</label>
+              <input type="number" id="zhuge-num3" placeholder="1-999" min="1" max="999" />
+            </div>
+          </div>
+          <p style="font-size:0.72rem;color:var(--text3);line-height:1.6;margin:10px 0 14px;">
+            三数之和对应签号。可用日期、门牌、车牌等日常数字。
+          </p>
+          <button class="btn" id="numberBtn" style="width:100%;justify-content:center;">🔢 报数求签</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 签文展示 -->
+  <div class="card fade-up hidden" id="qianCard">
+    <div class="section-title">签文<span class="num">02</span></div>
+    <div id="qianDisplay"></div>
+  </div>
+
+  <!-- 解签 -->
+  <div class="card fade-up hidden" id="interpCard">
+    <div class="section-title">解签<span class="num">03</span></div>
+    <div id="interpContent"></div>
+  </div>
+
+  <!-- 判断结论 -->
+  <div class="card fade-up hidden" id="verdictCard">
+    <div class="section-title">判断<span class="num">04</span></div>
+    <div id="verdictContent"></div>
+  </div>
+
+  <!-- 大师点评 -->
+  <div class="glass-card fade-up hidden" id="mastersCard">
+    <div id="mastersContent"></div>
+  </div>
+
+  <!-- 免责声明 -->
+  <div class="disclaimer">
+    <strong>声明：</strong>诸葛神数是中国传统文化的一部分，属于古典术数和文化遗产范畴。<br>
+    本系统仅供文化研究和娱乐参考，不构成任何人生决策建议。请相信科学，理性看待命运。
+  </div>
+</div>
+
+<script src="static/js/zhuge-engine.js"></script>
+<script src="static/js/masters-engine.js"></script>
+<script src="static/js/components/masters.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var currentResult = null;
+  var currentQuestion = '';
+  var currentDomain = '';
+  var currentMethod = 'random';
+
+  // ===== 工具函数 =====
+  function escHtml(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // 签等 → CSS 类名
+  function levelClass(level){
+    if(!level) return 'level-neutral';
+    if(level.indexOf('上') !== -1 && level.indexOf('下') === -1) return 'level-auspicious';
+    if(level.indexOf('下') !== -1) return 'level-inauspicious';
+    if(level.indexOf('中') !== -1) return 'level-neutral';
+    return 'level-neutral';
+  }
+
+  // ===== 事域标签点击 =====
+  var domainBtns = document.querySelectorAll('.domain-tag');
+  domainBtns.forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var isActive = btn.classList.contains('active');
+      domainBtns.forEach(function(b){ b.classList.remove('active'); });
+      if(!isActive){
+        btn.classList.add('active');
+        currentDomain = btn.dataset.domain;
+        document.getElementById('question').value = '请问' + currentDomain + '运势如何？';
+      }
+    });
+  });
+
+  // ===== 起卦方式 Tab =====
+  var methodTabs = document.getElementById('methodTabs');
+  methodTabs.addEventListener('click', function(e){
+    var btn = e.target.closest('.method-tab');
+    if(!btn) return;
+    methodTabs.querySelectorAll('.method-tab').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentMethod = btn.dataset.method;
+    document.querySelectorAll('.method-content').forEach(function(c){ c.classList.remove('active'); });
+    document.getElementById('method-' + currentMethod).classList.add('active');
+  });
+
+  // ===== 随机求签 =====
+  document.getElementById('randomBtn').addEventListener('click', function(){
+    doDivine({ method: 'random' });
+  });
+
+  // ===== 报字求签 =====
+  document.getElementById('wordBtn').addEventListener('click', function(){
+    var words = document.getElementById('zhuge-words').value.trim();
+    if(!words){ showToast('请输入汉字'); return; }
+    doDivine({ method: 'word', words: words });
+  });
+
+  // ===== 报数求签 =====
+  document.getElementById('numberBtn').addEventListener('click', function(){
+    var n1 = document.getElementById('zhuge-num1').value;
+    var n2 = document.getElementById('zhuge-num2').value;
+    var n3 = document.getElementById('zhuge-num3').value;
+    if(!n1 || !n2 || !n3){ showToast('请输入三个数字'); return; }
+    doDivine({ method: 'number', numbers: [parseInt(n1,10)||0, parseInt(n2,10)||0, parseInt(n3,10)||0] });
+  });
+
+  // ===== 起签主函数 =====
+  function doDivine(params){
+    var question = document.getElementById('question').value.trim();
+    currentQuestion = question;
+
+    var qianCard = document.getElementById('qianCard');
+    var interpCard = document.getElementById('interpCard');
+    var verdictCard = document.getElementById('verdictCard');
+    qianCard.classList.add('hidden');
+    interpCard.classList.add('hidden');
+    verdictCard.classList.add('hidden');
+
+    var qianDisplay = document.getElementById('qianDisplay');
+    qianDisplay.innerHTML = '<div class="spinner"></div>';
+
+    setTimeout(function(){
+      try {
+        var result = ZhugeEngine.divine(params);
+        if(!result || !result.poem){
+          qianDisplay.innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px;">起卦失败，请重试。</p>';
+          qianCard.classList.remove('hidden');
+          return;
+        }
+
+        currentResult = result;
+        renderQian(result, params);
+        renderInterp(result, question);
+        renderVerdict(result);
+
+        qianCard.classList.remove('hidden');
+        interpCard.classList.remove('hidden');
+        verdictCard.classList.remove('hidden');
+
+        var mastersCard = document.getElementById('mastersCard');
+        mastersCard.classList.remove('hidden');
+        initMastersPanel();
+
+        qianCard.scrollIntoView({ behavior:'smooth', block:'start' });
+      } catch(e){
+        qianDisplay.innerHTML = '<p style="color:var(--red-light);text-align:center;padding:20px;">' + escHtml(e.message || '起卦出错，请重试。') + '</p>';
+        qianCard.classList.remove('hidden');
+      }
+    }, 400);
+  }
+
+  // ===== 渲染签文 =====
+  function renderQian(result, params){
+    var display = document.getElementById('qianDisplay');
+    var html = '';
+
+    html += '<div class="qian-seal">';
+    html += '<div class="qian-number">第 ' + escHtml(String(result.number)) + ' 签 · 共 ' + ZhugeEngine.getTotalCount() + ' 签</div>';
+    html += '<div class="qian-level ' + levelClass(result.level) + '">' + escHtml(result.level || '中') + '</div>';
+    html += '<div class="qian-poem">' + escHtml(result.poem || '签诗待显...') + '</div>';
+    html += '</div>';
+
+    // 报字法显示笔画
+    if(params.method === 'word' && params.words){
+      var chars = params.words.replace(/\s/g,'').split('').slice(0,3);
+      html += '<div class="stroke-display">';
+      chars.forEach(function(c){
+        var strokes = ZhugeEngine.getStrokeCount(c);
+        html += '<div class="stroke-char">';
+        html += '<div class="char">' + escHtml(c) + '</div>';
+        html += '<div class="count">' + strokes + ' 画</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // 报数法显示三数
+    if(params.method === 'number' && params.numbers){
+      html += '<div class="stroke-display">';
+      params.numbers.forEach(function(n){
+        html += '<div class="stroke-char">';
+        html += '<div class="char">' + escHtml(String(n)) + '</div>';
+        html += '<div class="count">数</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+
+    // 起卦方式
+    var methodNames = { word:'报字法', number:'报数法', random:'随机法' };
+    html += '<div class="info-panel">';
+    html += '<div class="info-item info-gold"><div class="label">起卦方式</div><div class="value"><span class="highlight">' + escHtml(methodNames[params.method] || params.method) + '</span></div></div>';
+    if(params.words){
+      html += '<div class="info-item info-green"><div class="label">报字</div><div class="value">' + escHtml(params.words) + '</div></div>';
+    }
+    if(params.numbers){
+      html += '<div class="info-item info-purple"><div class="label">报数</div><div class="value">' + escHtml(params.numbers.join(' · ')) + '</div></div>';
+    }
+    html += '</div>';
+
+    display.innerHTML = html;
+  }
+
+  // ===== 渲染解签 =====
+  function renderInterp(result, question){
+    var card = document.getElementById('interpCard');
+    var content = document.getElementById('interpContent');
+
+    var html = '';
+
+    // 签诗重述
+    html += '<div class="interp-block">';
+    html += '<div class="block-label">【签诗】</div>';
+    html += '<div class="block-content"><p>' + escHtml(result.poem || '') + '</p></div>';
+    html += '</div>';
+
+    // 解读
+    html += '<div class="interp-block">';
+    html += '<div class="block-label">【解读】</div>';
+    html += '<div class="block-content"><p>' + escHtml(result.interpretation || '暂无解读') + '</p></div>';
+    html += '</div>';
+
+    // 问事分析
+    if(question && typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
+      try {
+        var qaResult = DomainAnalysis.analyze('zhuge', result, question);
+        if(qaResult && qaResult.analysis){
+          html += '<div class="interp-block" style="border-left-color:var(--blue-light);">';
+          html += '<div class="block-label">' + escHtml(qaResult.domain ? qaResult.domain.icon + ' ' + qaResult.domain.name : '问事') + '</div>';
+          html += '<div class="block-content"><p>' + escHtml(qaResult.analysis) + '</p></div>';
+          html += '</div>';
+        }
+      } catch(e){ /* 静默降级 */ }
+    }
+
+    content.innerHTML = html;
+    card.classList.remove('hidden');
+  }
+
+  // ===== 渲染判断结论 =====
+  function renderVerdict(result){
+    var card = document.getElementById('verdictCard');
+    var content = document.getElementById('verdictContent');
+
+    var levelColor = levelClass(result.level);
+    var dotColor = levelColor.indexOf('auspicious') !== -1 ? 'var(--green-light)' :
+                   levelColor.indexOf('inauspicious') !== -1 ? 'var(--red-light)' : 'var(--gold)';
+
+    var html = '';
+    html += '<div class="verdict-block" style="border-left:3px solid ' + dotColor + ';">';
+    html += '<div class="verdict-label">综合判断</div>';
+    html += '<div class="verdict-text">' + escHtml(result.verdict || '暂无判断结论') + '</div>';
+    html += '</div>';
+
+    // 签等说明
+    var levelDesc = {
+      '上上': '大吉之兆，万事亨通，宜积极进取。',
+      '中上': '中吉之象，顺遂有助，守正可得。',
+      '中': '中平之局，有阻有助，静待时机。',
+      '中下': '中平偏阻，宜守不宜攻，韬光养晦。',
+      '下下': '大凶之兆，宜静不宜动，蓄势待发。'
+    };
+    html += '<div class="interp-block">';
+    html += '<div class="block-label">【签等说明】' + escHtml(result.level || '') + '</div>';
+    html += '<div class="block-content"><p>' + escHtml(levelDesc[result.level] || '此签属中等签，吉凶参半，宜谨慎行事。') + '</p></div>';
+    html += '</div>';
+
+    content.innerHTML = html;
+    card.classList.remove('hidden');
+  }
+
+  // ===== 诸葛神数大师分析 =====
+  function generateZhugeAnalysis(master, result, question){
+    var poem = result.poem || '';
+    var interp = result.interpretation || '';
+    var verdict = result.verdict || '';
+    var level = result.level || '中';
+
+    var zhugeQuotes = {
+      '诸葛亮': '《诸葛武侯行军卜法》云："天垂象，见吉凶，圣人则之。" 此签第' + result.number + '，' + level + '之兆，当观签诗而明事机。',
+      '张子业': '子业观此签：第' + result.number + '签，' + level + '之兆。签诗云"' + poem.replace(/。/g,'。').slice(0,20) + '"。综合术数之法，吉凶之兆已显于签中，所问之事，当以谨慎为上，顺势而为。',
+      '张楠': '张楠观签：第' + result.number + '签，' + level + '之兆。签诗有云"' + poem.slice(0,20) + '"。此签主' + level + '，' + verdict,
+    };
+
+    var opening = '第' + escHtml(String(result.number)) + '签，' + escHtml(level) + '之兆。';
+    if(question) opening += '所问者：' + escHtml(question) + '。';
+
+    var overview = '签诗云："' + escHtml(poem) + '"。此乃' + escHtml(level) + '之象。';
+
+    var specialty = interp ? '【签解详析】\n' + interp : '此签暂无详细解读，建议重新起卦。';
+
+    var quote = zhugeQuotes[master.name] || '《诸葛武侯行军卜法》云："三数定乾坤，一签明吉凶。心诚则灵，机不可失。"';
+
+    var closing;
+    if(level.indexOf('上') !== -1 && level.indexOf('下') === -1){
+      closing = '综合而论，' + level + '之签，吉兆明显。所问之事，可大胆进取，但不可忘乎所以，盛极必衰，当思退路。';
+    } else if(level.indexOf('中') !== -1 && level.indexOf('下') === -1){
+      closing = '综合而论，中吉之局，运势平稳向好。所问之事，宜稳扎稳打，不可冒进，循序渐进方得始终。';
+    } else if(level.indexOf('中') !== -1){
+      closing = '综合而论，吉凶参半，局势胶着。所问之事，宜守正待时，不可急于求成，先稳根基再图进取。';
+    } else {
+      closing = '综合而论，' + level + '之兆，时运未至。所问之事，短期内多阻，宜韬光养晦，积蓄力量，待时机成熟再图大事。';
+    }
+
+    return {opening:opening, overview:overview, specialty:specialty, quote:quote, closing:closing};
+  }
+
+  // ===== 大师点评面板 =====
+  function initMastersPanel(){
+    var mastersArea = document.getElementById('mastersContent');
+    if(!mastersArea || !currentResult) return;
+    mastersArea.innerHTML = '';
+
+    var zhugeMasters = [];
+    if(window.MastersEngine && MastersEngine.MASTERS){
+      var allMasters = MastersEngine.MASTERS;
+      for(var key in allMasters){
+        if(allMasters.hasOwnProperty(key)){
+          var m = allMasters[key];
+          if(m.category === '诸葛' || m.category === '综合' || m.category === '奇门' || m.id === 'zhugeliang'){
+            zhugeMasters.push(m);
+          }
+        }
+      }
+      // 去重
+      var seen = {};
+      zhugeMasters = zhugeMasters.filter(function(m){
+        if(seen[m.id]) return false;
+        seen[m.id] = true;
+        return true;
+      });
+    }
+
+    if(zhugeMasters.length === 0){
+      mastersArea.innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px;">暂无可用大师</p>';
+      return;
+    }
+
+    renderMastersPanel(mastersArea, {
+      category: '诸葛',
+      masters: zhugeMasters,
+      analysisTypes: [{id:'full',label:'签象解读'}],
+      onAnalyze: function(masterId, analysisType){
+        var master = window.MastersEngine.MASTERS[masterId];
+        if(!master || !currentResult){ console.error('[天机阁] 诸葛大师分析失败: master不存在或result为空'); return null; }
+        try {
+          var result = generateZhugeAnalysis(master, currentResult, currentQuestion);
+          console.log('[天机阁] 诸葛大师分析成功:', masterId, 'sections:', Object.keys(result).join(','));
+          return result;
+        } catch(e){ console.error('[天机阁] 诸葛大师分析异常:', masterId, e); throw e; }
+      }
+    });
+  }
+
+  // ===== 轻提示 =====
+  function showToast(msg){
+    var toast = document.createElement('div');
+    toast.textContent = msg;
+    toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(24,20,14,0.95);border:1px solid var(--border-gold);color:var(--text);padding:10px 20px;border-radius:20px;font-size:0.82rem;z-index:9999;animation:fadeUp 0.3s ease;';
+    document.body.appendChild(toast);
+    setTimeout(function(){ toast.remove(); }, 2000);
+  }
+
+  // ===== 水墨粒子动画 =====
+  (function(){
+    var canvas = document.getElementById('inkCanvas');
+    var ctx = canvas.getContext('2d');
+    var w,h;
+    var particles = [];
+    function resize(){ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; }
+    resize();
+    window.addEventListener('resize',resize);
+    for(var i=0;i<50;i++){
+      particles.push({
+        x:Math.random()*w, y:Math.random()*h,
+        vx:(Math.random()-0.5)*0.3, vy:-Math.random()*0.5-0.1,
+        r:Math.random()*2+1, o:Math.random()*0.3+0.1,
+        age:0, life:Math.random()*400+200
+      });
+    }
+    function draw(){
+      ctx.clearRect(0,0,w,h);
+      particles.forEach(function(p){
+        p.age++;
+        if(p.age>p.life){ p.x=Math.random()*w; p.y=h+20; p.age=0; p.life=Math.random()*400+200; }
+        p.x+=p.vx; p.y+=p.vy;
+        var alpha=p.o*Math.sin((p.age/p.life)*Math.PI);
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        var grad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*2);
+        grad.addColorStop(0,'rgba(184,154,92,'+alpha+')');
+        grad.addColorStop(1,'rgba(184,154,92,0)');
+        ctx.fillStyle=grad; ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+})();
+</script>
+</body>
+</html>
