@@ -2328,6 +2328,7 @@
   }
 
   function buildZhugeDomainAnalysis(num, level, poem, interpretation, domainKey) {
+    var dm = DOMAINS[domainKey];
     var out = [];
     out.push('诸葛神数第' + num + '签，' + level + '。');
 
@@ -2383,6 +2384,7 @@
   }
 
   function buildZhugeCausalChain(num, level, poem, interpretation, domainKey) {
+    var dm = DOMAINS[domainKey];
     var out = [];
     out.push('以下是从签文到结论的完整因果链条：');
     out.push('');

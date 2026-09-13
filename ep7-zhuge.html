@@ -262,8 +262,9 @@
       .verdict-block {
         padding: 18px 22px; margin-top: 16px;
         background: rgba(184,154,92,0.05); border: 1px solid var(--border-gold);
-        border-radius: var(--radius-sm);
+        border-radius: var(--radius-sm); position: relative;
       }
+      .verdict-block::before { content: none; }
       .verdict-block .verdict-label {
         font-size: 0.72rem; color: var(--gold-dim);
         letter-spacing: 0.1em; margin-bottom: 8px;
@@ -430,12 +431,12 @@
     <div class="form-group" style="margin-bottom:20px;">
       <label>事域选择</label>
       <div class="domain-tags" id="domain-tags">
-        <button class="domain-tag" data-domain="事业">💼 事业</button>
-        <button class="domain-tag" data-domain="感情">💕 感情</button>
-        <button class="domain-tag" data-domain="财运">💰 财运</button>
-        <button class="domain-tag" data-domain="健康">🏥 健康</button>
-        <button class="domain-tag" data-domain="出行">✈️ 出行</button>
-        <button class="domain-tag" data-domain="学业">📚 学业</button>
+        <button class="domain-tag" data-domain="career">💼 事业</button>
+        <button class="domain-tag" data-domain="love">💕 感情</button>
+        <button class="domain-tag" data-domain="wealth">💰 财运</button>
+        <button class="domain-tag" data-domain="health">🏥 健康</button>
+        <button class="domain-tag" data-domain="travel">✈️ 出行</button>
+        <button class="domain-tag" data-domain="study">📚 学业</button>
       </div>
     </div>
 
@@ -523,6 +524,7 @@
 </div>
 
 <script src="static/js/zhuge-engine.js"></script>
+<script src="static/js/domain-analysis.js"></script>
 <script src="static/js/masters-engine.js"></script>
 <script src="static/js/components/masters.js"></script>
 <script>
@@ -711,15 +713,22 @@
     html += '<div class="block-content"><p>' + escHtml(result.interpretation || '暂无解读') + '</p></div>';
     html += '</div>';
 
-    // 问事分析
-    if(question && typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
+    // 事域分析
+    var domainTag = document.querySelector('.domain-tag.active');
+    var domainKey = domainTag ? domainTag.dataset.domain : '';
+    if(domainKey && typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
       try {
-        var qaResult = DomainAnalysis.analyze('zhuge', result, question);
+        var qaResult = DomainAnalysis.analyze('zhuge', result, question || '请问' + domainKey + '运势如何？');
         if(qaResult && qaResult.analysis){
           html += '<div class="interp-block" style="border-left-color:var(--blue-light);">';
-          html += '<div class="block-label">' + escHtml(qaResult.domain ? qaResult.domain.icon + ' ' + qaResult.domain.name : '问事') + '</div>';
-          html += '<div class="block-content"><p>' + escHtml(qaResult.analysis) + '</p></div>';
-          html += '</div>';
+          html += '<div class="block-label">' + escHtml(qaResult.domain ? qaResult.domain.icon + ' ' + qaResult.domain.name : '事域分析') + '</div>';
+          var paras = qaResult.analysis.split('\n');
+          html += '<div class="block-content">';
+          paras.forEach(function(p){
+            var t = p.trim();
+            if(t) html += '<p>' + escHtml(t) + '</p>';
+          });
+          html += '</div></div>';
         }
       } catch(e){ /* 静默降级 */ }
     }
