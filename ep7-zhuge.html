@@ -268,6 +268,7 @@
       .verdict-block .verdict-label {
         font-size: 0.72rem; color: var(--gold-dim);
         letter-spacing: 0.1em; margin-bottom: 8px;
+        position: relative; z-index: 1;
       }
       .verdict-block .verdict-text {
         font-family: var(--font-serif); font-size: 1rem;
@@ -536,6 +537,16 @@
   var currentDomain = '';
   var currentMethod = 'random';
 
+  // ===== 事域中英文映射 =====
+  var DOMAIN_NAMES = {
+    career: '事业',
+    love: '感情',
+    wealth: '财运',
+    health: '健康',
+    travel: '出行',
+    study: '学业'
+  };
+
   // ===== 工具函数 =====
   function escHtml(s){
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -550,7 +561,7 @@
     return 'level-neutral';
   }
 
-  // ===== 事域标签点击 =====
+  // 事域标签点击
   var domainBtns = document.querySelectorAll('.domain-tag');
   domainBtns.forEach(function(btn){
     btn.addEventListener('click',function(){
@@ -559,7 +570,8 @@
       if(!isActive){
         btn.classList.add('active');
         currentDomain = btn.dataset.domain;
-        document.getElementById('question').value = '请问' + currentDomain + '运势如何？';
+        var domainName = DOMAIN_NAMES[currentDomain] || currentDomain;
+        document.getElementById('question').value = '请问' + domainName + '运势如何？';
       }
     });
   });
@@ -694,7 +706,7 @@
     display.innerHTML = html;
   }
 
-  // ===== 渲染解签 =====
+  // ===== 渲染解签（统一逻辑：无论是否选事域，都输出详细解读） =====
   function renderInterp(result, question){
     var card = document.getElementById('interpCard');
     var content = document.getElementById('interpContent');
@@ -707,21 +719,23 @@
     html += '<div class="block-content"><p>' + escHtml(result.poem || '') + '</p></div>';
     html += '</div>';
 
-    // 解读
+    // 引擎解读
     html += '<div class="interp-block">';
     html += '<div class="block-label">【解读】</div>';
     html += '<div class="block-content"><p>' + escHtml(result.interpretation || '暂无解读') + '</p></div>';
     html += '</div>';
 
-    // 事域分析
+    // 事域分析（统一：选择事域用该事域，未选择默认事业）
     var domainTag = document.querySelector('.domain-tag.active');
-    var domainKey = domainTag ? domainTag.dataset.domain : '';
-    if(domainKey && typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
+    var domainKey = domainTag ? domainTag.dataset.domain : 'career';
+    if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
       try {
-        var qaResult = DomainAnalysis.analyze('zhuge', result, question || '请问' + domainKey + '运势如何？');
+        var domainName = DOMAIN_NAMES[domainKey] || domainKey;
+        var qText = question || ('请问' + domainName + '运势如何？');
+        var qaResult = DomainAnalysis.analyze('zhuge', result, qText);
         if(qaResult && qaResult.analysis){
           html += '<div class="interp-block" style="border-left-color:var(--blue-light);">';
-          html += '<div class="block-label">' + escHtml(qaResult.domain ? qaResult.domain.icon + ' ' + qaResult.domain.name : '事域分析') + '</div>';
+          html += '<div class="block-label">' + escHtml(qaResult.domain ? qaResult.domain.icon + ' ' + qaResult.domain.name : domainName + '事域分析') + '</div>';
           var paras = qaResult.analysis.split('\n');
           html += '<div class="block-content">';
           paras.forEach(function(p){
@@ -769,37 +783,99 @@
     card.classList.remove('hidden');
   }
 
-  // ===== 诸葛神数大师分析 =====
+  // ===== 诸葛神数大师分析（基于签文内容生成深度解读） =====
   function generateZhugeAnalysis(master, result, question){
     var poem = result.poem || '';
     var interp = result.interpretation || '';
     var verdict = result.verdict || '';
     var level = result.level || '中';
+    var num = result.number || '?';
+    var q = question || '';
 
-    var zhugeQuotes = {
-      '诸葛亮': '《诸葛武侯行军卜法》云："天垂象，见吉凶，圣人则之。" 此签第' + result.number + '，' + level + '之兆，当观签诗而明事机。',
-      '张子业': '子业观此签：第' + result.number + '签，' + level + '之兆。签诗云"' + poem.replace(/。/g,'。').slice(0,20) + '"。综合术数之法，吉凶之兆已显于签中，所问之事，当以谨慎为上，顺势而为。',
-      '张楠': '张楠观签：第' + result.number + '签，' + level + '之兆。签诗有云"' + poem.slice(0,20) + '"。此签主' + level + '，' + verdict,
+    // 从签文中提取意象关键词（用于深度分析）
+    var imageKeywords = [];
+    var imageDict = {
+      '龙腾':'龙腾', '虎啸':'虎啸', '春风':'春风', '细雨':'细雨', '孤舟':'孤舟', '东风':'东风',
+      '天门':'天门', '金榜':'金榜', '宝鼎':'宝鼎', '金丹':'金丹', '祥云':'祥云', '玉盘':'玉盘',
+      '鹿鸣':'鹿鸣', '芳草':'芳草', '绿柳':'绿柳', '青苗':'青苗', '沧海':'沧海', '迷津':'迷津',
+      '秋高':'秋高', '山高':'山高', '水长':'水长', '云开':'云开', '日出':'日出', '月明':'月明',
+      '花开':'花开', '花落':'花落', '风起':'风起', '露重':'露重'
     };
+    for(var kw in imageDict){
+      if(poem.indexOf(kw) !== -1) imageKeywords.push(kw);
+    }
 
-    var opening = '第' + escHtml(String(result.number)) + '签，' + escHtml(level) + '之兆。';
-    if(question) opening += '所问者：' + escHtml(question) + '。';
+    // 判断签文基调
+    var tone = '';
+    if(level.indexOf('上上') !== -1) tone = '上上大吉，签中气象宏大，诸事亨通之兆';
+    else if(level.indexOf('上') !== -1 && level.indexOf('下') === -1) tone = '上吉之签，运势向好，宜把握时机';
+    else if(level.indexOf('中') !== -1 && level.indexOf('下') === -1) tone = '中平之局，吉凶参半，需稳中求进';
+    else if(level.indexOf('中') !== -1) tone = '中平略带阻滞，宜守正待时';
+    else tone = '凶兆之签，短期内多阻，宜韬光养晦';
 
-    var overview = '签诗云："' + escHtml(poem) + '"。此乃' + escHtml(level) + '之象。';
+    // 生成各段内容
+    var opening = master.pronouns + '观此签：第' + escHtml(String(num)) + '签，' + escHtml(level) + '。' +
+      (q ? '所问者：' + escHtml(q) + '。' : '') +
+      '诸葛神数以三数定乾坤，三百八十四签各有所主，此签' + tone + '。';
 
-    var specialty = interp ? '【签解详析】\n' + interp : '此签暂无详细解读，建议重新起卦。';
+    var overview = '签诗云："';
+    overview += escHtml(poem) + '"。';
+    if(imageKeywords.length > 0){
+      overview += '签中意象有' + imageKeywords.slice(0,3).map(function(kw){ return '"' + kw + '"'; }).join('、') + '。';
+      if(imageKeywords.indexOf('龙腾') !== -1 || imageKeywords.indexOf('虎啸') !== -1){
+        overview += '龙虎之象主势，预示事有转机、贵人将至。';
+      }
+      if(imageKeywords.indexOf('春风') !== -1 || imageKeywords.indexOf('细雨') !== -1){
+        overview += '风雨润泽之象，主渐进之功，不宜冒进，但终有所成。';
+      }
+      if(imageKeywords.indexOf('孤舟') !== -1 || imageKeywords.indexOf('迷津') !== -1){
+        overview += '舟渡迷津之象，当前处境虽艰，但得东风便可乘风破浪，关键在于等待与借力。';
+      }
+      if(imageKeywords.indexOf('宝鼎') !== -1 || imageKeywords.indexOf('金丹') !== -1){
+        overview += '藏宝炼金之象，主大器晚成，当前蓄势阶段，厚积方能薄发。';
+      }
+    } else {
+      overview += '签文意象含蓄，需结合签等与所问之事综合研判。';
+    }
+    overview += ' 此乃' + escHtml(level) + '之象，' + tone + '。';
 
-    var quote = zhugeQuotes[master.name] || '《诸葛武侯行军卜法》云："三数定乾坤，一签明吉凶。心诚则灵，机不可失。"';
+    var specialty = '';
+    if(interp){
+      specialty += '【签解详析】\n' + interp;
+    }
+    if(verdict){
+      specialty += '\n\n【核心论断】\n' + verdict;
+    }
+    if(q){
+      specialty += '\n\n【所问之事对应】\n所问"' + q + '"，结合' + level + '签之象：';
+      if(level.indexOf('上') !== -1 && level.indexOf('下') === -1){
+        specialty += '吉兆明显，可积极行动，但需防盛极而衰，行事留三分余地。';
+      } else if(level.indexOf('中') !== -1 && level.indexOf('下') === -1){
+        specialty += '运势平稳向好，宜稳扎稳打、循序渐进，不可贪功冒进。';
+      } else if(level.indexOf('中') !== -1){
+        specialty += '吉凶参半，宜守正待时，先稳根基再图进取，不宜仓促决策。';
+      } else {
+        specialty += '短期多阻，宜韬光养晦、积蓄力量，待时机成熟再行大事。';
+      }
+    }
+
+    // 经典引用：优先使用大师自带模板，否则用通用诸葛引语
+    var quote = '《诸葛武侯行军卜法》云："三数定乾坤，一签明吉凶。心诚则灵，机不可失。"';
+    if(master.quoteTemplates && master.quoteTemplates.length > 0){
+      quote = master.quoteTemplates[0].replace(/\{[^}]+\}/g, level);
+    }
 
     var closing;
-    if(level.indexOf('上') !== -1 && level.indexOf('下') === -1){
-      closing = '综合而论，' + level + '之签，吉兆明显。所问之事，可大胆进取，但不可忘乎所以，盛极必衰，当思退路。';
+    if(level.indexOf('上上') !== -1){
+      closing = master.pronouns + '断曰：' + tone + '。所问之事，当乘势而上，但盛极必衰，需思退路、留余地。谋事在人，成事在天，但尽人事，无愧于心。';
+    } else if(level.indexOf('上') !== -1 && level.indexOf('下') === -1){
+      closing = master.pronouns + '断曰：吉兆已现，宜顺势而为，把握当下上升期。然机不可失，时不再来，速决速行方为上策。';
     } else if(level.indexOf('中') !== -1 && level.indexOf('下') === -1){
-      closing = '综合而论，中吉之局，运势平稳向好。所问之事，宜稳扎稳打，不可冒进，循序渐进方得始终。';
+      closing = master.pronouns + '断曰：中吉之局，运势平稳向好。所问之事，宜稳扎稳打，循序渐进，方得始终。';
     } else if(level.indexOf('中') !== -1){
-      closing = '综合而论，吉凶参半，局势胶着。所问之事，宜守正待时，不可急于求成，先稳根基再图进取。';
+      closing = master.pronouns + '断曰：吉凶参半，局势胶着。先稳根基再图进取，守正待时，不可急于求成。';
     } else {
-      closing = '综合而论，' + level + '之兆，时运未至。所问之事，短期内多阻，宜韬光养晦，积蓄力量，待时机成熟再图大事。';
+      closing = master.pronouns + '断曰：' + tone + '。韬光养晦，积蓄力量，待时机成熟再图大事。塞翁失马，焉知非福，逆境亦为磨石。';
     }
 
     return {opening:opening, overview:overview, specialty:specialty, quote:quote, closing:closing};
