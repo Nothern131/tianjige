@@ -4034,6 +4034,16 @@
           for (var key in data) {
             s = s.replace(new RegExp('\\{' + key + '\\}', 'g'), data[key] || '');
           }
+          // 古籍引用标注：凡以《书名》开头的引用句，补加"古籍引用："前缀，避免古籍名突兀出现
+          var ancientBooks = ['青囊奥语', '青囊经', '青囊序', '撼龙经', '疑龙经', '天玉经', '都天宝照经', '催官篇', '罗经解', '天星催官', '理气心印'];
+          for (var bi = 0; bi < ancientBooks.length; bi++) {
+            var bk = ancientBooks[bi];
+            // 给每个「《X》云：」前加"古籍引用："（句首或中文标点后触发；已有标注的跳过）
+            var rawPat = new RegExp('(^|[。；！？\\s])(\\u300a' + bk + '\\u300b云)', 'g');
+            s = s.replace(rawPat, function (m, p1, p2) {
+              return p1 + '古籍引用：' + p2;
+            });
+          }
           return s;
         }
 

@@ -1290,7 +1290,7 @@ textarea {
   position: relative;
 }
 .verdict-block::before {
-  content: '青囊判词';
+  content: '综合判断';
   position: absolute;
   top: -11px;
   left: 20px;
