@@ -321,21 +321,56 @@ function initZiweiMastersPanel(container, result, question) {
       { id: 'full', label: '命盘解读' },
       { id: 'minggong', label: '命宫专论' },
     ],
-    onAnalyze: function (masterId) {
+    onAnalyze: function (masterId, analysisType) {
       var master = MastersEngine.MASTERS[masterId];
       if (!master || !result) return null;
-      if (typeof DomainAnalysis === 'undefined' || !DomainAnalysis.analyze) return null;
 
-      // 命盘全览分析
-      var fullResult = DomainAnalysis.analyze('ziwei', result, question || '请全面解读此命盘');
-      // 命宫专论分析
-      var mingResult = DomainAnalysis.analyze('ziwei', result, question || '请重点解读命宫主星与四化飞星');
+      var q = question || (analysisType === 'minggong' ? '请重点解读命宫主星与四化飞星' : '请全面解读此命盘');
+
+      var fullResult = '';
+      var mingResult = '';
+      if (typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze) {
+        try {
+          var r1 = DomainAnalysis.analyze('ziwei', result, q);
+          if (r1 && r1.analysis) fullResult = r1.analysis;
+        } catch(e){}
+        try {
+          var r2 = DomainAnalysis.analyze('ziwei', result, '请重点解读命宫主星与四化飞星');
+          if (r2 && r2.analysis) mingResult = r2.analysis;
+        } catch(e){}
+      }
+      if (!fullResult) {
+        fullResult = '命宫：' + (result.命宫||'?') + '（主星：' + (result.命宫主星||'无') + '）\n身宫：' + (result.身宫||'?') + ' | 五行局：' + (result.五行局||'?') + '\n紫微落：' + (result.紫微星落||'?') + '宫\n总体运势：' + (result.总体运势||'平稳');
+      }
+      if (!mingResult) {
+        mingResult = '【命宫专论】命宫在' + (result.命宫||'?') + '，主星' + (result.命宫主星||'无') + '。' + (result.总体运势||'运势平稳') + '。';
+      }
+
+      var openingTpl = master.openingTemplates && master.openingTemplates[0]
+        ? master.openingTemplates[0]
+        : master.name + '观紫微星盘，帝星所临，吉凶自现。';
+      var opening = openingTpl
+        .replace(/\{日主\}/g, result.命宫主星||'紫微')
+        .replace(/\{日主五行\}/g, result.五行局||'金')
+        .replace(/\{旺衰\}/g, result.总体运势||'平和');
+
+      var quoteTpl = master.quoteTemplates && master.quoteTemplates[0]
+        ? master.quoteTemplates[0]
+        : '《紫微斗数全书》云："紫微帝座，乃众星之主，万曜之尊。"';
+
+      var closingTpl = master.closingTemplates && master.closingTemplates[0]
+        ? master.closingTemplates[0]
+        : '大师断之：' + (result.总体运势||'运势平稳') + '。星曜流转，命亦随之。';
+      var closing = closingTpl
+        .replace(/\{结论\}/g, result.总体运势||'命途平顺')
+        .replace(/\{建议\}/g, '顺势而为，守正待时');
 
       return {
-        opening: master.openingTemplates[0] || '紫微帝星照临，命宫主星为' + (result.命宫主星 || '?') + '，' + (result.五行局 || '?') + '局。',
-        main: fullResult ? fullResult.analysis : '',
-        conclusion: mingResult ? mingResult.analysis : '',
-        tips: '建议：命宫主星为' + (result.命宫主星 || '?') + '，' + (result.命宫 || '?') + '宫位，' + (result.总体运势 || '运势平稳') + '。',
+        opening: opening,
+        overview: fullResult,
+        specialty: analysisType === 'minggong' ? mingResult : fullResult,
+        quote: quoteTpl,
+        closing: closing,
       };
     },
   });

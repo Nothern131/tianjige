@@ -415,6 +415,14 @@
   <div class="glass-card fade-up hidden" id="mastersCard">
     <div class="section-title">大师点评<span class="num">04</span></div>
     <div id="mastersContent"></div>
+    <div id="ziweiFollowUpArea" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:none;">
+      <div style="font-size:0.78rem;color:var(--text2);letter-spacing:0.04em;margin-bottom:10px;">追问 · 让大师继续深入解读</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="ziwei-followup-input" placeholder="如：命宫主星与事业宫有何关联？" style="flex:1;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;font-size:0.82rem;" />
+        <button id="ziwei-followup-btn" style="background:var(--gold-dim);color:var(--ink-dark);border:none;border-radius:6px;padding:8px 14px;font-size:0.82rem;cursor:pointer;white-space:nowrap;">追问</button>
+      </div>
+      <div id="ziwei-followup-result" style="margin-top:12px;"></div>
+    </div>
   </div>
 
   <!-- 免责声明 -->
@@ -518,20 +526,72 @@
         renderMastersPanel(document.getElementById('mastersContent'), {
           category: '紫微',
           masters: window.MastersEngine ? Object.values(window.MastersEngine.MASTERS || {}).filter(function(m){ return m.category === '紫微' || m.category === '综合'; }) : [],
-          analysisTypes: [{id:'full',label:'命盘解读'}],
+          analysisTypes: [
+            {id:'full', label:'命盘解读'},
+            {id:'minggong', label:'命宫专论'}
+          ],
           onAnalyze: function(masterId, analysisType){
             if(!currentResult) return null;
-            try {
-              return {
-                opening: '紫微斗数命理分析',
-                overview: '命宫主星：' + (result['命宫主星']||'无') + '，五行局：' + (result['五行局']||'') + '，总体运势：' + (result['总体运势']||''),
-                specialty: '请结合十二宫位综合分析',
-                quote: '',
-                closing: '以上分析仅供参考，命运掌握在自己手中。'
-              };
-            } catch(e){ return null; }
+            var master = window.MastersEngine ? window.MastersEngine.MASTERS[masterId] : null;
+            if(!master) return null;
+
+            var question = currentQuestion || (analysisType === 'minggong' ? '请重点解读命宫主星与四化飞星' : '请全面解读此命盘');
+
+            // 调用 DomainAnalysis 获取事域分析文本
+            var analysisText = '';
+            if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
+              try {
+                var da = DomainAnalysis.analyze('ziwei', currentResult, question);
+                if(da && da.analysis) analysisText = da.analysis;
+              } catch(e){}
+            }
+
+            // 无 DomainAnalysis 时 fallback：直接从 result 提取
+            if(!analysisText){
+              var r = currentResult;
+              analysisText = '命宫：' + (r['命宫']||'?') + '（主星：' + (r['命宫主星']||'无') + '）\n'
+                + '身宫：' + (r['身宫']||'?') + ' | 五行局：' + (r['五行局']||'?') + '\n'
+                + '紫微落：' + (r['紫微星落']||'?') + '宫\n'
+                + '总体运势：' + (r['总体运势']||'平稳');
+              var siHua = r['四化']||{};
+              if(siHua.lu) analysisText += '\n四化：化禄['+siHua.lu+'] 化权['+(siHua.quan||'—')+'] 化科['+(siHua.ke||'—')+'] 化忌['+(siHua.ji||'—')+']';
+            }
+
+            // 五段式
+            var openingTpl = master.openingTemplates && master.openingTemplates[0]
+              ? master.openingTemplates[0]
+              : master.name + '观紫微星盘，帝星所临，吉凶自现。汝命宫主星' + (currentResult['命宫主星']||'?') + '，' + (currentResult['五行局']||'?') + '局。';
+            var opening = openingTpl
+              .replace(/\{日主\}/g, currentResult['命宫主星']||'紫微')
+              .replace(/\{日主五行\}/g, currentResult['五行局']||'金')
+              .replace(/\{旺衰\}/g, currentResult['总体运势']||'平和');
+
+            var quoteTpl = master.quoteTemplates && master.quoteTemplates[0]
+              ? master.quoteTemplates[0]
+              : '《紫微斗数全书》云："紫微帝座，乃众星之主，万曜之尊。"';
+
+            var closingTpl = master.closingTemplates && master.closingTemplates[0]
+              ? master.closingTemplates[0]
+              : '大师断之：' + (currentResult['总体运势']||'运势平稳') + '。星曜流转，命亦随之，顺势而为，则吉星高照。';
+            var closing = closingTpl
+              .replace(/\{结论\}/g, currentResult['总体运势']||'命途平顺')
+              .replace(/\{建议\}/g, '顺势而为，守正待时');
+
+            return {
+              opening: opening,
+              overview: analysisText,
+              specialty: analysisType === 'minggong'
+                ? '【命宫专论】命宫在' + (currentResult['命宫']||'?') + '，主星' + (currentResult['命宫主星']||'无') + '。' + (currentResult['总体运势']||'运势平稳') + '。'
+                : '【全盘解读】五行局：' + (currentResult['五行局']||'?') + '，紫微落' + (currentResult['紫微星落']||'?') + '宫，身宫在' + (currentResult['身宫']||'?') + '。' + (currentResult['总体运势']||'运势平稳') + '。',
+              quote: quoteTpl,
+              closing: closing
+            };
           }
         });
+
+        // 显示追问区域
+        var fuArea = document.getElementById('ziweiFollowUpArea');
+        if(fuArea) fuArea.style.display = '';
         mastersCard.classList.remove('hidden');
 
         overviewCard.scrollIntoView({behavior:'smooth',block:'start'});
@@ -750,6 +810,70 @@
     toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(24,20,14,0.95);border:1px solid var(--border-gold);color:var(--text);padding:10px 20px;border-radius:20px;font-size:0.82rem;z-index:9999;animation:fadeUp 0.3s ease;';
     document.body.appendChild(toast);
     setTimeout(function(){ toast.remove(); }, 2000);
+  }
+
+  // ===== 追问事件 =====
+  var followUpBtn = document.getElementById('ziwei-followup-btn');
+  if(followUpBtn){
+    followUpBtn.addEventListener('click', function(){
+      var fuInput = document.getElementById('ziwei-followup-input');
+      var fuResult = document.getElementById('ziwei-followup-result');
+      var question = fuInput ? fuInput.value.trim() : '';
+      if(!question){ showToast('请输入你想追问的问题'); return; }
+      if(!currentResult){ showToast('请先完成排盘'); return; }
+
+      fuResult.innerHTML = '<div class="spinner" style="margin:12px auto;"></div>';
+      followUpBtn.disabled = true;
+
+      setTimeout(function(){
+        var masterList = window.MastersEngine ? Object.values(window.MastersEngine.MASTERS || {}).filter(function(m){ return m.category === '紫微' || m.category === '综合'; }) : [];
+        if(masterList.length === 0){
+          fuResult.innerHTML = '<p style="color:var(--text3);font-size:0.82rem;">暂无可用大师</p>';
+          followUpBtn.disabled = false;
+          return;
+        }
+        var answers = [];
+        for(var i=0;i<masterList.length;i++){
+          var m = masterList[i];
+          var openingTpl = m.openingTemplates && m.openingTemplates[0] ? m.openingTemplates[0] : m.name + '观紫微星盘，帝星所临，吉凶自现。';
+          var opening = openingTpl
+            .replace(/\{日主\}/g, currentResult['命宫主星']||'紫微')
+            .replace(/\{日主五行\}/g, currentResult['五行局']||'金')
+            .replace(/\{旺衰\}/g, currentResult['总体运势']||'平和');
+
+          var analysisText = '';
+          if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
+            try {
+              var da = DomainAnalysis.analyze('ziwei', currentResult, question);
+              if(da && da.analysis) analysisText = da.analysis;
+            } catch(e){}
+          }
+          if(!analysisText){
+            analysisText = '针对「' + question + '」：命宫在' + (currentResult['命宫']||'?') + '，主星' + (currentResult['命宫主星']||'无') + '，' + (currentResult['总体运势']||'运势平稳') + '。';
+          }
+
+          answers.push({
+            master: m,
+            opening: opening,
+            answer: analysisText,
+            closing: '星曜流转，命亦随之，顺势而为，则吉星高照。'
+          });
+        }
+
+        var html = '';
+        for(var j=0;j<answers.length;j++){
+          var a = answers[j];
+          html += '<div style="background:rgba(184,154,92,0.04);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;">';
+          html += '<div style="font-size:0.78rem;color:var(--gold);letter-spacing:0.04em;margin-bottom:6px;">' + (a.master.avatar||'⭐') + ' ' + a.master.name + ' · ' + (a.master.title||a.master.category) + '</div>';
+          html += '<div style="font-size:0.85rem;color:var(--text);white-space:pre-wrap;line-height:1.8;">' + escHtml(a.opening) + '\n\n' + escHtml(a.answer) + '\n\n' + escHtml(a.closing) + '</div>';
+          html += '</div>';
+        }
+        fuResult.innerHTML = html;
+        fuResult.style.display = '';
+        followUpBtn.disabled = false;
+        fuResult.scrollIntoView({behavior:'smooth',block:'nearest'});
+      }, 400);
+    });
   }
 
   // ===== 水墨粒子动画 =====
