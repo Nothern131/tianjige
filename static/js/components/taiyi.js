@@ -2,6 +2,101 @@
  * 太乙神数组件
  * 日期时间起算 → 太乙十六神 → 五福三基
  */
+
+// ===== 太乙神数大师深度解读（移植自 EP6 体验页，主站/体验页共用） =====
+function generateTaiyiAnalysis(master, result, question) {
+  var _esc = (typeof escapeHtml === 'function') ? escapeHtml : function (s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  };
+  var interp = result.interpretation || '';
+  var opening = '', overview = '', specialty = '', quote = '', closing = '';
+  var gods = result.gods || [];
+  var taiyiGong = result.taiyi_gong || '中';
+  var juShu = result.ju_shu || 0;
+
+  var taiyiQuotes = {
+    '王朴': '《太乙金镜式经》云："太乙者，天地之神也，运行于九宫之间，察天时之变，定人事之机。"',
+  };
+
+  // 开口
+  var gongDir = '';
+  if (typeof TaiyiEngine !== 'undefined' && TaiyiEngine.GONG_DIR) {
+    gongDir = TaiyiEngine.GONG_DIR[taiyiGong] || '中';
+  }
+  opening = '太乙积年' + _esc(String(result.ji_nian || '')) + '，局数' + _esc(String(juShu)) + '，太乙落' + _esc(taiyiGong) + '宫（' + _esc(gongDir) + '）。';
+  if (question) opening += '所问者：' + _esc(question) + '。';
+
+  // 总论
+  var jiCount = gods.filter(function (g) { return g.auspicious === '大吉' || g.auspicious === '吉'; }).length;
+  var xiongCount = gods.filter(function (g) { return g.auspicious === '凶'; }).length;
+  var verdict = jiCount >= 10 ? '大吉' : jiCount >= 7 ? '平吉' : jiCount >= 4 ? '平' : '凶';
+  overview = '此局总断为' + verdict + '。十六神中，吉神' + jiCount + '尊，凶神' + xiongCount + '尊。太乙落' + taiyiGong + '宫，当察其卦象与神煞之交感。';
+
+  // 专论
+  specialty = interp;
+  if (specialty) {
+    specialty = '【局象详析】\n' + specialty;
+  }
+
+  // 引经据典
+  quote = taiyiQuotes[master.name] || '《太乙金镜式经》云："太乙巡行九宫，吉凶自见，顺势者昌，逆势者亡。"';
+
+  // 结语
+  if (verdict === '大吉') {
+    closing = '综合而论，太乙得位，吉神众多，此乃上上之局。所问之事，顺势而为，可成。然盛极必衰，当思警惕，见好就收。';
+  } else if (verdict === '平吉') {
+    closing = '综合而论，吉多凶少，运势平稳向好。所问之事，宜择太乙落宫方位而行，趋吉避凶，可得其利。';
+  } else if (verdict === '平') {
+    closing = '综合而论，吉凶参半，局势胶着。所问之事，宜守正待时，不可冒进，先稳根基再图进取。';
+  } else {
+    closing = '综合而论，凶神较盛，时运未至。所问之事，短期内多阻，宜韬光养晦，积蓄力量，待下一轮太乙巡行再图大事。';
+  }
+
+  return { opening: opening, overview: overview, specialty: specialty, quote: quote, closing: closing };
+}
+
+// ===== 太乙神数大师点评面板 =====
+function initTaiyiMastersPanel(container, result, question) {
+  var mastersArea = container ? container.querySelector('#taiyi-masters-area') : null;
+  if (!mastersArea || !result || typeof MastersEngine === 'undefined' || !MastersEngine.MASTERS) return;
+  mastersArea.innerHTML = '';
+  mastersArea.classList.remove('hidden');
+
+  var taiyiMasters = [];
+  var allMasters = MastersEngine.MASTERS;
+  for (var key in allMasters) {
+    if (allMasters.hasOwnProperty(key)) {
+      var m = allMasters[key];
+      if (m.category === '太乙' || m.category === '综合') {
+        taiyiMasters.push(m);
+      }
+    }
+  }
+  if (taiyiMasters.length === 0) return;
+
+  if (typeof renderMastersPanel !== 'function') return;
+  renderMastersPanel(mastersArea, {
+    category: '太乙',
+    masters: taiyiMasters,
+    analysisTypes: [{ id: 'full', label: '即时占断' }],
+    onAnalyze: function (masterId) {
+      var master = allMasters[masterId];
+      if (!master || !result) {
+        console.error('[天机阁] 太乙大师分析失败: master不存在或result为空');
+        return null;
+      }
+      try {
+        var res = generateTaiyiAnalysis(master, result, question || '');
+        console.log('[天机阁] 太乙大师分析成功:', masterId, 'sections:', Object.keys(res).join(','));
+        return res;
+      } catch (e) {
+        console.error('[天机阁] 太乙大师分析异常:', masterId, e);
+        throw e;
+      }
+    },
+  });
+}
+
 function renderTaiyiComponent() {
   const container = document.createElement('div');
   container.className = 'fade-in';
@@ -64,6 +159,7 @@ function renderTaiyiComponent() {
     <!-- 结果 -->
     <div id="taiyi-result-area" class="hidden">
       <div class="glass-card" id="taiyi-result-card"></div>
+      <div id="taiyi-masters-area" class="hidden" style="margin-top:24px;"></div>
     </div>
   `;
 
@@ -131,6 +227,9 @@ async function handleTaiyiSubmit(container, params) {
     }
 
     renderTaiyiResult(resultCard, result, questionAnalysisHtml);
+
+    // 大师点评面板（基于太乙十六神深度解读，主站/体验页共用）
+    initTaiyiMastersPanel(container, result, question);
   } catch (error) {
     resultCard.innerHTML = `
       <div class="error-container">

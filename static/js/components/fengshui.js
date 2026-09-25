@@ -173,6 +173,7 @@
       '<h3 style="color:var(--gold-light);margin-bottom:16px;">📋 九宫详解</h3>' +
       '<div class="fs-table-wrap" id="fs-table"></div>' +
       '</div>' +
+      '<div id="fengshui-masters-area" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);"></div>' +
       '</div>' +
       '</div>';
 
@@ -1071,6 +1072,7 @@
 
   /* ========== 结果展示 ========== */
   function displayResult(container, result) {
+    window._lastFengshuiResult = result;
     container.querySelector('#fs-result-area').style.display = 'block';
 
     var levelColors = {
@@ -1102,6 +1104,7 @@
     renderGrid(container, result);
     renderBestWorst(container, result);
     renderTable(container, result);
+    initFengshuiMastersPanel(result);
   }
 
   function renderGrid(container, result) {
@@ -1258,7 +1261,171 @@
     return s ? s.color : '#888';
   }
 
-  /* ========== 公开 API ========== */
+  // ========== 风水大师点评（EP1 反哺） ==========
+var FENGSHUI_MASTERS = [
+  { id: 'yangyunsong', name: '杨筠松', title: '峦头派宗师', avatar: '⛰️', desc: '精研峦头形势，寻龙点穴，著《撼龙经》《疑龙经》，为赣派风水鼻祖。重视龙穴砂水向配合，论势重龙脉起落起伏、关锁严密，论理重气之聚散藏蓄。'},
+  { id: 'laibuyi', name: '赖布衣', title: '理气派宗师', avatar: '🧭', desc: '精推天星催官，以罗盘分金立向，著《催官篇》《铁冠神数》。重理气派，以天星照临、二十四山分金论贵贱，强调理气与罗经精确配合。'},
+  { id: 'jiangdahong', name: '蒋大鸿', title: '玄空飞星宗师', avatar: '🌟', desc: '传玄空飞星真诀，著《地理辨正》《宅经补注》，为三元玄空派开山祖师。重元运推演，以洛书九星飞布九宫，论当运旺衰，推时运与地运之配合。' },
+];
+
+var fengshuiStarNames = ['一白', '二黑', '三碧', '四绿', '五黄', '六白', '七赤', '八白', '九紫'];
+var fengshuiStarProps = [
+  { elem: '水', yinyang: '阳', note: '当运为文昌贵人', starQuality: '吉' },
+  { elem: '土', yinyang: '阴', note: '病符星，宜静不宜动', starQuality: '凶' },
+  { elem: '木', yinyang: '阳', note: '是非星，主争斗口舌', starQuality: '凶' },
+  { elem: '木', yinyang: '阴', note: '文昌星，利读书考试', starQuality: '吉' },
+  { elem: '土', yinyang: '阳', note: '廉贞星，大凶', starQuality: '大凶' },
+  { elem: '金', yinyang: '阳', note: '武曲星，财官双美', starQuality: '吉' },
+  { elem: '金', yinyang: '阴', note: '破军星，耗损破财', starQuality: '凶' },
+  { elem: '土', yinyang: '阳', note: '左辅星，财运亨通', starQuality: '吉' },
+  { elem: '火', yinyang: '阳', note: '右弼星，桃花贵人', starQuality: '吉' },
+];
+var fengshuiGongNames = ['坎', '坤', '震', '巽', '中', '乾', '兑', '艮', '离'];
+
+var fengshuiMasterAnalyze = function (master, result) {
+  if (!result || !result.palaces) return null;
+  var m = master.id || master;
+  var p = result.palaces || [];
+  var g = FengshuiEngine.MOUNTAIN_GUA;
+  var gyy = FengshuiEngine.MOUNTAIN_YINYANG;
+  var sit = (result.sitting || '').trim();
+  var fac = (result.facing || '').trim();
+  var sitGua = g[sit] || '—';
+  var facGua = g[fac] || '—';
+  var sitYY = gyy[sit] || '—';
+  var facYY = gyy[fac] || '—';
+  var data = {};
+  data.坐 = sit;
+  data.向 = fac;
+  data.年 = result.buildYear || '—';
+  data.运 = result.periodNum ? '第' + result.periodNum + '运' : '—';
+  data.整体 = result.overallLevel || '—';
+  data.运星 = (p[4] || {}).periodStar || '—';
+  data.总评 = result.overallLevel || '—';
+  data.中宫 = p[4] ? fengshuiStarNames[p[4].periodStar - 1] || '—' : '—';
+  data.中宫评 = p[4] ? (p[4].level || '—') + (p[4].notes ? '：' + p[4].notes : '') : '—';
+  data.旺宫 = result.bestPalace ? (result.bestPalace.name || '—') + '（' + (result.bestPalace.level || '—') + '）' : '—';
+  data.衰宫 = result.worstPalace ? (result.worstPalace.name || '—') + '（' + (result.worstPalace.level || '—') + '）' : '—';
+  data.最佳 = result.bestPalace ? result.bestPalace.name || '—' : '—';
+  data.最差 = result.worstPalace ? result.worstPalace.name || '—' : '—';
+  data.最佳星 = p[4] ? fengshuiStarNames[p[4].periodStar - 1] || '—' : '—';
+  data.最差星 = data.运星;
+  data.最佳评 = result.bestPalace && result.bestPalace.notes ? result.bestPalace.notes : '—';
+  data.最差评 = result.worstPalace && result.worstPalace.notes ? result.worstPalace.notes : '—';
+  data.最佳用 = result.bestPalace && result.bestPalace.warnings ? result.bestPalace.warnings.join('，') : '—';
+  data.化解 = data.最佳用;
+  data.坐卦 = sitGua;
+  data.向卦 = facGua;
+  data.山星 = (p[4] || {}).mountainStar != null ? fengshuiStarNames[p[4].mountainStar - 1] || '—' : '—';
+  data.向星 = (p[4] || {}).facingStar != null ? fengshuiStarNames[p[4].facingStar - 1] || '—' : '—';
+  data.山向评 = (p[4] ? ((p[4].mountainStar != null ? fengshuiStarNames[p[4].mountainStar - 1] : '—') + '生' + (p[4].facingStar != null ? fengshuiStarNames[p[4].facingStar - 1] : '—')) : '—');
+  data.年 = result.currentYear || '—';
+  data.年五黄 = p[4] ? fengshuiStarNames[p[4].annualStar - 1] || '—' : '—';
+  data.年五黄宫 = '中宫';
+  data.年八白 = '—';
+  data.年九紫 = '—';
+  data.年星 = '—';
+  data.吉宫数 = p.filter(function (pp) { return pp && pp.level === '大吉'; }).length;
+  data.凶宫数 = p.filter(function (pp) { return pp && (pp.level === '大凶' || pp.level === '凶'); }).length;
+  data.旺星 = p.map(function (pp, i) { return pp ? (pp.periodStar != null ? fengshuiStarNames[pp.periodStar - 1] : '—') : '—'; }).join('、');
+  data.衰星 = '—';
+  data.星曜分 = result.scoreBreakdown && result.scoreBreakdown.starQuality != null ? Math.round(result.scoreBreakdown.starQuality) : '—';
+  data.五行分 = result.scoreBreakdown && result.scoreBreakdown.wuxing != null ? Math.round(result.scoreBreakdown.wuxing) : '—';
+  data.组合分 = result.scoreBreakdown && result.scoreBreakdown.combos != null ? Math.round(result.scoreBreakdown.combos) : '—';
+  data.格局加成 = result.scoreBreakdown && result.scoreBreakdown.groupBonus ? result.scoreBreakdown.groupBonus.join('、') : '—';
+  data.加权均值 = result.scoreBreakdown && result.scoreBreakdown.weightedAvg != null ? Math.round(result.scoreBreakdown.weightedAvg) : '—';
+  var bestP = p.filter(function (pp) { return pp && (pp.level === '大吉' || pp.level === '吉'); });
+  var worstP = p.filter(function (pp) { return pp && (pp.level === '大凶' || pp.level === '凶'); });
+  data.坐山论 = sitGua + '卦·' + sit + '山（' + sitYY + '）';
+  data.朝向论 = facGua + '卦·' + fac + '向（' + facYY + '）';
+  data.元运论 = '今入' + (result.periodNum || '—') + '运';
+  data.中宫论 = '中宫' + (p[4] ? fengshuiStarNames[p[4].periodStar - 1] : '') + (p[4] ? '（' + (p[4].level || '') + '）' : '');
+  data.旺宫论 = bestP.length ? bestP.map(function (pp) { return pp.name; }).join('、') : '—';
+  data.衰宫论 = worstP.length ? worstP.map(function (pp) { return pp.name; }).join('、') : '—';
+  data.山向论 = sit + '山' + fac + '向';
+  data.卦象论 = sitGua + '卦坐' + facGua + '卦向';
+  var sb = result.scoreBreakdown;
+  data.综合得分 = result.overallScore != null ? Math.round(result.overallScore) : '—';
+  data.格局加分 = sb && sb.groupBonus ? sb.groupBonus.join('、') : '—';
+  data.分项得分 = '星曜:' + data.星曜分 + ' 五行:' + data.五行分 + ' 组合:' + data.组合分;
+  data.最终结论 = result.overallLevel || '—';
+  if (m === 'yangyunsong') {
+    data.占 = sit + '山' + fac + '向';
+    data.坐山 = sit + '山';
+    data.朝向 = fac + '向';
+    data.形势 = '峦头饱满，龙穴真切';
+    data.气脉 = '龙脉清晰，关锁严密';
+    data.水法 = '水聚明堂，朝案有情';
+    data.主事 = '人丁兴旺，富贵双全';
+  }
+  if (m === 'laibuyi') {
+    data.占 = sit + '山' + fac + '向';
+    data.分金 = sitGua + '卦' + sit + '山' + fac + '向';
+    data.天星 = '天星照临，吉星在位';
+    data.罗经 = '罗盘精准，分金得度';
+    data.催官 = '催官得位，贵气上腾';
+    data.主事 = '官贵显达，世代荣昌';
+  }
+  if (m === 'jiangdahong') {
+    data.占 = sit + '山' + fac + '向';
+    data.运星 = p[4] ? fengshuiStarNames[p[4].periodStar - 1] : '—';
+    data.当运 = result.periodNum ? '第' + result.periodNum + '运当令' : '—';
+    data.退运 = result.periodNum ? '当运' + result.periodNum + '运' : '—';
+    data.飞布 = '洛书九星飞布九宫';
+    data.主事 = '时运配合，旺衰得宜';
+  }
+  return data;
+};
+
+var renderMasterResult = function (container, result, master) {
+  var data = fengshuiMasterAnalyze(master, result);
+  if (!data) return;
+  var openingTpls = master.openingTemplates || [];
+  var overviewTpls = master.overviewTemplates || [];
+  var specialtyTpls = master.specialtyTemplates || [];
+  var quoteTpls = master.quoteTemplates || [];
+  var closingTpls = master.closingTemplates || [];
+  function pick(tpls, d) {
+    if (!tpls || !tpls.length) return '';
+    var tpl = tpls[Math.floor(Math.random() * tpls.length)];
+    return tpl.replace(/\{(\w+)\}/g, function (_, key) { return (d && d[key]) != null ? d[key] : '{' + key + '}'; });
+  }
+  container.innerHTML = '<div class="master-result">' +
+    '<div class="master-result-opening">' + pick(openingTpls, data) + '</div>' +
+    '<div class="master-result-overview">' + pick(overviewTpls, data) + '</div>' +
+    '<div class="master-result-specialty">' + pick(specialtyTpls, data) + '</div>' +
+    '<div class="master-result-quote">' + pick(quoteTpls, data) + '</div>' +
+    '<div class="master-result-closing">' + pick(closingTpls, data) + '</div>' +
+    '</div>';
+};
+
+var initFengshuiMastersPanel = function (result) {
+  var area = document.getElementById('fengshui-masters-area');
+  if (!area || !result) return;
+  var masterId = localStorage.getItem('fengshuiMasterId');
+  var master = FENGSHUI_MASTERS.find(function (m) { return m.id === masterId; }) || FENGSHUI_MASTERS[0];
+  area.innerHTML = '<h4>🎯 ' + master.avatar + ' ' + master.name + '·' + master.title + '</h4>' +
+    '<button onclick="fengshuiCycleMaster()">换一位大师</button>';
+  renderMasterResult(area, result, master);
+};
+window.fengshuiCycleMaster = function () {
+  var idx = parseInt(localStorage.getItem('fengshuiMasterIdx') || '0', 10);
+  idx = (idx + 1) % FENGSHUI_MASTERS.length;
+  localStorage.setItem('fengshuiMasterIdx', String(idx));
+  localStorage.setItem('fengshuiMasterId', FENGSHUI_MASTERS[idx].id);
+  var result = window._lastFengshuiResult;
+  if (result) {
+    var area = document.getElementById('fengshui-masters-area');
+    if (area) {
+      var master = FENGSHUI_MASTERS[idx];
+      area.innerHTML = '<h4>🎯 ' + master.avatar + ' ' + master.name + '·' + master.title + '</h4>' +
+        '<button onclick="fengshuiCycleMaster()">换一位大师</button>';
+      renderMasterResult(area, result, master);
+    }
+  }
+};
+
+/* ========== 公开 API ========== */
   global.FengshuiComponent = {
     render: render,
   };

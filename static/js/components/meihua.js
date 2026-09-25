@@ -3,6 +3,115 @@
  * 自动起卦（日期/随机数）→ 本卦互卦变卦 → 体用生克
  * 后台综合算法：邵雍先天易学 + 体用生克体系
  */
+
+// ===== 梅花易数大师深度解读（移植自 EP4 体验页，主站/体验页共用） =====
+function getMeihuaWuxing(name) {
+  if (typeof MeihuaEngine === 'undefined' || !MeihuaEngine.BAGUA) return '';
+  var bagua = MeihuaEngine.BAGUA;
+  for (var k in bagua) {
+    if (bagua.hasOwnProperty(k) && bagua[k].name === name) return bagua[k].wuxing || '';
+  }
+  return '';
+}
+
+function generateMeihuaAnalysis(master, result, question) {
+  var interp = result.interpretation || '';
+  var shengKe = result.sheng_ke || {};
+  var wanwu = result.wanwu_leixiang || {};
+  var opening = '', overview = '', specialty = '', quote = '', closing = '';
+
+  var meihuaQuotes = {
+    '邵雍': '心易之学，以心感物，以物观理。梅花易数，不执于象，不拘于数，唯心是求。',
+    '陈抟': '先天之学，心为枢机。观物之妙，不在远求，即在目前。',
+    '孔子': '易有太极，是生两仪。两仪生四象，四象生八卦。',
+    '朱熹': '易者，象也。象者，像也。观象玩辞，可尽易矣。',
+    '王弼': '得意忘象，得象忘言。观象以尽意，玩辞以明理。'
+  };
+
+  // 开口
+  var tiWx = getMeihuaWuxing(result.ti_gua);
+  var yongWx = getMeihuaWuxing(result.yong_gua);
+  opening = '占得' + (result.original_gua ? result.original_gua.name : '—') + '之' + (result.changed_gua ? result.changed_gua.name : '—') + '，体' + tiWx + '，用' + yongWx + '。' + (shengKe.说明 || '') + '。';
+  if (question) opening += '所问者：' + question + '。';
+
+  // 总纲
+  var level = shengKe.等级 !== undefined ? shengKe.等级 : 2;
+  var verdict = level >= 3 ? '吉' : level >= 2 ? '平' : '凶';
+  var levelDesc = level >= 3 ? '体用相生，所求可成' : level >= 2 ? '体用比和，平中取利' : '体克用或用克体，事多阻逆';
+  overview = '此卦总断为' + verdict + '。' + levelDesc + '。';
+
+  // 专项
+  specialty = '';
+  if (result.original_gua && result.original_gua.guaCi) {
+    specialty += '【卦辞】' + result.original_gua.guaCi + '。\n\n';
+  }
+  if (interp) {
+    specialty += '【断语】' + interp + '。\n\n';
+  }
+  if (wanwu['体卦']) {
+    specialty += '【体卦类象】方位在' + (wanwu['体卦'].方位 || '') + '，人事主' + (wanwu['体卦'].人事 || '') + '，身体应' + (wanwu['体卦'].身体 || '') + '。\n';
+  }
+  if (wanwu['用卦']) {
+    specialty += '【用卦类象】方位在' + (wanwu['用卦'].方位 || '') + '，人事主' + (wanwu['用卦'].人事 || '') + '，身体应' + (wanwu['用卦'].身体 || '') + '。\n';
+  }
+
+  // 引经据典
+  quote = meihuaQuotes[master.name] || '邵子曰：观物察己，以理推事。' + (result.original_gua ? result.original_gua.name : '') + '之象，可细推之。';
+
+  // 结语
+  if (level >= 3) {
+    closing = '综合而论，此卦大吉。所问之事，顺势而为，可成。然盛极必衰，宜见好就收，不可贪多。';
+  } else if (level >= 2) {
+    closing = '综合而论，此卦平。所问之事，需待时运。不宜强求，宜守正待时，静观其变。';
+  } else {
+    closing = '综合而论，此卦多阻。所问之事，短期内难有进展。宜退守蓄势，不可冒进。待时而动，自有转机。';
+  }
+
+  return { opening: opening, overview: overview, specialty: specialty, quote: quote, closing: closing };
+}
+
+// ===== 梅花易数大师点评面板 =====
+function initMeihuaMastersPanel(container, result, question) {
+  var mastersArea = container ? container.querySelector('#meihua-masters-area') : null;
+  if (!mastersArea || !result || typeof MastersEngine === 'undefined' || !MastersEngine.MASTERS) return;
+  mastersArea.innerHTML = '';
+  mastersArea.classList.remove('hidden');
+
+  var meihuaMasters = [];
+  var allMasters = MastersEngine.MASTERS;
+  for (var key in allMasters) {
+    if (allMasters.hasOwnProperty(key)) {
+      var m = allMasters[key];
+      if (m.category === '梅花' || m.category === '综合') {
+        meihuaMasters.push(m);
+      }
+    }
+  }
+  if (meihuaMasters.length === 0) return;
+
+  if (typeof renderMastersPanel !== 'function') return;
+  renderMastersPanel(mastersArea, {
+    category: '梅花',
+    masters: meihuaMasters,
+    analysisTypes: [{ id: 'full', label: '即时占断' }],
+    onAnalyze: function (masterId) {
+      var master = allMasters[masterId];
+      if (!master || !result) {
+        console.error('[天机阁] 梅花大师分析失败: master不存在或result为空');
+        return null;
+      }
+      try {
+        var res = generateMeihuaAnalysis(master, result, question || '');
+        console.log('[天机阁] 梅花大师分析成功:', masterId, 'sections:', Object.keys(res).join(','));
+        return res;
+      } catch (e) {
+        console.error('[天机阁] 梅花大师分析异常:', masterId, e);
+        throw e;
+      }
+    },
+  });
+}
+
 function renderMeihuaComponent() {
   const container = document.createElement('div');
   container.className = 'fade-in';
@@ -79,6 +188,7 @@ function renderMeihuaComponent() {
     <!-- 结果 -->
     <div id="meihua-result-area" class="hidden">
       <div class="glass-card" id="meihua-result-card"></div>
+      <div id="meihua-masters-area" class="hidden" style="margin-top:24px;"></div>
     </div>
   `;
 
@@ -182,6 +292,9 @@ async function handleMeihuaSubmit(container, params) {
     }
 
     renderMeihuaResult(resultCard, result, questionAnalysisHtml);
+
+    // 大师点评面板（基于梅花体用生克深度解读，主站/体验页共用）
+    initMeihuaMastersPanel(container, result, question);
   } catch (error) {
     resultCard.innerHTML = `
       <div class="error-container">

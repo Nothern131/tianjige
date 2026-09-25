@@ -2,6 +2,57 @@
  * 八字排盘组件 v2
  * 出生信息输入 → 四柱展示 → 分析 Tab
  */
+
+/** 八字格式转换（适配 masters-engine.js） */
+function convertBaziFormat(bazi, gender) {
+  return {
+    ri_zhu: bazi.日主,
+    ri_zhu_wuxing: bazi.日主五行,
+    year_pillar: bazi.年柱,
+    month_pillar: bazi.月柱,
+    day_pillar: bazi.日柱,
+    hour_pillar: bazi.时柱,
+    gender: gender || 'male',
+  };
+}
+
+/** 八字大师点评面板 — 移植自 EP2 体验页，主站/体验页共用 */
+function initBaziMastersPanel(container, bazi, gender) {
+  if (typeof MastersEngine === 'undefined' || typeof renderMastersPanel === 'undefined') {
+    return;
+  }
+  var mastersArea = container.querySelector('#bazi-masters-area');
+  if (!mastersArea) return;
+
+  // 过滤八字大师
+  var baziMasters = [];
+  var allMasters = MastersEngine.MASTERS;
+  for (var key in allMasters) {
+    if (allMasters.hasOwnProperty(key) && allMasters[key].category === '八字') {
+      baziMasters.push(allMasters[key]);
+    }
+  }
+  if (baziMasters.length === 0) return;
+
+  mastersArea.classList.remove('hidden');
+  mastersArea.innerHTML = '';
+  renderMastersPanel(mastersArea, {
+    category: '八字',
+    masters: baziMasters,
+    analysisTypes: [
+      { id: 'full', label: '全盘分析' },
+      { id: 'wealth', label: '财富分析' },
+      { id: 'talent', label: '天赋分析' },
+      { id: 'balance', label: '反内耗' },
+      { id: 'love', label: '正缘分析' },
+    ],
+    onAnalyze: function (masterId, analysisType) {
+      var formattedBazi = convertBaziFormat(bazi, gender);
+      return MastersEngine.analyze(masterId, analysisType, formattedBazi, gender);
+    },
+  });
+}
+
 function renderBaziComponent(state) {
   state = state || {};
   state.userInfo = state.userInfo || {};
@@ -99,6 +150,9 @@ function renderBaziComponent(state) {
         <div class="tabs" id="bazi-analysis-tabs"></div>
         <div id="bazi-tab-content"></div>
       </div>
+
+      <!-- 大师点评面板（EP2 体验页已打磨的五段式大师解读，主站/体验页共用） -->
+      <div id="bazi-masters-area" class="hidden" style="margin-top:24px;"></div>
     </div>
   `;
 
@@ -195,6 +249,9 @@ async function handleBaziSubmit(container, state) {
     // 渲染分析 Tab
     renderAnalysisTabs(container, result, state);
 
+    // 大师点评面板（EP2 体验页已打磨的五段式大师解读，主站/体验页共用）
+    initBaziMastersPanel(container, result, gender);
+
     // 自动保存咨询记录到用户档案
     try {
       if (typeof UserProfileAPI !== 'undefined') {
@@ -226,12 +283,10 @@ async function handleBaziSubmit(container, state) {
 
 /** 渲染四柱表格 v2 — 适配实际 API 返回格式 */
 function renderPillarsV2(container, result) {
-  var pillars = ['年柱', '月柱', '日柱', '时柱'];
   var labels = ['年柱', '月柱', '日柱', '时柱'];
   var gan = ['', '', '', '']; // 天干
   var zhi = ['', '', '', '']; // 地支
-
-  pillars.forEach(function (key, i) {
+  labels.forEach(function (key, i) {
     var val = result[key] || '';
     if (val.length >= 2) {
       gan[i] = val[0];

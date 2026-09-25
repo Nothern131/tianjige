@@ -2289,6 +2289,140 @@
     return lines.join('\n');
   }
 
+  /* 诸葛神数签等说明（主站/体验页共用） */
+  var ZHUGE_LEVEL_DESC = {
+    '上上': '大吉之兆，万事亨通，宜积极进取。',
+    '上': '上吉之象，运势向好，宜把握时机。',
+    '中上': '中吉之象，顺遂有助，守正可得。',
+    '中': '中平之局，有阻有助，静待时机。',
+    '中下': '中平偏阻，宜守不宜攻，韬光养晦。',
+    '下': '下签之兆，短期多阻，宜韬光养晦。',
+    '下下': '大凶之兆，宜静不宜动，蓄势待发。'
+  };
+
+  /** 诸葛神数签等说明（按签等取文案） */
+  function getZhugeLevelDesc(level) {
+    return ZHUGE_LEVEL_DESC[level] || '此签属中等签，吉凶参半，宜谨慎行事。';
+  }
+
+  /*
+   * 诸葛神数大师深度解读（五段式：开篇/总论/专论/引经/结语）
+   * 基于签文意象 + 签等生成，主站与 EP7 体验页共用同一套逻辑，确保一致。
+   * @param {object} master - 大师对象（含 pronouns/quoteTemplates/name/category）
+   * @param {object} result - ZhugeEngine.divine 返回结果
+   * @param {string} question - 所问之事
+   * @returns {object} { opening, overview, specialty, quote, closing, levelDesc }
+   */
+  function generateZhugeAnalysis(master, result, question) {
+    var _esc = (typeof escapeHtml === 'function') ? escapeHtml : function (s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    };
+    var poem = result.poem || '';
+    var interp = result.interpretation || '';
+    var verdict = result.verdict || '';
+    var level = result.level || '中';
+    var num = result.number || '?';
+    var q = question || '';
+
+    // 从签文中提取意象关键词（用于深度分析）
+    var imageKeywords = [];
+    var imageDict = {
+      '龙腾': '龙腾', '虎啸': '虎啸', '春风': '春风', '细雨': '细雨', '孤舟': '孤舟', '东风': '东风',
+      '天门': '天门', '金榜': '金榜', '宝鼎': '宝鼎', '金丹': '金丹', '祥云': '祥云', '玉盘': '玉盘',
+      '鹿鸣': '鹿鸣', '芳草': '芳草', '绿柳': '绿柳', '青苗': '青苗', '沧海': '沧海', '迷津': '迷津',
+      '秋高': '秋高', '山高': '山高', '水长': '水长', '云开': '云开', '日出': '日出', '月明': '月明',
+      '花开': '花开', '花落': '花落', '风起': '风起', '露重': '露重'
+    };
+    for (var kw in imageDict) {
+      if (imageDict.hasOwnProperty(kw) && poem.indexOf(kw) !== -1) imageKeywords.push(kw);
+    }
+
+    // 判断签文基调
+    var tone = '';
+    if (level.indexOf('上上') !== -1) tone = '上上大吉，签中气象宏大，诸事亨通之兆';
+    else if (level.indexOf('上') !== -1 && level.indexOf('下') === -1) tone = '上吉之签，运势向好，宜把握时机';
+    else if (level.indexOf('中') !== -1 && level.indexOf('下') === -1) tone = '中平之局，吉凶参半，需稳中求进';
+    else if (level.indexOf('中') !== -1) tone = '中平略带阻滞，宜守正待时';
+    else tone = '凶兆之签，短期内多阻，宜韬光养晦';
+
+    // 开篇
+    var opening = (master.pronouns || '吾') + '观此签：第' + _esc(String(num)) + '签，' + _esc(level) + '。' +
+      (q ? '所问者：' + _esc(q) + '。' : '') +
+      '诸葛神数以三数定乾坤，三百八十四签各有所主，此签' + tone + '。';
+
+    // 总论
+    var overview = '签诗云："';
+    overview += _esc(poem) + '"。';
+    if (imageKeywords.length > 0) {
+      overview += '签中意象有' + imageKeywords.slice(0, 3).map(function (kw) { return '"' + kw + '"'; }).join('、') + '。';
+      if (imageKeywords.indexOf('龙腾') !== -1 || imageKeywords.indexOf('虎啸') !== -1) {
+        overview += '龙虎之象主势，预示事有转机、贵人将至。';
+      }
+      if (imageKeywords.indexOf('春风') !== -1 || imageKeywords.indexOf('细雨') !== -1) {
+        overview += '风雨润泽之象，主渐进之功，不宜冒进，但终有所成。';
+      }
+      if (imageKeywords.indexOf('孤舟') !== -1 || imageKeywords.indexOf('迷津') !== -1) {
+        overview += '舟渡迷津之象，当前处境虽艰，但得东风便可乘风破浪，关键在于等待与借力。';
+      }
+      if (imageKeywords.indexOf('宝鼎') !== -1 || imageKeywords.indexOf('金丹') !== -1) {
+        overview += '藏宝炼金之象，主大器晚成，当前蓄势阶段，厚积方能薄发。';
+      }
+    } else {
+      overview += '签文意象含蓄，需结合签等与所问之事综合研判。';
+    }
+    overview += ' 此乃' + _esc(level) + '之象，' + tone + '。';
+
+    // 专论
+    var specialty = '';
+    if (interp) {
+      specialty += '【签解详析】\n' + interp;
+    }
+    if (verdict) {
+      specialty += '\n\n【核心论断】\n' + verdict;
+    }
+    if (q) {
+      specialty += '\n\n【所问之事对应】\n所问"' + q + '"，结合' + level + '签之象：';
+      if (level.indexOf('上') !== -1 && level.indexOf('下') === -1) {
+        specialty += '吉兆明显，可积极行动，但需防盛极而衰，行事留三分余地。';
+      } else if (level.indexOf('中') !== -1 && level.indexOf('下') === -1) {
+        specialty += '运势平稳向好，宜稳扎稳打、循序渐进，不可贪功冒进。';
+      } else if (level.indexOf('中') !== -1) {
+        specialty += '吉凶参半，宜守正待时，先稳根基再图进取，不宜仓促决策。';
+      } else {
+        specialty += '短期多阻，宜韬光养晦、积蓄力量，待时机成熟再行大事。';
+      }
+    }
+
+    // 经典引用：优先用大师自带模板，否则用通用诸葛引语
+    var quote = '《诸葛武侯行军卜法》云："三数定乾坤，一签明吉凶。心诚则灵，机不可失。"';
+    if (master.quoteTemplates && master.quoteTemplates.length > 0) {
+      quote = master.quoteTemplates[0].replace(/\{[^}]+\}/g, level);
+    }
+
+    // 结语
+    var closing;
+    if (level.indexOf('上上') !== -1) {
+      closing = (master.pronouns || '吾') + '断曰：' + tone + '。所问之事，当乘势而上，但盛极必衰，需思退路、留余地。谋事在人，成事在天，但尽人事，无愧于心。';
+    } else if (level.indexOf('上') !== -1 && level.indexOf('下') === -1) {
+      closing = (master.pronouns || '吾') + '断曰：吉兆已现，宜顺势而为，把握当下上升期。然机不可失，时不再来，速决速行方为上策。';
+    } else if (level.indexOf('中') !== -1 && level.indexOf('下') === -1) {
+      closing = (master.pronouns || '吾') + '断曰：中吉之局，运势平稳向好。所问之事，宜稳扎稳打，循序渐进，方得始终。';
+    } else if (level.indexOf('中') !== -1) {
+      closing = (master.pronouns || '吾') + '断曰：吉凶参半，局势胶着。先稳根基再图进取，守正待时，不可急于求成。';
+    } else {
+      closing = (master.pronouns || '吾') + '断曰：' + tone + '。韬光养晦，积蓄力量，待时机成熟再图大事。塞翁失马，焉知非福，逆境亦为磨石。';
+    }
+
+    return {
+      opening: opening,
+      overview: overview,
+      specialty: specialty,
+      quote: quote,
+      closing: closing,
+      levelDesc: getZhugeLevelDesc(level)
+    };
+  }
+
   /** 解读签文单句（精进版：基于签句原文 + 字数 + 意象组合生成差异化解读，消除雷同） */
   function interpretPoemLine(line, domainKey) {
     // 事域中文名（用于解读前缀）
@@ -3059,6 +3193,10 @@
     detectCareerSubtype: detectCareerSubtype,
     /** 暴露领域建议列表供大师分析使用 */
     DOMAIN_ADVICES: DOMAIN_ADVICES,
+    /** 诸葛神数大师深度解读（主站/体验页共用，返回五段式 + 签等说明） */
+    analyzeZhugeMaster: generateZhugeAnalysis,
+    /** 诸葛神数签等说明 */
+    getZhugeLevelDesc: getZhugeLevelDesc,
 
     /**
      * 统一问事分析入口

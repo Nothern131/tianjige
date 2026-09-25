@@ -79,6 +79,7 @@ function renderZhugeComponent() {
     <!-- 结果区域 -->
     <div id="zhuge-result-area" class="hidden">
       <div class="glass-card" id="zhuge-result-card"></div>
+      <div id="zhuge-masters-area" class="hidden" style="margin-top:24px;"></div>
     </div>
   `;
 
@@ -175,7 +176,21 @@ async function handleZhugeSubmit(container, params) {
       }
     }
 
+    // 渲染签等说明 + 判断结论（主站/体验页共用文案）
+    var levelDesc = (typeof DomainAnalysis !== 'undefined' && DomainAnalysis.getZhugeLevelDesc)
+      ? DomainAnalysis.getZhugeLevelDesc(result.level)
+      : '此签属中等签，吉凶参半，宜谨慎行事。';
+    questionAnalysisHtml +=
+      '<div class="interp-block" style="margin-top:16px;border:1px solid var(--border-subtle);border-radius:10px;padding:14px 16px;">' +
+      '<div style="font-size:0.8rem;color:var(--gold-light);letter-spacing:0.05em;margin-bottom:8px;">【签等说明】' +
+      escapeHtml(result.level || '') + '</div>' +
+      '<div style="color:var(--text-secondary);font-size:0.86rem;line-height:1.7;">' +
+      escapeHtml(levelDesc) + '</div></div>';
+
     renderZhugeResult(resultCard, result, questionAnalysisHtml);
+
+    // 大师点评面板（基于签文意象 + 签等生成深度解读，主站/体验页共用）
+    initZhugeMastersPanel(container, result, question);
   } catch (error) {
     resultCard.innerHTML = `
       <div class="error-container">
@@ -184,6 +199,50 @@ async function handleZhugeSubmit(container, params) {
       </div>
     `;
   }
+}
+
+/** 诸葛神数 · 大师点评面板（基于签文意象 + 签等生成深度解读，主站/体验页共用） */
+function initZhugeMastersPanel(container, result, question) {
+  var area = container.querySelector('#zhuge-masters-area');
+  if (!area) return;
+  area.classList.remove('hidden');
+
+  var zhugeMasters = [];
+  if (typeof MastersEngine !== 'undefined' && MastersEngine.MASTERS) {
+    var allMasters = MastersEngine.MASTERS;
+    for (var key in allMasters) {
+      if (allMasters.hasOwnProperty(key)) {
+        var m = allMasters[key];
+        if (m.category === '诸葛' || m.category === '综合' || m.category === '奇门' || m.id === 'zhugeliang') {
+          zhugeMasters.push(m);
+        }
+      }
+    }
+    var seen = {};
+    zhugeMasters = zhugeMasters.filter(function (m) {
+      if (seen[m.id]) return false;
+      seen[m.id] = true;
+      return true;
+    });
+  }
+
+  if (zhugeMasters.length === 0) {
+    area.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;">暂无可用大师</p>';
+    return;
+  }
+
+  if (typeof renderMastersPanel !== 'function') return;
+  renderMastersPanel(area, {
+    category: '诸葛',
+    masters: zhugeMasters,
+    analysisTypes: [{ id: 'full', label: '签象解读' }],
+    onAnalyze: function (masterId) {
+      var master = MastersEngine.MASTERS[masterId];
+      if (!master || !result) return null;
+      if (typeof DomainAnalysis === 'undefined' || !DomainAnalysis.analyzeZhugeMaster) return null;
+      return DomainAnalysis.analyzeZhugeMaster(master, result, question || '');
+    }
+  });
 }
 
 /** 渲染诸葛神数结果 */

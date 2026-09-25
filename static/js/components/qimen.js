@@ -2,6 +2,119 @@
  * 奇门遁甲组件
  * 日期时间起局 → 九宫格展示 → 八门九星八神
  */
+
+// ===== 奇门遁甲大师深度解读（移植自 EP5 体验页，主站/体验页共用） =====
+function generateQimenAnalysis(master, result, question) {
+  var _esc = (typeof escapeHtml === 'function') ? escapeHtml : function (s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  };
+  var interp = result.interpretation || '';
+  var opening = '', overview = '', specialty = '', quote = '', closing = '';
+
+  var qimenQuotes = {
+    '诸葛亮': '运筹帷幄之中，决胜千里之外。奇门者，帝王之学也。',
+    '刘伯温': '天垂象，见吉凶。奇门遁甲，察天时地利人和。',
+    '宋惠彬': '奇门学术，逻辑为纲。九宫八卦，时空之模型也。',
+  };
+
+  // 开口
+  opening = '今起' + _esc(result.period || '') + ' ' + _esc(result.ju_num || '') + '局，值' + _esc(result.jieqi || '') + '。日' + _esc(result.day_gz || '') + '，时' + _esc(result.time_gz || '') + '。';
+  if (question) opening += '所问者：' + _esc(question) + '。';
+
+  // 总纲
+  var auspiciousDoors = ['休门', '生门', '开门'];
+  var auspiciousStars = ['天心', '天任', '天辅', '天禽'];
+  var auspiciousGods = ['值符', '太阴', '六合', '九天', '九地'];
+  var goodCount = 0, badCount = 0;
+  var gridOrder = [4, 9, 2, 3, 5, 7, 8, 1, 6];
+  var cells = result.cells || {};
+  gridOrder.forEach(function (pos) {
+    if (pos === 5) return;
+    var c = cells[pos] || {};
+    if (auspiciousDoors.indexOf(c.door) >= 0 || auspiciousStars.indexOf(c.star) >= 0 || auspiciousGods.indexOf(c.god) >= 0) {
+      goodCount++;
+    } else {
+      badCount++;
+    }
+  });
+  var verdict = goodCount > badCount ? '吉' : goodCount < badCount ? '凶' : '平';
+  overview = '此局总断为' + verdict + '。' + goodCount + '宫得吉，' + badCount + '宫不吉。';
+
+  // 专项
+  specialty = '';
+  if (interp) {
+    specialty += interp + '\n\n';
+  }
+  var bestPos = null;
+  gridOrder.forEach(function (pos) {
+    if (pos === 5) return;
+    var c = cells[pos] || {};
+    if (auspiciousDoors.indexOf(c.door) >= 0 && auspiciousGods.indexOf(c.god) >= 0) {
+      bestPos = pos;
+    }
+  });
+  if (bestPos) {
+    var gongNames = { 1: '坎一宫', 2: '坤二宫', 3: '震三宫', 4: '巽四宫', 5: '中五宫', 6: '乾六宫', 7: '兑七宫', 8: '艮八宫', 9: '离九宫' };
+    specialty += '【吉方】' + _esc(gongNames[bestPos] || '') + '方吉，宜向此方布局出行。\n';
+  }
+
+  // 引经据典
+  quote = qimenQuotes[master.name] || '《奇门遁甲》云：天遁、地遁、人遁，三遁相生，万事如意。';
+
+  // 结语
+  if (verdict === '吉') {
+    closing = '综合而论，此局大吉。所问之事，顺势而为，可成。然盛极必衰，宜见好就收，趋吉避凶。';
+  } else if (verdict === '平') {
+    closing = '综合而论，此局平。所问之事，需待时运。宜择吉方而动，守正待时。';
+  } else {
+    closing = '综合而论，此局多阻。所问之事，短期内难有进展。宜退守蓄势，择吉时吉方而动，待时而起。';
+  }
+
+  return { opening: opening, overview: overview, specialty: specialty, quote: quote, closing: closing };
+}
+
+// ===== 奇门遁甲大师点评面板 =====
+function initQimenMastersPanel(container, result, question) {
+  var mastersArea = container ? container.querySelector('#qimen-masters-area') : null;
+  if (!mastersArea || !result || typeof MastersEngine === 'undefined' || !MastersEngine.MASTERS) return;
+  mastersArea.innerHTML = '';
+  mastersArea.classList.remove('hidden');
+
+  var qimenMasters = [];
+  var allMasters = MastersEngine.MASTERS;
+  for (var key in allMasters) {
+    if (allMasters.hasOwnProperty(key)) {
+      var m = allMasters[key];
+      if (m.category === '奇门' || m.category === '综合') {
+        qimenMasters.push(m);
+      }
+    }
+  }
+  if (qimenMasters.length === 0) return;
+
+  if (typeof renderMastersPanel !== 'function') return;
+  renderMastersPanel(mastersArea, {
+    category: '奇门',
+    masters: qimenMasters,
+    analysisTypes: [{ id: 'full', label: '即时占断' }],
+    onAnalyze: function (masterId) {
+      var master = allMasters[masterId];
+      if (!master || !result) {
+        console.error('[天机阁] 奇门大师分析失败: master不存在或result为空');
+        return null;
+      }
+      try {
+        var res = generateQimenAnalysis(master, result, question || '');
+        console.log('[天机阁] 奇门大师分析成功:', masterId, 'sections:', Object.keys(res).join(','));
+        return res;
+      } catch (e) {
+        console.error('[天机阁] 奇门大师分析异常:', masterId, e);
+        throw e;
+      }
+    },
+  });
+}
+
 function renderQimenComponent() {
   const container = document.createElement('div');
   container.className = 'fade-in';
@@ -88,6 +201,7 @@ function renderQimenComponent() {
     <!-- 九宫格 -->
     <div id="qimen-result-area" class="hidden">
       <div class="glass-card" id="qimen-result-card"></div>
+      <div id="qimen-masters-area" class="hidden" style="margin-top:24px;"></div>
     </div>
   `;
 
@@ -156,6 +270,9 @@ async function handleQimenSubmit(container, params) {
     }
 
     renderQimenResult(resultCard, result, questionAnalysisHtml);
+
+    // 大师点评面板（基于奇门九宫格深度解读，主站/体验页共用）
+    initQimenMastersPanel(container, result, question);
   } catch (error) {
     resultCard.innerHTML = `
       <div class="error-container">
