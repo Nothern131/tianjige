@@ -540,80 +540,15 @@
         renderGongDetails(result);
         renderDaXian(result);
 
+        initZiweiMasters(result);
+
         overviewCard.classList.remove('hidden');
         gongCard.classList.remove('hidden');
         dayunCard.classList.remove('hidden');
+        mastersCard.classList.remove('hidden');
 
-        renderMastersPanel(document.getElementById('mastersContent'), {
-          category: '紫微',
-          masters: window.MastersEngine ? Object.values(window.MastersEngine.MASTERS || {}).filter(function(m){ return m.category === '紫微' || m.category === '综合'; }) : [],
-          analysisTypes: [
-            {id:'full', label:'命盘解读'},
-            {id:'minggong', label:'命宫专论'}
-          ],
-          onAnalyze: function(masterId, analysisType){
-            if(!currentResult) return null;
-            var master = window.MastersEngine ? window.MastersEngine.MASTERS[masterId] : null;
-            if(!master) return null;
-
-            var question = currentQuestion || (analysisType === 'minggong' ? '请重点解读命宫主星与四化飞星' : '请全面解读此命盘');
-
-            // 调用 DomainAnalysis 获取事域分析文本
-            var analysisText = '';
-            if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
-              try {
-                var da = DomainAnalysis.analyze('ziwei', currentResult, question);
-                if(da && da.analysis) analysisText = da.analysis;
-              } catch(e){}
-            }
-
-            // 无 DomainAnalysis 时 fallback：直接从 result 提取
-            if(!analysisText){
-              var r = currentResult;
-              analysisText = '命宫：' + (r['命宫']||'?') + '（主星：' + (r['命宫主星']||'无') + '）\n'
-                + '身宫：' + (r['身宫']||'?') + ' | 五行局：' + (r['五行局']||'?') + '\n'
-                + '紫微落：' + (r['紫微星落']||'?') + '宫\n'
-                + '总体运势：' + (r['总体运势']||'平稳');
-              var siHua = r['四化']||{};
-              if(siHua.lu) analysisText += '\n四化：化禄['+siHua.lu+'] 化权['+(siHua.quan||'—')+'] 化科['+(siHua.ke||'—')+'] 化忌['+(siHua.ji||'—')+']';
-            }
-
-            // 五段式
-            var openingTpl = master.openingTemplates && master.openingTemplates[0]
-              ? master.openingTemplates[0]
-              : master.name + '观紫微星盘，帝星所临，吉凶自现。汝命宫主星' + (currentResult['命宫主星']||'?') + '，' + (currentResult['五行局']||'?') + '局。';
-            var opening = openingTpl
-              .replace(/\{日主\}/g, currentResult['命宫主星']||'紫微')
-              .replace(/\{日主五行\}/g, currentResult['五行局']||'金')
-              .replace(/\{旺衰\}/g, currentResult['总体运势']||'平和');
-
-            var quoteTpl = master.quoteTemplates && master.quoteTemplates[0]
-              ? master.quoteTemplates[0]
-              : '《紫微斗数全书》云："紫微帝座，乃众星之主，万曜之尊。"';
-
-            var closingTpl = master.closingTemplates && master.closingTemplates[0]
-              ? master.closingTemplates[0]
-              : '大师断之：' + (currentResult['总体运势']||'运势平稳') + '。星曜流转，命亦随之，顺势而为，则吉星高照。';
-            var closing = closingTpl
-              .replace(/\{结论\}/g, currentResult['总体运势']||'命途平顺')
-              .replace(/\{建议\}/g, '顺势而为，守正待时');
-
-            return {
-              opening: opening,
-              overview: analysisText,
-              specialty: analysisType === 'minggong'
-                ? '【命宫专论】命宫在' + (currentResult['命宫']||'?') + '，主星' + (currentResult['命宫主星']||'无') + '。' + (currentResult['总体运势']||'运势平稳') + '。'
-                : '【全盘解读】五行局：' + (currentResult['五行局']||'?') + '，紫微落' + (currentResult['紫微星落']||'?') + '宫，身宫在' + (currentResult['身宫']||'?') + '。' + (currentResult['总体运势']||'运势平稳') + '。',
-              quote: quoteTpl,
-              closing: closing
-            };
-          }
-        });
-
-        // 显示追问区域
         var fuArea = document.getElementById('ziweiFollowUpArea');
         if(fuArea) fuArea.style.display = '';
-        mastersCard.classList.remove('hidden');
 
         overviewCard.scrollIntoView({behavior:'smooth',block:'start'});
       } catch(e){
@@ -841,6 +776,109 @@
     });
   }
 
+  /** 构建紫微五段式分析（供 renderMastersPanel onAnalyze 与追问区共用） */
+  function buildZiweiAnalysis(result, masterId, analysisType){
+    var master = window.MastersEngine ? (window.MastersEngine.MASTERS || {})[masterId] : null;
+    if(!master || !result) return null;
+
+    var typeQuestionMap = {
+      full: '请全面解读此命盘',
+      minggong: '请重点解读命宫主星与四化飞星',
+      career: '请从事业维度解读此命盘',
+      wealth: '请从财运维度解读此命盘',
+      love: '请从感情维度解读此命盘',
+      health: '请从健康维度解读此命盘'
+    };
+    var question = currentQuestion || typeQuestionMap[analysisType] || typeQuestionMap.full;
+
+    var analysisText = '';
+    if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
+      try {
+        var da = DomainAnalysis.analyze('ziwei', result, question);
+        if(da && da.analysis) analysisText = da.analysis;
+      } catch(e){}
+    }
+    if(!analysisText){
+      var r = result;
+      analysisText = '命宫：' + (r['命宫']||'?') + '（主星：' + (r['命宫主星']||'无') + '）\n'
+        + '身宫：' + (r['身宫']||'?') + ' | 五行局：' + (r['五行局']||'?') + '\n'
+        + '紫微落：' + (r['紫微星落']||'?') + '宫\n'
+        + '总体运势：' + (r['总体运势']||'平稳');
+      var siHua = r['四化']||{};
+      if(siHua.lu) analysisText += '\n四化：化禄['+siHua.lu+'] 化权['+(siHua.quan||'—')+'] 化科['+(siHua.ke||'—')+'] 化忌['+(siHua.ji||'—')+']';
+    }
+
+    var openingTpl = master.openingTemplates && master.openingTemplates[0]
+      ? master.openingTemplates[0]
+      : master.name + '观紫微星盘，帝星所临，吉凶自现。汝命宫主星' + (result['命宫主星']||'?') + '，' + (result['五行局']||'?') + '局。';
+    var opening = openingTpl
+      .replace(/\{日主\}/g, result['命宫主星']||'紫微')
+      .replace(/\{日主五行\}/g, result['五行局']||'金')
+      .replace(/\{旺衰\}/g, result['总体运势']||'平和');
+
+    var quoteTpl = master.quoteTemplates && master.quoteTemplates[0]
+      ? master.quoteTemplates[0]
+      : '《紫微斗数全书》云："紫微帝座，乃众星之主，万曜之尊。"';
+
+    var closingTpl = master.closingTemplates && master.closingTemplates[0]
+      ? master.closingTemplates[0]
+      : '大师断之：' + (result['总体运势']||'运势平稳') + '。星曜流转，命亦随之，顺势而为，则吉星高照。';
+    var closing = closingTpl
+      .replace(/\{结论\}/g, result['总体运势']||'命途平顺')
+      .replace(/\{建议\}/g, '顺势而为，守正待时');
+
+    var specialtyLabel = {
+      minggong: '【命宫专论】',
+      career: '【事业研判】',
+      wealth: '【财运研判】',
+      love: '【感情研判】',
+      health: '【健康研判】'
+    };
+    var specialtyPrefix = specialtyLabel[analysisType] || '【全盘解读】';
+    var specialty = specialtyPrefix
+      + (result['命宫']||'?') + '宫主星' + (result['命宫主星']||'无')
+      + '，' + (result['总体运势']||'运势平稳') + '。'
+      + analysisText;
+
+    return {
+      opening: opening,
+      overview: analysisText,
+      specialty: specialty,
+      quote: quoteTpl,
+      closing: closing
+    };
+  }
+
+  /** 大师点评面板初始化（仿 EP2 initMasters 模式） */
+  function initZiweiMasters(result){
+    var mastersContent = document.getElementById('mastersContent');
+    if(!mastersContent) return;
+
+    var ziweiMasters = window.MastersEngine
+      ? Object.values(window.MastersEngine.MASTERS || {}).filter(function(m){
+          return m.category === '紫微' || m.category === '综合';
+        })
+      : [];
+
+    if(ziweiMasters.length === 0) return;
+
+    mastersContent.innerHTML = '';
+    renderMastersPanel(mastersContent, {
+      category: '紫微',
+      masters: ziweiMasters,
+      analysisTypes: [
+        { id: 'full', label: '全盘解读' },
+        { id: 'minggong', label: '命宫专论' },
+        { id: 'career', label: '事业研判' },
+        { id: 'wealth', label: '财运研判' },
+        { id: 'love', label: '感情研判' },
+      ],
+      onAnalyze: function(masterId, analysisType){
+        return buildZiweiAnalysis(result, masterId, analysisType);
+      }
+    });
+  }
+
   // 从 interpretation 文本中提取各宫解读（引擎仅提供了命宫解读，其余宫位基于星曜生成基础描述）
   function extractGongInterpretation(interpretation, gongName, mains, fus, siHua){
     var lines = [];
@@ -954,47 +992,33 @@
         var domainKey = currentDomain || 'career';
         var age = calcCurrentAge();
 
+        // 构建大限/流年附加文本
+        var extraText = '';
+        try {
+          if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyzeZiweiDaXian){
+            var dx = ZiWeiEngine.calcDaXian(currentResult, age);
+            extraText += '\n' + DomainAnalysis.analyzeZiweiDaXian(currentResult, dx, domainKey);
+          }
+        } catch(e){}
+        try {
+          if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyzeZiweiLiuNian){
+            var thisYear = new Date().getFullYear();
+            var ln = ZiWeiEngine.calcLiuNian(currentResult, thisYear);
+            extraText += '\n' + DomainAnalysis.analyzeZiweiLiuNian(currentResult, ln, domainKey);
+          }
+        } catch(e){}
+
         var answers = [];
         for(var i=0;i<masterList.length;i++){
           var m = masterList[i];
-          var openingTpl = m.openingTemplates && m.openingTemplates[0] ? m.openingTemplates[0] : m.name + '观紫微星盘，帝星所临，吉凶自现。';
-          var opening = openingTpl
-            .replace(/\{日主\}/g, currentResult['命宫主星']||'紫微')
-            .replace(/\{日主五行\}/g, currentResult['五行局']||'金')
-            .replace(/\{旺衰\}/g, currentResult['总体运势']||'平和');
-
-          var analysisText = '';
-          if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
-            try {
-              var da = DomainAnalysis.analyze('ziwei', currentResult, question);
-              if(da && da.analysis) analysisText = da.analysis;
-            } catch(e){}
-          }
-          if(!analysisText){
-            analysisText = '针对「' + question + '」：命宫在' + (currentResult['命宫']||'?') + '，主星' + (currentResult['命宫主星']||'无') + '，' + (currentResult['总体运势']||'运势平稳') + '。';
-          }
-
-          // 自动附带大限/流年/流月补充解读
-          var extraText = '';
-          try {
-            if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyzeZiweiDaXian){
-              var dx = ZiWeiEngine.calcDaXian(currentResult, age);
-              extraText += '\n' + DomainAnalysis.analyzeZiweiDaXian(currentResult, dx, domainKey);
-            }
-          } catch(e){}
-          try {
-            if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyzeZiweiLiuNian){
-              var thisYear = new Date().getFullYear();
-              var ln = ZiWeiEngine.calcLiuNian(currentResult, thisYear);
-              extraText += '\n' + DomainAnalysis.analyzeZiweiLiuNian(currentResult, ln, domainKey);
-            }
-          } catch(e){}
-
+          var fivePart = buildZiweiAnalysis(currentResult, m.id, 'full');
+          if(!fivePart) continue;
+          var answerBody = fivePart.overview + extraText;
           answers.push({
             master: m,
-            opening: opening,
-            answer: analysisText + extraText,
-            closing: '星曜流转，命亦随之，顺势而为，则吉星高照。'
+            opening: fivePart.opening,
+            answer: answerBody,
+            closing: fivePart.closing
           });
         }
 
