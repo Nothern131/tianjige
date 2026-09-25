@@ -2938,6 +2938,67 @@
     return lines.join('\n');
   }
 
+  /* ========== 紫微大限/流年/流月/流时 → 事域解读 ========== */
+
+  /** 大限事域解读 */
+  function analyzeZiweiDaXian(result, daXian, domainKey) {
+    var lines = [];
+    lines.push('【大限运程 · ' + (DOMAINS[domainKey] || {}).name + '】');
+    var list = daXian.list || [];
+    var cur = daXian.currentLimit >= 0 ? list[daXian.currentLimit] : null;
+    lines.push('大限方向：' + (daXian.isShun ? '顺行' : '逆行') + '，共' + list.length + '限。');
+    if (cur) {
+      lines.push('');
+      lines.push('当前大限：' + cur.startAge + '岁-' + cur.endAge + '岁 → ' + cur.gongName + '（' + cur.gongZhi + '）');
+      lines.push('大限干支：' + cur.ganZhi + '，大限四化：禄[' + (cur.siHua.lu || '—') + '] 权[' + (cur.siHua.quan || '—') + '] 科[' + (cur.siHua.ke || '—') + '] 忌[' + (cur.siHua.ji || '—') + ']');
+      lines.push('');
+      lines.push('【' + (DOMAINS[domainKey] || {}).name + '维度大限研判】');
+      var siHua = cur.siHua || {};
+      if (siHua.lu) lines.push('→ 大限化禄在' + siHua.lu + '，' + DOMAINS[domainKey].name + '方面十年内整体有增益之象。');
+      if (siHua.ji) lines.push('⚠ 大限化忌在' + siHua.ji + '，' + DOMAINS[domainKey].name + '方面十年内需防阻滞。');
+      if (siHua.quan) lines.push('→ 大限化权在' + siHua.quan + '，' + DOMAINS[domainKey].name + '方面可掌握主动权。');
+      if (siHua.ke) lines.push('√ 大限化科在' + siHua.ke + '，' + DOMAINS[domainKey].name + '方面有名声和贵人相助。');
+      lines.push('');
+      lines.push('大限宫星曜：' + (cur.stars && cur.stars.length > 0 ? cur.stars.join('、') : '无主星'));
+    }
+    return lines.join('\n');
+  }
+
+  /** 流年事域解读 */
+  function analyzeZiweiLiuNian(result, liuNian, domainKey) {
+    var lines = [];
+    lines.push('【' + liuNian.year + '年（' + liuNian.ganZhi + '）流年 · ' + (DOMAINS[domainKey] || {}).name + '】');
+    lines.push('流年命宫落在' + liuNian.gongName + '（' + liuNian.mingGongZhi + '），星曜：' + (liuNian.stars && liuNian.stars.length > 0 ? liuNian.stars.join('、') : '无主星'));
+    var siHua = liuNian.siHua || {};
+    lines.push('流年四化：禄[' + (siHua.lu || '—') + '] 权[' + (siHua.quan || '—') + '] 科[' + (siHua.ke || '—') + '] 忌[' + (siHua.ji || '—') + ']');
+    lines.push('');
+    lines.push('【' + liuNian.year + '年' + DOMAINS[domainKey].name + '研判】');
+    if (siHua.lu) lines.push('→ ' + liuNian.year + '年化禄在' + siHua.lu + '，' + DOMAINS[domainKey].name + '方面有顺遂之象。');
+    if (siHua.ji) lines.push('⚠ ' + liuNian.year + '年化忌在' + siHua.ji + '，' + DOMAINS[domainKey].name + '方面宜谨慎。');
+    if (siHua.quan) lines.push('→ ' + liuNian.year + '年化权在' + siHua.quan + '，' + DOMAINS[domainKey].name + '方面可主动出击。');
+    if (siHua.ke) lines.push('√ ' + liuNian.year + '年化科在' + siHua.ke + '，' + DOMAINS[domainKey].name + '方面有贵人。');
+    lines.push('');
+    lines.push('流年命宫' + liuNian.mingGongZhi + '（' + liuNian.gongName + '）星曜与事域宫位叠加，是' + DOMAINS[domainKey].name + '运势的关键所在。');
+    return lines.join('\n');
+  }
+
+  /** 流月事域解读 */
+  function analyzeZiweiLiuYue(result, liuYue, domainKey) {
+    var lines = [];
+    lines.push('【' + liuYue.year + '年' + liuYue.month + '月（' + liuYue.ganZhi + '）流月 · ' + (DOMAINS[domainKey] || {}).name + '】');
+    lines.push('流月命宫落在' + liuYue.gongName + '（' + liuYue.mingGongZhi + '），星曜：' + (liuYue.stars && liuYue.stars.length > 0 ? liuYue.stars.join('、') : '无主星'));
+    var siHua = liuYue.siHua || {};
+    lines.push('流月四化：禄[' + (siHua.lu || '—') + '] 权[' + (siHua.quan || '—') + '] 科[' + (siHua.ke || '—') + '] 忌[' + (siHua.ji || '—') + ']');
+    lines.push('');
+    lines.push('【' + liuYue.month + '月' + DOMAINS[domainKey].name + '研判】');
+    if (siHua.lu) lines.push('→ 本月化禄在' + siHua.lu + '，' + DOMAINS[domainKey].name + '方面有顺遂之机。');
+    if (siHua.ji) lines.push('⚠ 本月化忌在' + siHua.ji + '，' + DOMAINS[domainKey].name + '方面宜守不宜攻。');
+    if (siHua.quan) lines.push('→ 本月化权在' + siHua.quan + '，' + DOMAINS[domainKey].name + '方面可把握主动权。');
+    lines.push('');
+    lines.push('流月' + liuYue.mingGongZhi + '（' + liuYue.gongName + '）是本月' + DOMAINS[domainKey].name + '的关键宫位。');
+    return lines.join('\n');
+  }
+
   function buildZiweiDomainAnalysis(mingGongZhi, mingGongZhuXing, gongs, siHua, allStars, domainKey) {
     var out = [];
     out.push('紫微斗数以命宫' + mingGongZhi + '（主星' + mingGongZhuXing + '）为根基，十二宫各有归位。');
@@ -3195,8 +3256,14 @@
     DOMAIN_ADVICES: DOMAIN_ADVICES,
     /** 诸葛神数大师深度解读（主站/体验页共用，返回五段式 + 签等说明） */
     analyzeZhugeMaster: generateZhugeAnalysis,
-    /** 诸葛神数签等说明 */
-    getZhugeLevelDesc: getZhugeLevelDesc,
+    /** 紫微大限事域解读 */
+    analyzeZiweiDaXian: analyzeZiweiDaXian,
+    /** 紫微流年事域解读 */
+    analyzeZiweiLiuNian: analyzeZiweiLiuNian,
+    /** 紫微流月事域解读 */
+    analyzeZiweiLiuYue: analyzeZiweiLiuYue,
+    /** 紫微基础命盘事域解读 */
+    analyzeZiwei: analyzeZiwei,
 
     /**
      * 统一问事分析入口

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node build.js",
     "preview": "vite preview",
     "lint": "eslint static/js",
     "format": "prettier --write 'static/js/**/*.js' 'static/css/**/*.css' '*.html'",
@@ -12,8 +12,9 @@
     "test:watch": "node tests/run_tests.js --watch"
   },
   "devDependencies": {
-    "vite": "^5.4.0",
     "eslint": "^8.57.0",
-    "prettier": "^3.3.0"
+    "prettier": "^3.3.0",
+    "terser": "^5.51.2",
+    "vite": "^5.4.0"
   }
 }

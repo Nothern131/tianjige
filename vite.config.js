@@ -21,9 +21,26 @@ export default defineConfig({
         'ep8-ziwei': 'ep8-ziwei.html',
         architecture: 'architecture.html',
       },
+      // 静默非模块 script 的 bundle 警告（这些文件由 copy-static 单独复制）
+      onwarn(warning, defaultHandler) {
+        if (
+          warning.code === 'MIXED_EXPORTS' ||
+          (warning.message && warning.message.includes("can't be bundled"))
+        ) {
+          return;
+        }
+        defaultHandler(warning);
+      },
     },
     cssCodeSplit: false,
     copyPublicDir: false,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false,
+      },
+    },
+    chunkSizeWarningLimit: 2000,
   },
   server: {
     port: 8889,
@@ -32,10 +49,11 @@ export default defineConfig({
   plugins: [
     {
       name: 'copy-static',
-      closeBundle() {
+      writeBundle() {
         const src = path.resolve('static');
         const dst = path.resolve('dist/static');
         if (!fs.existsSync(src)) return;
+        fs.rmSync(dst, { recursive: true, force: true });
         fs.cpSync(src, dst, { recursive: true });
       },
     },

@@ -411,9 +411,26 @@
     <div id="gongContent"></div>
   </div>
 
-  <!-- 04 大师点评 -->
+  <!-- 04 大限流年 -->
+  <div class="card fade-up hidden" id="dayunCard">
+    <div class="section-title">大限流年<span class="num">04</span></div>
+    <div id="dayunGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;"></div>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="font-size:0.78rem;color:var(--text2);letter-spacing:0.04em;margin-bottom:10px;">流年 · 流月 追问</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <label style="font-size:0.72rem;color:var(--text3);">年份</label>
+        <input type="number" id="ziwei-liunian-year" placeholder="如 2026" style="width:72px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 8px;font-size:0.82rem;" />
+        <label style="font-size:0.72rem;color:var(--text3);">月份</label>
+        <input type="number" id="ziwei-liunian-month" min="1" max="12" placeholder="如 6" style="width:52px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 8px;font-size:0.82rem;" />
+        <button id="ziwei-liunian-btn" style="background:var(--gold-dim);color:var(--ink-dark);border:none;border-radius:6px;padding:6px 14px;font-size:0.82rem;cursor:pointer;white-space:nowrap;">推演</button>
+      </div>
+      <div id="ziwei-liunian-result" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- 05 大师点评 -->
   <div class="glass-card fade-up hidden" id="mastersCard">
-    <div class="section-title">大师点评<span class="num">04</span></div>
+    <div class="section-title">大师点评<span class="num">05</span></div>
     <div id="mastersContent"></div>
     <div id="ziweiFollowUpArea" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:none;">
       <div style="font-size:0.78rem;color:var(--text2);letter-spacing:0.04em;margin-bottom:10px;">追问 · 让大师继续深入解读</div>
@@ -503,9 +520,11 @@
 
     var overviewCard = document.getElementById('overviewCard');
     var gongCard = document.getElementById('gongCard');
+    var dayunCard = document.getElementById('dayunCard');
     var mastersCard = document.getElementById('mastersCard');
     overviewCard.classList.add('hidden');
     gongCard.classList.add('hidden');
+    dayunCard.classList.add('hidden');
     mastersCard.classList.add('hidden');
 
     var overviewContent = document.getElementById('overviewContent');
@@ -519,9 +538,11 @@
         currentResult = result;
         renderOverview(result);
         renderGongDetails(result);
+        renderDaXian(result);
 
         overviewCard.classList.remove('hidden');
         gongCard.classList.remove('hidden');
+        dayunCard.classList.remove('hidden');
 
         renderMastersPanel(document.getElementById('mastersContent'), {
           category: '紫微',
@@ -720,6 +741,106 @@
     el.innerHTML = html;
   }
 
+  // ===== 渲染大限流年卡片 =====
+  function renderDaXian(result){
+    var el = document.getElementById('dayunGrid');
+    if(!el) return;
+
+    var age = calcCurrentAge();
+    var dx = ZiWeiEngine.calcDaXian(result, age);
+    var html = '';
+
+    dx.list.forEach(function(item, idx){
+      var isCur = (dx.currentLimit >= 0 && idx === dx.currentLimit);
+      html += '<div style="background:' + (isCur ? 'rgba(184,154,92,0.12)' : 'rgba(0,0,0,0.25)') +
+        ';border:1px solid ' + (isCur ? 'var(--border-gold)' : 'var(--border)') +
+        ';border-radius:8px;padding:8px 6px;text-align:center;">';
+      html += '<div style="font-size:0.62rem;color:' + (isCur ? 'var(--gold-light)' : 'var(--text3)') + ';margin-bottom:3px;">' +
+        item.startAge + '-' + item.endAge + '岁</div>';
+      html += '<div style="font-family:var(--font-serif);font-size:0.82rem;color:var(--gold-light);font-weight:600;">' +
+        escHtml(item.ganZhi) + '</div>';
+      html += '<div style="font-size:0.62rem;color:var(--text2);margin-top:3px;">' + escHtml(item.gongName) + '</div>';
+      if(isCur){
+        html += '<div style="font-size:0.58rem;color:var(--gold);margin-top:4px;">当前大限</div>';
+      }
+      html += '</div>';
+    });
+
+    html += '<div style="grid-column:1/-1;margin-top:8px;font-size:0.72rem;color:var(--text3);letter-spacing:0.04em;">';
+    html += '大限方向：' + (dx.isShun ? '顺行' : '逆行') + '，共' + dx.list.length + '限。';
+    if(dx.currentLimit >= 0){
+      html += '当前大限：' + dx.list[dx.currentLimit].ganZhi + ' ' + dx.list[dx.currentLimit].gongName + '。';
+    }
+    html += '</div>';
+
+    el.innerHTML = html;
+  }
+
+  /** 从排盘输入推算当前周岁 */
+  function calcCurrentAge(){
+    var bd = document.getElementById('ziwei-birthdate');
+    if(!bd || !bd.value) return 1;
+    var dp = bd.value.split('-');
+    var by = parseInt(dp[0],10) || 2000;
+    var bm = parseInt(dp[1],10) || 1;
+    var bd2 = parseInt(dp[2],10) || 1;
+    var now = new Date();
+    var age = now.getFullYear() - by;
+    if(now.getMonth()+1 < bm || (now.getMonth()+1 === bm && now.getDate() < bd2)) age--;
+    return Math.max(1, age);
+  }
+
+  // ===== 流年·流月推演事件 =====
+  var liuNianBtn = document.getElementById('ziwei-liunian-btn');
+  if(liuNianBtn){
+    liuNianBtn.addEventListener('click', function(){
+      var yearEl = document.getElementById('ziwei-liunian-year');
+      var monthEl = document.getElementById('ziwei-liunian-month');
+      var year = parseInt(yearEl && yearEl.value, 10);
+      var month = parseInt(monthEl && monthEl.value, 10);
+      var resEl = document.getElementById('ziwei-liunian-result');
+      if(!currentResult){ showToast('请先完成排盘'); return; }
+      if(isNaN(year)){ showToast('请输入年份'); return; }
+
+      resEl.innerHTML = '<div class="spinner" style="margin:8px auto;"></div>';
+      liuNianBtn.disabled = true;
+
+      setTimeout(function(){
+        var lines = [];
+        var domainKey = currentDomain || 'career';
+
+        var ln = ZiWeiEngine.calcLiuNian(currentResult, year);
+        lines.push('【' + ln.year + '年（' + ln.ganZhi + '）流年】');
+        lines.push('流年命宫落在' + ln.gongName + '（' + ln.mingGongZhi + '），星曜：' + (ln.stars && ln.stars.length > 0 ? ln.stars.join('、') : '无主星'));
+        var lnSh = ln.siHua || {};
+        lines.push('流年四化：禄[' + (lnSh.lu||'—') + '] 权[' + (lnSh.quan||'—') + '] 科[' + (lnSh.ke||'—') + '] 忌[' + (lnSh.ji||'—') + ']');
+        if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyzeZiweiLiuNian){
+          lines.push('');
+          lines.push(DomainAnalysis.analyzeZiweiLiuNian(currentResult, ln, domainKey));
+        }
+
+        if(!isNaN(month) && month >= 1 && month <= 12){
+          var ly = ZiWeiEngine.calcLiuYue(currentResult, year, month);
+          lines.push('');
+          lines.push('【' + ly.year + '年' + ly.month + '月（' + ly.ganZhi + '）流月】');
+          lines.push('流月命宫落在' + ly.gongName + '（' + ly.mingGongZhi + '），星曜：' + (ly.stars && ly.stars.length > 0 ? ly.stars.join('、') : '无主星'));
+          var lySh = ly.siHua || {};
+          lines.push('流月四化：禄[' + (lySh.lu||'—') + '] 权[' + (lySh.quan||'—') + '] 科[' + (lySh.ke||'—') + '] 忌[' + (lySh.ji||'—') + ']');
+          if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyzeZiweiLiuYue){
+            lines.push('');
+            lines.push(DomainAnalysis.analyzeZiweiLiuYue(currentResult, ly, domainKey));
+          }
+        }
+
+        resEl.innerHTML = '<div style="background:rgba(184,154,92,0.04);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:0.82rem;color:var(--text);white-space:pre-wrap;line-height:1.9;">' +
+          escHtml(lines.join('\n')) + '</div>';
+        resEl.style.display = '';
+        liuNianBtn.disabled = false;
+        resEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+      }, 300);
+    });
+  }
+
   // 从 interpretation 文本中提取各宫解读（引擎仅提供了命宫解读，其余宫位基于星曜生成基础描述）
   function extractGongInterpretation(interpretation, gongName, mains, fus, siHua){
     var lines = [];
@@ -832,6 +953,10 @@
           followUpBtn.disabled = false;
           return;
         }
+
+        var domainKey = currentDomain || 'career';
+        var age = calcCurrentAge();
+
         var answers = [];
         for(var i=0;i<masterList.length;i++){
           var m = masterList[i];
@@ -852,10 +977,26 @@
             analysisText = '针对「' + question + '」：命宫在' + (currentResult['命宫']||'?') + '，主星' + (currentResult['命宫主星']||'无') + '，' + (currentResult['总体运势']||'运势平稳') + '。';
           }
 
+          // 自动附带大限/流年/流月补充解读
+          var extraText = '';
+          try {
+            if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyzeZiweiDaXian){
+              var dx = ZiWeiEngine.calcDaXian(currentResult, age);
+              extraText += '\n' + DomainAnalysis.analyzeZiweiDaXian(currentResult, dx, domainKey);
+            }
+          } catch(e){}
+          try {
+            if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyzeZiweiLiuNian){
+              var thisYear = new Date().getFullYear();
+              var ln = ZiWeiEngine.calcLiuNian(currentResult, thisYear);
+              extraText += '\n' + DomainAnalysis.analyzeZiweiLiuNian(currentResult, ln, domainKey);
+            }
+          } catch(e){}
+
           answers.push({
             master: m,
             opening: opening,
-            answer: analysisText,
+            answer: analysisText + extraText,
             closing: '星曜流转，命亦随之，顺势而为，则吉星高照。'
           });
         }

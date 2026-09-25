@@ -777,9 +777,154 @@
     return '命宫格局中平，吉凶参半，需后天努力辅助。';
   }
 
+  /* ========== 十三、大限运程 ========== */
+  /**
+   * 计算某支（地支）的干支
+   * 通过六十甲子定位 + 偏移取
+   */
+  function calcGanZhiOfZhi(targetZhi, anchorZhi, anchorGan) {
+    var anchorPos = ZHI_NUM[anchorZhi];
+    var targetPos = ZHI_NUM[targetZhi];
+    var offset = (targetPos - anchorPos + 12) % 12;
+    var anchorGanIdx = GAN.indexOf(anchorGan);
+    var targetGan = GAN[(anchorGanIdx + offset) % 10];
+    return targetGan + targetZhi;
+  }
+
+  /** 大限排盘：每10年一限，大限命宫 = 本宫大限的宫位 */
+  function calcDaXian(result, currentAge) {
+    var gender = result.gender || '男';
+    var isMale = gender === '男' || gender === 'male' || gender === 1;
+    var mingGongZhi = result.命宫;
+    var isYangNian = '甲丙戊庚壬'.indexOf(result.年干) !== -1;
+
+    // 男命顺行（阳年），女命逆行（阴年）为顺；反之则逆
+    var isShun = (isMale === isYangNian);
+
+    var mingPos = ZHI_NUM[mingGongZhi];
+
+    // 大限起宫：命宫起1-10岁，第2宫11-20岁，...
+    var startAge = 1;
+    if (!isShun) startAge = 10; // 简化：逆行时第10-1岁
+
+    var daXian = [];
+    var maxLimit = 60;
+    for (var age = startAge; age < maxLimit; age += 10) {
+      var limitIdx = Math.floor((age - startAge) / 10);
+      var pos;
+      if (isShun) {
+        pos = (mingPos + limitIdx) % 12;
+      } else {
+        pos = (mingPos - limitIdx + 12) % 12;
+      }
+      var zhi = ZHI[pos];
+      var gongGan = result.gongGan || {};
+      var zhiGan = gongGan[zhi] || (function(){
+        // 若 result 未含 gongGan，从年干重建
+        var yinGan = YIN_SHOU_GAN[result.年干] || '甲';
+        var yinIdx = GAN.indexOf(yinGan);
+        return GAN[(yinIdx + ZHI_NUM[zhi]) % 10];
+      })();
+      var ganZhi = zhiGan + zhi;
+      var jzIdx = JIAZI_INDEX[ganZhi];
+      var gan = ganZhi[0];
+
+      // 大限四化
+      var dxSiHua = SI_HUA[gan] || SI_HUA['甲'];
+
+      // 大限命宫位置（相对本宫命宫）
+      var relPos = pos;
+      var gong = result.十二宫[relPos] || {};
+
+      daXian.push({
+        startAge: age,
+        endAge: age + 9,
+        ganZhi: ganZhi,
+        siHua: dxSiHua,
+        gongZhi: zhi,
+        gongName: GONG_NAMES[relPos] || '未知',
+        stars: gong.stars || [],
+      });
+    }
+
+    return { list: daXian, isShun: isShun, currentLimit: (function(){
+      var idx = -1;
+      for (var i = 0; i < daXian.length; i++) {
+        if (currentAge >= daXian[i].startAge && currentAge <= daXian[i].endAge) {
+          idx = i;
+          break;
+        }
+      }
+      return idx;
+    })() };
+  }
+
+  /** 流年：当年干支 → 流年命宫（流年地支所在宫）+ 流年四化 */
+  function calcLiuNian(result, targetYear) {
+    // 目标年的年干
+    var baseYear = 1900;
+    var offset = targetYear - baseYear;
+    var yearGzIdx = (((JIAZI_INDEX['庚子'] || 0) + offset) % 60 + 60) % 60;
+    var yearGan = GAN[yearGzIdx % 10];
+    var yearZhi = ZHI[yearGzIdx % 12];
+    var ganZhi = yearGan + yearZhi;
+    var siHua = SI_HUA[yearGan] || SI_HUA['甲'];
+
+    // 流年命宫：以流年地支所在宫
+    var liuNianMingGong = ZHI_NUM[yearZhi];
+    var gong = result.十二宫[liuNianMingGong] || {};
+
+    return {
+      year: targetYear,
+      ganZhi: ganZhi,
+      gan: yearGan,
+      zhi: yearZhi,
+      siHua: siHua,
+      mingGongZhi: ZHI[liuNianMingGong],
+      gongName: GONG_NAMES[liuNianMingGong] || '未知',
+      stars: gong.stars || [],
+    };
+  }
+
+  /** 流月：该年某月的月干 → 流月命宫 + 流月四化 */
+  function calcLiuYue(result, targetYear, targetMonth) {
+    // 月干：五虎遁（年干定寅月，顺数至该月）
+    var WUHU_DUN = { 甲: '丙', 己: '丙', 乙: '戊', 庚: '戊', 丙: '庚', 辛: '庚', 丁: '壬', 壬: '壬', 戊: '甲', 癸: '甲' };
+    var baseYear = 1900;
+    var offset = targetYear - baseYear;
+    var yearGzIdx = (((JIAZI_INDEX['庚子'] || 0) + offset) % 60 + 60) % 60;
+    var yearGan = GAN[yearGzIdx % 10];
+    var yinGan = WUHU_DUN[yearGan] || '甲';
+    var yinIdx = GAN.indexOf(yinGan);
+    var monthGan = GAN[(yinIdx + targetMonth - 1) % 10];
+
+    // 月支：寅月起寅宫，逐月顺数
+    var monthZhi = ZHI[(2 + targetMonth - 1) % 12];
+    var ganZhi = monthGan + monthZhi;
+    var siHua = SI_HUA[monthGan] || SI_HUA['甲'];
+
+    var liuYueMingGong = ZHI_NUM[monthZhi];
+    var gong = result.十二宫[liuYueMingGong] || {};
+
+    return {
+      year: targetYear,
+      month: targetMonth,
+      ganZhi: ganZhi,
+      gan: monthGan,
+      zhi: monthZhi,
+      siHua: siHua,
+      mingGongZhi: ZHI[liuYueMingGong],
+      gongName: GONG_NAMES[liuYueMingGong] || '未知',
+      stars: gong.stars || [],
+    };
+  }
+
   /* ========== 公开 API ========== */
   global.ZiWeiEngine = {
     paipan: paipan,
     GONG_NAMES: GONG_NAMES,
+    calcDaXian: calcDaXian,
+    calcLiuNian: calcLiuNian,
+    calcLiuYue: calcLiuYue,
   };
 })(typeof window !== 'undefined' ? window : this);
