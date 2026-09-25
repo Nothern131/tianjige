@@ -845,10 +845,7 @@
   function extractGongInterpretation(interpretation, gongName, mains, fus, siHua){
     var lines = [];
 
-    // 如果 interpretation 中有该宫位的专门解读，提取出来
     // 当前引擎 interpretation 格式：逐行包含宫名和星曜信息
-    var gongRegex = new RegExp('【' + gongName.replace(/([（）])/g,'\\$1') + '解读】|' + gongName + '（[^】]+)：([^\n]*)', 'g');
-    var match;
     var foundSpecial = false;
 
     // 尝试从 interpretation 文本中找到该宫位的特定内容
