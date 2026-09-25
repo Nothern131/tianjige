@@ -18,6 +18,7 @@ export default defineConfig({
         'ep5-qimen': 'ep5-qimen.html',
         'ep6-taiyi': 'ep6-taiyi.html',
         'ep7-zhuge': 'ep7-zhuge.html',
+        'ep8-ziwei': 'ep8-ziwei.html',
         architecture: 'architecture.html',
       },
     },

@@ -81,6 +81,7 @@ function renderZiweiComponent() {
 \
     <div id="ziwei-result-area" class="hidden">\
       <div class="glass-card" id="ziwei-result-card"></div>\
+      <div id="ziwei-masters-area" class="hidden" style="margin-top:24px;"></div>\
     </div>\
   ';
 
@@ -275,4 +276,67 @@ function renderZiweiResult(container, result, question) {
   resultCard.innerHTML = html;
   resultArea.classList.remove('hidden');
   resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // 大师点评面板（EP8Z 体验页已打磨的五段式大师解读，主站/体验页共用）
+  initZiweiMastersPanel(container, result, question);
+}
+
+/** 紫微斗数大师点评面板 — 移植自 EP8Z 体验页，主站/体验页共用 */
+function initZiweiMastersPanel(container, result, question) {
+  if (typeof MastersEngine === 'undefined' || typeof renderMastersPanel === 'undefined') return;
+
+  var mastersArea = container.querySelector('#ziwei-masters-area');
+  if (!mastersArea) return;
+
+  // 过滤紫微斗数大师
+  var ziweiMasters = [];
+  if (typeof MastersEngine !== 'undefined' && MastersEngine.MASTERS) {
+    var allMasters = MastersEngine.MASTERS;
+    for (var key in allMasters) {
+      if (allMasters.hasOwnProperty(key)) {
+        var m = allMasters[key];
+        if (m.category === '紫微' || m.category === '综合') {
+          ziweiMasters.push(m);
+        }
+      }
+    }
+    var seen = {};
+    ziweiMasters = ziweiMasters.filter(function (m) {
+      if (seen[m.id]) return false;
+      seen[m.id] = true;
+      return true;
+    });
+  }
+
+  if (ziweiMasters.length === 0) {
+    mastersArea.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px;">暂无可用大师</p>';
+    return;
+  }
+
+  if (typeof renderMastersPanel !== 'function') return;
+  renderMastersPanel(mastersArea, {
+    category: '紫微',
+    masters: ziweiMasters,
+    analysisTypes: [
+      { id: 'full', label: '命盘解读' },
+      { id: 'minggong', label: '命宫专论' },
+    ],
+    onAnalyze: function (masterId) {
+      var master = MastersEngine.MASTERS[masterId];
+      if (!master || !result) return null;
+      if (typeof DomainAnalysis === 'undefined' || !DomainAnalysis.analyze) return null;
+
+      // 命盘全览分析
+      var fullResult = DomainAnalysis.analyze('ziwei', result, question || '请全面解读此命盘');
+      // 命宫专论分析
+      var mingResult = DomainAnalysis.analyze('ziwei', result, question || '请重点解读命宫主星与四化飞星');
+
+      return {
+        opening: master.openingTemplates[0] || '紫微帝星照临，命宫主星为' + (result.命宫主星 || '?') + '，' + (result.五行局 || '?') + '局。',
+        main: fullResult ? fullResult.analysis : '',
+        conclusion: mingResult ? mingResult.analysis : '',
+        tips: '建议：命宫主星为' + (result.命宫主星 || '?') + '，' + (result.命宫 || '?') + '宫位，' + (result.总体运势 || '运势平稳') + '。',
+      };
+    },
+  });
 }
