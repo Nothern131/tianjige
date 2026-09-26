@@ -262,7 +262,15 @@
       .ziwei-mini-gong.is-shen { border-color: var(--purple-light); }
       .zm-name { font-family: var(--font-serif); font-size: 0.85rem; color: var(--text); font-weight: 600; margin-bottom: 4px; }
       .zm-ganzhi { font-size: 0.65rem; color: var(--text3); margin-bottom: 4px; }
-      .zm-stars { font-size: 0.72rem; color: var(--gold-light); line-height: 1.4; }
+      .zm-stars { font-size: 0.72rem; color: var(--gold-light); line-height: 1.5; }
+      .zm-stars .st-aux { color: var(--text2); }
+      .zm-stars .st-small { color: var(--text3); }
+      .zm-sihua { display: flex; gap: 3px; margin-top: 5px; flex-wrap: wrap; }
+      .zm-sihua .sk { font-size: 0.58rem; padding: 1px 5px; border-radius: 4px; font-weight: 600; line-height: 1.3; }
+      .zm-sihua .sk-lu { color: var(--gold-light); background: rgba(184,154,92,0.14); border: 1px solid rgba(184,154,92,0.3); }
+      .zm-sihua .sk-quan { color: var(--red-light); background: rgba(192,64,64,0.14); border: 1px solid rgba(192,64,64,0.3); }
+      .zm-sihua .sk-ke { color: var(--blue-light); background: rgba(74,106,138,0.16); border: 1px solid rgba(74,106,138,0.35); }
+      .zm-sihua .sk-ji { color: var(--purple-light); background: rgba(122,106,160,0.14); border: 1px solid rgba(122,106,160,0.35); }
       .zm-marker { font-size: 0.6rem; color: var(--text3); margin-top: 4px; }
       .zm-marker .ming-mark { color: var(--gold); }
       .zm-marker .shen-mark { color: var(--purple-light); }
@@ -438,6 +446,108 @@
         .master-section-content { padding-left: 0; }
         .master-section-icon { width: 28px; height: 28px; font-size: 0.9rem; }
       }
+
+      /* ===== 紫微专业版命盘格子（仿文墨天机 4×4 + 中心命主） ===== */
+      .pan-board {
+        margin: 20px auto 0; width: 100%; max-width: 560px;
+        border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
+        background: rgba(10,8,6,0.55); overflow: hidden;
+      }
+      .pan-row {
+        display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+        border-top: 1px solid var(--border);
+      }
+      .pan-row:first-child { border-top: none; }
+      .pan-cell {
+        position: relative; padding: 8px 7px 9px;
+        border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+        min-height: 104px; display: flex; flex-direction: column;
+        cursor: pointer; transition: background 0.2s; overflow: hidden;
+      }
+      .pan-cell:nth-child(4n) { border-right: none; }
+      .pan-cell:hover { background: rgba(184,154,92,0.05); }
+      .pan-cell.expanded { background: rgba(184,154,92,0.09); z-index: 2; box-shadow: 0 0 0 1px var(--border-gold) inset; }
+      .pan-cell.is-ming { background: rgba(184,154,92,0.07); }
+      .pan-cell.is-shen { background: rgba(122,106,160,0.07); }
+      .pc-top {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 4px; margin-bottom: 4px;
+      }
+      .pc-gong { font-family: var(--font-serif); font-size: 0.92rem; color: var(--gold-light); font-weight: 600; }
+      .pc-gong .ming-badge { color: var(--gold); font-size: 0.62rem; margin-left: 3px; }
+      .pc-gong .shen-badge { color: var(--purple-light); font-size: 0.62rem; margin-left: 3px; }
+      .pc-dx { font-size: 0.6rem; color: var(--text3); text-align: right; line-height: 1.3; }
+      .pc-dx b { color: var(--gold-dim); font-weight: 600; }
+      .pc-stars { flex: 1; font-size: 0.66rem; line-height: 1.5; color: var(--text2); word-break: break-word; }
+      .pc-stars .sm { color: var(--gold-light); font-weight: 600; }
+      .pc-stars .sf { color: var(--text2); }
+      .pc-stars .ss { color: var(--text3); }
+      .pc-stars .st { color: var(--text3); }
+      .pc-stars .sk { display:inline-block; font-size:0.56rem; padding:0 3px; margin:0 1px; border-radius:3px; font-weight:600; }
+      .pc-stars .sk-lu { color: var(--gold-light); background: rgba(184,154,92,0.16); }
+      .pc-stars .sk-quan { color: var(--red-light); background: rgba(192,64,64,0.16); }
+      .pc-stars .sk-ke { color: var(--blue-light); background: rgba(74,106,138,0.2); }
+      .pc-stars .sk-ji { color: var(--purple-light); background: rgba(122,106,160,0.2); }
+      .pc-bottom {
+        display: flex; align-items: center; justify-content: space-between;
+        font-size: 0.62rem; color: var(--text3); padding-top: 4px;
+        border-top: 1px dashed var(--border); margin-top: 3px;
+      }
+      .pc-ganzhi { color: var(--text2); }
+      .pc-wang { font-weight: 600; }
+      .pc-wang.t { color: var(--red-light); } .pc-wang.z { color: var(--green-light); }
+      .pc-wang.p { color: var(--text3); } .pc-wang.x { color: var(--text3); }
+      .pc-wang.d { color: var(--text3); }
+
+      /* 中心命主信息格 */
+      .pan-center {
+        grid-column: 2 / 4; grid-row: 2 / 4;
+        border: 1px solid var(--border-gold); background: rgba(184,154,92,0.05);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; padding: 12px; position: relative; z-index: 1;
+      }
+      .center-main { font-family: var(--font-serif); font-size: 0.78rem; color: var(--gold); line-height: 1.7; }
+      .center-main .big { font-size: 1.05rem; font-weight: 700; color: var(--gold-light); }
+      .center-main .sub { font-size: 0.68rem; color: var(--text2); }
+      .center-sihua { display: flex; gap: 5px; margin-top: 10px; }
+      .center-sihua span { font-size: 0.6rem; padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border); }
+      .center-sihua .c-lu { color: var(--gold-light); border-color: rgba(184,154,92,0.3); }
+      .center-sihua .c-quan { color: var(--red-light); border-color: rgba(192,64,64,0.3); }
+      .center-sihua .c-ke { color: var(--blue-light); border-color: rgba(74,106,138,0.35); }
+      .center-sihua .c-ji { color: var(--purple-light); border-color: rgba(122,106,160,0.35); }
+      .center-hint { margin-top: 8px; font-size: 0.58rem; color: var(--text3); }
+
+      /* 底部 大限/流年/流月/流日/流时 行 */
+      .pan-foot {
+        border-top: 1px solid var(--border-gold); background: rgba(184,154,92,0.03);
+        padding: 10px 12px;
+      }
+      .foot-row { display: grid; grid-template-columns: 38px 1fr; gap: 6px; margin-bottom: 5px; align-items: center; }
+      .foot-row:last-child { margin-bottom: 0; }
+      .foot-label { font-family: var(--font-serif); font-size: 0.7rem; color: var(--gold); letter-spacing: 0.1em; }
+      .foot-content { font-size: 0.66rem; color: var(--text2); line-height: 1.5; }
+      .foot-content b { color: var(--text); font-weight: 600; }
+      .foot-content .gong-name { color: var(--gold-light); }
+      @media(max-width:600px){
+        .pan-cell { min-height: 84px; padding: 6px 5px; }
+        .pc-gong { font-size: 0.82rem; }
+        .pc-stars { font-size: 0.6rem; }
+        .center-main .big { font-size: 0.92rem; }
+      }
+
+      /* 宫位点击原地展开 */
+      .pc-expand {
+        margin-top: 6px; padding: 6px 8px;
+        background: rgba(10,8,6,0.92); border: 1px solid var(--border-gold);
+        border-radius: 6px; font-size: 0.66rem; color: var(--text2);
+        line-height: 1.6; white-space: normal; word-break: break-word;
+        position: absolute; left: 4px; right: 4px; bottom: 4px; z-index: 3;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+      }
+      .pc-expand .gi-title { color: var(--gold-light); font-weight: 600; margin-bottom: 4px; font-family: var(--font-serif); }
+      .pc-expand .gi-stars b { color: var(--gold-light); }
+      .pc-expand .gi-sihua { color: var(--red-light); margin-top: 4px; }
+      .pc-expand .gi-note { color: var(--text2); margin-top: 4px; font-size: 0.62rem; }
 
       /* ===== Disclaimer ===== */
       .disclaimer {
@@ -763,6 +873,7 @@
   <!-- 02 命盘总览 -->
   <div class="card fade-up hidden" id="overviewCard">
     <div class="section-title">命盘总览<span class="num">02</span></div>
+    <div id="panBoardContainer"></div>
     <div id="overviewContent"></div>
   </div>
 
@@ -777,12 +888,17 @@
     <div class="section-title">大限流年<span class="num">04</span></div>
     <div id="dayunGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;"></div>
     <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
-      <div style="font-size:0.78rem;color:var(--text2);letter-spacing:0.04em;margin-bottom:10px;">流年 · 流月 追问</div>
+      <div style="font-size:0.78rem;color:var(--text2);letter-spacing:0.04em;margin-bottom:10px;">流年 · 流月 · 流日 推演</div>
+      <div style="font-size:0.66rem;color:var(--text3);margin-bottom:10px;line-height:1.6;">
+        <span style="color:var(--gold-dim);">标注说明</span>：流年按<b style="color:var(--text2);">公历年（太岁）</b>；流月按<b style="color:var(--text2);">农历月</b>；流日按<b style="color:var(--text2);">公历日</b>。
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <label style="font-size:0.72rem;color:var(--text3);">年份</label>
+        <label style="font-size:0.72rem;color:var(--text3);">年份(公历)</label>
         <input type="number" id="ziwei-liunian-year" placeholder="如 2026" style="width:72px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 8px;font-size:0.82rem;" />
-        <label style="font-size:0.72rem;color:var(--text3);">月份</label>
+        <label style="font-size:0.72rem;color:var(--text3);">月(农历)</label>
         <input type="number" id="ziwei-liunian-month" min="1" max="12" placeholder="如 6" style="width:52px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 8px;font-size:0.82rem;" />
+        <label style="font-size:0.72rem;color:var(--text3);">日(公历)</label>
+        <input type="number" id="ziwei-liunian-day" min="1" max="31" placeholder="如 15" style="width:52px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 8px;font-size:0.82rem;" />
         <button id="ziwei-liunian-btn" style="background:var(--gold-dim);color:var(--ink-dark);border:none;border-radius:6px;padding:6px 14px;font-size:0.82rem;cursor:pointer;white-space:nowrap;">推演</button>
       </div>
       <div id="ziwei-liunian-result" style="margin-top:12px;"></div>
@@ -829,19 +945,22 @@
   };
 
   var MAIN_STARS = ['紫微','天机','太阳','武曲','天同','廉贞','天府','太阴','贪狼','巨门','天相','天梁','七杀','破军'];
+  var AUX_STARS = ['左辅','右弼','文昌','文曲','天魁','天钺','禄存','擎羊','陀罗','火星','铃星','地空','地劫'];
+  var SMALL_STARS = ['天马','红鸾','天喜','咸池','天姚','孤辰','寡宿','破碎','天刑'];
 
   function escHtml(s){
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function classifyStars(stars){
-    var mains = [], fus = [];
-    if(!stars) return { mains:mains, fus:fus };
+    var mains = [], aux = [], small = [];
+    if(!stars) return { mains:mains, aux:aux, small:small, fus:aux.concat(small) };
     for(var i=0;i<stars.length;i++){
       if(MAIN_STARS.indexOf(stars[i]) !== -1) mains.push(stars[i]);
-      else fus.push(stars[i]);
+      else if(AUX_STARS.indexOf(stars[i]) !== -1) aux.push(stars[i]);
+      else small.push(stars[i]);
     }
-    return { mains:mains, fus:fus };
+    return { mains:mains, aux:aux, small:small, fus:aux.concat(small) };
   }
 
   // ===== 公历/农历双模式切换 =====
@@ -950,6 +1069,7 @@
         if(!result){ overviewContent.innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px;">排盘失败，请重试。</p>'; overviewCard.classList.remove('hidden'); return; }
 
         currentResult = result;
+        renderPanBoard(result);
         renderOverview(result);
         renderGongDetails(result);
         renderDaXian(result);
@@ -971,6 +1091,207 @@
       }
     }, 400);
   });
+
+  // ===== 渲染专业版 4×4 命盘格子（仿参考图：上四格 + 中心命主 + 下八格 + 底部行） =====
+  // 标准紫微盘 4×4 布局：
+  //   行0: 戌 亥 子 丑
+  //   行1: 寅 [中][中] 申
+  //   行2: 卯 [中][中] 酉
+  //   行3: 辰 巳 午 未
+  var PAN_GRID = [
+    ['戌','亥','子','丑'],
+    ['寅',null,null,'申'],
+    ['卯',null,null,'酉'],
+    ['辰','巳','午','未']
+  ];
+  var PAN_CENTER_CELL = { r: 1, c: 1 };
+
+  function buildDaXianMap(result){
+    // 返回 { 地支: {startAge,endAge,ganZhi} }
+    var age = calcCurrentAge();
+    var dx = ZiWeiEngine.calcDaXian(result, age);
+    var map = {};
+    dx.list.forEach(function(item){
+      map[item.gongZhi] = item;
+    });
+    return map;
+  }
+
+  function getMingZhu(shi){
+    var MING_ZHU = { 子:'贪狼',丑:'巨门',寅:'禄存',卯:'文曲',辰:'廉贞',巳:'武曲',午:'破军',未:'天机',申:'紫微',酉:'天同',戌:'文昌',亥:'武曲' };
+    return MING_ZHU[shi] || '';
+  }
+  function getShenZhu(shi){
+    var SHEN_ZHU = { 子:'文曲',丑:'禄存',寅:'巨门',卯:'贪狼',辰:'武曲',巳:'廉贞',午:'天同',未:'破军',申:'天机',酉:'紫微',戌:'武曲',亥:'文昌' };
+    return SHEN_ZHU[shi] || '';
+  }
+
+  function renderPanBoard(result){
+    var el = document.getElementById('panBoardContainer');
+    if(!el) return;
+    var gongs = result['十二宫'] || [];
+    var siHua = result['四化'] || {};
+    var dxMap = buildDaXianMap(result);
+
+    // 地支 → 宫对象
+    var byZhi = {};
+    gongs.forEach(function(g){ byZhi[g.zhi] = g; });
+
+    var html = '<div class="pan-board">';
+    for(var r=0; r<4; r++){
+      html += '<div class="pan-row">';
+      for(var c=0; c<4; c++){
+        var zhi = PAN_GRID[r][c];
+        if(zhi === null){
+          // 中心 2×2 格只在第一个 null 位置 (r=1,c=1) 放命主信息
+          if(r === PAN_CENTER_CELL.r && c === PAN_CENTER_CELL.c){
+            var mingGongZhi = result['命宫'];
+            html += '<div class="pan-center">';
+            html += '<div class="center-main">';
+            html += '<div class="big">'+escHtml(String(result['命宫主星']||'空宫'))+'</div>';
+            html += '<div class="sub">'+escHtml(String(result['五行局']||''))+' · 命主'+escHtml(getMingZhu(mingGongZhi)||'?')+' 身主'+escHtml(getShenZhu(result['身宫'])||'?')+'</div>';
+            html += '<div class="sub">'+escHtml(String(result['年干支']||''))+'年 · '+escHtml(String(result['性别']||''))+'命 · '+escHtml(String(result['农历年']||''))+'年'+escHtml(String(result['农历月']||''))+'月'+escHtml(String(result['农历日']||''))+'日'+(result['农历闰月']?'(闰)':'')+'</div>';
+            html += '</div>';
+            html += '<div class="center-sihua">';
+            html += '<span class="c-lu">禄'+escHtml(siHua.lu||'')+'</span>';
+            html += '<span class="c-quan">权'+escHtml(siHua.quan||'')+'</span>';
+            html += '<span class="c-ke">科'+escHtml(siHua.ke||'')+'</span>';
+            html += '<span class="c-ji">忌'+escHtml(siHua.ji||'')+'</span>';
+            html += '</div>';
+            html += '<div class="center-hint">点击任一宫位 → 展开该宫解读</div>';
+            html += '</div>';
+          }
+          continue;
+        }
+        var g = byZhi[zhi];
+        if(!g) continue;
+        var cls = classifyStars(g.stars || []);
+        var dx = dxMap[g.zhi];
+        var clsAttr = g.isMingGong ? ' is-ming' : (g.isShenGong ? ' is-shen' : '');
+        html += '<div class="pan-cell'+clsAttr+'" data-gong="'+escHtml(g.name)+'">';
+        // 顶：宫名 + 大限年龄
+        html += '<div class="pc-top">';
+        html += '<div class="pc-gong">'+escHtml(g.name)+(g.isMingGong?'<span class="ming-badge">命</span>':'')+(g.isShenGong?'<span class="shen-badge">身</span>':'')+'</div>';
+        if(dx){ html += '<div class="pc-dx"><b>'+dx.startAge+'-'+dx.endAge+'</b><br>'+escHtml(dx.ganZhi)+'</div>'; }
+        html += '</div>';
+        // 星曜（主/辅/小 + 四化角标）
+        html += '<div class="pc-stars">';
+        var parts = [];
+        if(cls.mains.length) parts.push(cls.mains.map(escHtml).join(' '));
+        if(cls.aux.length) parts.push('<span class="sf">'+cls.aux.map(escHtml).join('、')+'</span>');
+        if(cls.small.length) parts.push('<span class="ss">'+cls.small.map(escHtml).join('、')+'</span>');
+        if(!parts.length) parts.push('<span class="st">空宫</span>');
+        html += parts.join('<br>');
+        // 四化角标（挂在主星后）
+        if(g.sihua && g.sihua.length){
+          var markCls = { 禄:'lu', 权:'quan', 科:'ke', 忌:'ji' };
+          html += ' <span style="font-size:0.56rem;color:var(--text3);">[' + g.sihua.map(function(m){ return '<i class="sk sk-'+markCls[m]+'">'+m+'</i>'; }).join('') + ']</span>';
+        }
+        html += '</div>';
+        // 底：干支 + 命主
+        html += '<div class="pc-bottom">';
+        html += '<span class="pc-ganzhi">'+escHtml(g.ganZhi||'')+'</span>';
+        html += '<span>'+escHtml(gongMingZhu(g.zhi))+'</span>';
+        html += '</div>';
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    // 底部：大限/流年/流月/流日/流时 行
+    var now = new Date();
+    var curYear = now.getFullYear();
+    var ln = ZiWeiEngine.calcLiuNian(result, curYear);
+    var ly = ZiWeiEngine.calcLiuYue(result, curYear, now.getMonth()+1);
+    html += '<div class="pan-foot">';
+    html += footRow('大限', (function(){
+      var age = calcCurrentAge();
+      var dx = ZiWeiEngine.calcDaXian(result, age);
+      if(dx.currentLimit >= 0){ var it = dx.list[dx.currentLimit]; return '<b>'+it.startAge+'-'+it.endAge+'</b>岁 '+escHtml(it.ganZhi)+' 临<span class="gong-name">'+escHtml(it.gongName)+'</span>'; }
+      return '—';
+    })());
+    html += footRow('流年', '<b>'+curYear+'</b>（'+escHtml(ln.ganZhi)+'）流年临<span class="gong-name">'+escHtml(ln.gongName)+'</span>·'+(ln.stars&&ln.stars.length?ln.stars.slice(0,3).join('、'):'无'));
+    html += footRow('流月', '<b>'+curYear+'年'+(now.getMonth()+1)+'月</b>（'+escHtml(ly.ganZhi)+'）临<span class="gong-name">'+escHtml(ly.gongName)+'</span>');
+    html += footRow('流日', '今日 <b>'+curYear+'/'+(now.getMonth()+1)+'/'+now.getDate()+'</b>（公历）');
+    html += footRow('流时', '当前 <b>'+(now.getHours()<0?'子':now.getHours()<2?'子':now.getHours()<4?'丑':now.getHours()<6?'寅':now.getHours()<8?'卯':now.getHours()<10?'辰':now.getHours()<12?'巳':now.getHours()<14?'午':now.getHours()<16?'未':now.getHours()<18?'申':now.getHours()<20?'酉':now.getHours()<22?'戌':'亥')+'时</b>');
+    html += '</div>';
+    html += '</div>';
+    el.innerHTML = html;
+
+    // 绑定宫位点击 → 原地展开（S3）
+    bindPanCellClick(result, el);
+  }
+
+  function getSihuaForStar(result, star){
+    var sh = result['四化']||{};
+    if(star===sh.lu)return '禄'; if(star===sh.quan)return '权'; if(star===sh.ke)return '科'; if(star===sh.ji)return '忌';
+    return '';
+  }
+  function gongMingZhu(zhi){ return getMingZhu(zhi); }
+  function footRow(label, content){
+    return '<div class="foot-row"><div class="foot-label">'+label+'</div><div class="foot-content">'+content+'</div></div>';
+  }
+
+  /** 宫位点击 → 原地展开该宫解读 */
+  function bindPanCellClick(result, boardEl){
+    var cells = boardEl.querySelectorAll('.pan-cell');
+    cells.forEach(function(cell){
+      cell.addEventListener('click', function(){
+        var alreadyOpen = cell.classList.contains('expanded');
+        // 先收起所有
+        cells.forEach(function(c){
+          c.classList.remove('expanded');
+          var ex = c.querySelector('.pc-expand'); if(ex) ex.remove();
+        });
+        if(alreadyOpen) return;
+        cell.classList.add('expanded');
+        var gongName = cell.dataset.gong;
+        var g = result['十二宫'].filter(function(x){return x.name===gongName;})[0];
+        var interp = renderGongInterpInline(result, g);
+        var div = document.createElement('div');
+        div.className = 'pc-expand';
+        div.innerHTML = interp;
+        cell.style.overflow = 'visible';
+        cell.appendChild(div);
+      });
+    });
+  }
+
+  /** 单宫完整解读（星曜+四化+格局+事域） */
+  function renderGongInterpInline(result, g){
+    if(!g) return '';
+    var siHua = result['四化']||{};
+    var lines = [];
+    lines.push('<div class="gi-title">'+escHtml(g.name)+'宫（'+escHtml(g.ganZhi)+'）</div>');
+    var cls = classifyStars(g.stars||[]);
+    lines.push('<div class="gi-stars">');
+    if(cls.mains.length) lines.push('主星：<b>'+escHtml(cls.mains.join('、'))+'</b><br>');
+    if(cls.aux.length) lines.push('辅星：'+escHtml(cls.aux.join('、'))+'<br>');
+    if(cls.small.length) lines.push('小星：'+escHtml(cls.small.join('、')));
+    lines.push('</div>');
+    // 四化
+    var marks={禄:'lu',权:'quan',科:'ke',忌:'ji'};
+    var siHuaInGong=[];
+    for(var m in marks){ var star=siHua[marks[m]]; if(star&&g.stars.indexOf(star)!==-1) siHuaInGong.push(star+'化'+m); }
+    if(siHuaInGong.length) lines.push('<div class="gi-sihua">'+siHuaInGong.join('、')+' 落此宫</div>');
+    // 格局（调用引擎 S4 格局解析）
+    lines.push('<div class="gi-note">'+gongGeguNote(result,g)+'</div>');
+    return lines.join('');
+  }
+  /** 该宫涉及的格局判定（引擎 analyzeGegu） */
+  function gongGeguNote(result,g){
+    if(typeof ZiWeiEngine !== 'undefined' && ZiWeiEngine.analyzeGegu){
+      var gegu = ZiWeiEngine.analyzeGegu(result);
+      if(gegu && gegu.命格 && gegu.命格.length){
+        var related = gegu.命格.map(function(x){
+          var desc = '';
+          for(var i=0;i<gegu.命格说明.length;i++){ if(gegu.命格说明[i].indexOf(x)!==-1||true) desc = gegu.命格说明[i]; break; }
+          return '<span style="color:var(--gold-light);">'+escHtml(x)+'</span>：'+escHtml(desc||'');
+        });
+        return '<b>格局</b> '+related.join('　');
+      }
+    }
+    return '此宫星曜组合中规中矩，吉凶随四化与三方四正流转。';
+  }
 
   // ===== 渲染命盘总览 =====
   function renderOverview(result){
@@ -1035,14 +1356,28 @@
     html += '<div style="margin-top:20px;"><div class="section-title" style="font-size:0.9rem;">十二宫星曜分布<span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;margin-left:8px;">命宫·身宫标记</span></div>';
     html += '<div class="ziwei-overview">';
     gongs.forEach(function(g){
-      var starStr = (g.stars && g.stars.length > 0) ? g.stars.join(' · ') : '—';
+      var cls = classifyStars(g.stars || []);
+      var starParts = [];
+      if(cls.mains.length) starParts.push('<span class="st-main">' + cls.mains.map(escHtml).join('、') + '</span>');
+      if(cls.aux.length) starParts.push('<span class="st-aux">' + cls.aux.map(escHtml).join('、') + '</span>');
+      if(cls.small.length) starParts.push('<span class="st-small">' + cls.small.map(escHtml).join('、') + '</span>');
+      var starStr = starParts.length ? starParts.join('<span class="st-sep"> · </span>') : '<span class="st-small">空宫</span>';
       var markers = '';
       if(g.isMingGong) markers += '<span class="ming-mark">命</span>';
       if(g.isShenGong) markers += '<span class="shen-mark">身</span>';
+      // 四化角标
+      var siHuaHtml = '';
+      if(g.sihua && g.sihua.length){
+        var map = {'禄':'lu','权':'quan','科':'ke','忌':'ji'};
+        siHuaHtml = '<div class="zm-sihua">' + g.sihua.map(function(m){
+          return '<span class="sk sk-' + map[m] + '">' + m + '</span>';
+        }).join('') + '</div>';
+      }
       html += '<div class="ziwei-mini-gong' + (g.isMingGong?' is-ming':'') + (g.isShenGong?' is-shen':'') + '">';
       html += '<div class="zm-name">' + escHtml(g.name) + '</div>';
       html += '<div class="zm-ganzhi">' + escHtml(g.ganZhi || '') + '</div>';
-      html += '<div class="zm-stars">' + escHtml(starStr) + '</div>';
+      html += '<div class="zm-stars">' + starStr + '</div>';
+      if(siHuaHtml) html += siHuaHtml;
       html += '<div class="zm-marker">' + markers + '</div>';
       html += '</div>';
     });
@@ -1055,12 +1390,29 @@
   function renderGongDetails(result){
     var el = document.getElementById('gongContent');
     var gongs = result['十二宫'] || [];
-    var interpretation = result['interpretation'] || '';
     var siHua = result['四化'] || {};
 
-    var html = '<div class="gong-detail-grid">';
+    var html = '';
 
-    gongs.forEach(function(g){
+    // 全局格局解析（S4）
+    if(typeof ZiWeiEngine !== 'undefined' && ZiWeiEngine.analyzeGegu){
+      var gegu = ZiWeiEngine.analyzeGegu(result);
+      if(gegu && gegu.命格 && gegu.命格.length){
+        html += '<div class="interp-block" style="margin-bottom:16px;">';
+        html += '<div class="block-label">命局格局判定</div>';
+        html += '<div class="block-content">';
+        gegu.命格说明.forEach(function(s){ html += '<p>'+escHtml(s)+'</p>'; });
+        html += '</div></div>';
+      }
+    }
+
+    // 12 宫逐宫完整解读（引擎 interpretAllGongs）
+    var fullInterp = (typeof ZiWeiEngine !== 'undefined' && ZiWeiEngine.interpretAllGongs)
+      ? ZiWeiEngine.interpretAllGongs(result) : [];
+
+    html += '<div class="gong-detail-grid">';
+
+    gongs.forEach(function(g, gi){
       var classified = classifyStars(g.stars || []);
       var starsHtml = '';
       if(classified.mains.length > 0){
@@ -1076,8 +1428,19 @@
       if(g.isMingGong) markersHtml += '<span class="gdc-marker ming">命宫</span>';
       if(g.isShenGong) markersHtml += '<span class="gdc-marker shen">身宫</span>';
 
-      // 从 interpretation 文本中提取该宫位相关的解读
-      var gongInterp = extractGongInterpretation(interpretation, g.name, classified.mains, classified.fus, siHua);
+      // 完整解读（引擎逐宫）+ 四化落宫 + 格局
+      var fullLine = fullInterp[gi] || '';
+      var interpHtml = '';
+      if(fullLine){
+        interpHtml += '<p>'+escHtml(fullLine)+'</p>';
+      }
+      // 四化落此宫
+      var marks2={禄:'lu',权:'quan',科:'ke',忌:'ji'};
+      var siHuaHere=[];
+      for(var mk in marks2){ var st=siHua[marks2[mk]]; if(st && (g.stars||[]).indexOf(st)!==-1) siHuaHere.push(st+'化'+mk); }
+      if(siHuaHere.length){
+        interpHtml += '<p style="color:var(--red-light);">四化落宫：'+escHtml(siHuaHere.join('、'))+'</p>';
+      }
 
       html += '<div class="gong-detail-card' + (g.isMingGong?' is-ming':'') + '">';
       html += '<div class="gdc-header">';
@@ -1086,7 +1449,7 @@
       html += '<div class="gdc-markers">' + markersHtml + '</div>';
       html += '</div>';
       html += '<div class="gdc-stars">' + starsHtml + '</div>';
-      html += '<div class="gdc-interp">' + gongInterp + '</div>';
+      html += '<div class="gdc-interp">' + interpHtml + '</div>';
       html += '</div>';
     });
 
@@ -1143,17 +1506,19 @@
     return Math.max(1, age);
   }
 
-  // ===== 流年·流月推演事件 =====
+  // ===== 流年·流月·流日推演事件 =====
   var liuNianBtn = document.getElementById('ziwei-liunian-btn');
   if(liuNianBtn){
     liuNianBtn.addEventListener('click', function(){
       var yearEl = document.getElementById('ziwei-liunian-year');
       var monthEl = document.getElementById('ziwei-liunian-month');
+      var dayEl = document.getElementById('ziwei-liunian-day');
       var year = parseInt(yearEl && yearEl.value, 10);
       var month = parseInt(monthEl && monthEl.value, 10);
+      var day = parseInt(dayEl && dayEl.value, 10);
       var resEl = document.getElementById('ziwei-liunian-result');
       if(!currentResult){ showToast('请先完成排盘'); return; }
-      if(isNaN(year)){ showToast('请输入年份'); return; }
+      if(isNaN(year)){ showToast('请输入年份（公历）'); return; }
 
       resEl.innerHTML = '<div class="spinner" style="margin:8px auto;"></div>';
       liuNianBtn.disabled = true;
@@ -1161,9 +1526,10 @@
       setTimeout(function(){
         var lines = [];
         var domainKey = currentDomain || 'career';
+        var today = new Date();
 
         var ln = ZiWeiEngine.calcLiuNian(currentResult, year);
-        lines.push('【' + ln.year + '年（' + ln.ganZhi + '）流年】');
+        lines.push('【' + ln.year + '年（' + ln.ganZhi + '）流年 · 公历/太岁】');
         lines.push('流年命宫落在' + ln.gongName + '（' + ln.mingGongZhi + '），星曜：' + (ln.stars && ln.stars.length > 0 ? ln.stars.join('、') : '无主星'));
         var lnSh = ln.siHua || {};
         lines.push('流年四化：禄[' + (lnSh.lu||'—') + '] 权[' + (lnSh.quan||'—') + '] 科[' + (lnSh.ke||'—') + '] 忌[' + (lnSh.ji||'—') + ']');
@@ -1175,7 +1541,7 @@
         if(!isNaN(month) && month >= 1 && month <= 12){
           var ly = ZiWeiEngine.calcLiuYue(currentResult, year, month);
           lines.push('');
-          lines.push('【' + ly.year + '年' + ly.month + '月（' + ly.ganZhi + '）流月】');
+          lines.push('【' + ly.year + '年' + ly.month + '月（' + ly.ganZhi + '）流月 · 农历】');
           lines.push('流月命宫落在' + ly.gongName + '（' + ly.mingGongZhi + '），星曜：' + (ly.stars && ly.stars.length > 0 ? ly.stars.join('、') : '无主星'));
           var lySh = ly.siHua || {};
           lines.push('流月四化：禄[' + (lySh.lu||'—') + '] 权[' + (lySh.quan||'—') + '] 科[' + (lySh.ke||'—') + '] 忌[' + (lySh.ji||'—') + ']');
@@ -1183,6 +1549,18 @@
             lines.push('');
             lines.push(DomainAnalysis.analyzeZiweiLiuYue(currentResult, ly, domainKey));
           }
+        }
+
+        var liuRiYear = isNaN(year) ? today.getFullYear() : year;
+        var liuRiMonth = isNaN(month) ? today.getMonth()+1 : month;
+        var liuRiDay = isNaN(day) ? today.getDate() : day;
+        if(ZiWeiEngine.calcLiuRi){
+          var lr = ZiWeiEngine.calcLiuRi(currentResult, liuRiYear, liuRiMonth, liuRiDay);
+          lines.push('');
+          lines.push('【' + lr.year + '年' + lr.month + '月' + lr.day + '日（' + lr.ganZhi + '）流日 · 公历】');
+          lines.push('流日命宫落在' + lr.gongName + '（' + lr.mingGongZhi + '），星曜：' + (lr.stars && lr.stars.length > 0 ? lr.stars.join('、') : '无主星'));
+          var lrSh = lr.siHua || {};
+          lines.push('流日四化：禄[' + (lrSh.lu||'—') + '] 权[' + (lrSh.quan||'—') + '] 科[' + (lrSh.ke||'—') + '] 忌[' + (lrSh.ji||'—') + ']');
         }
 
         resEl.innerHTML = '<div style="background:rgba(184,154,92,0.04);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-size:0.82rem;color:var(--text);white-space:pre-wrap;line-height:1.9;">' +
@@ -1215,6 +1593,11 @@
       try {
         analysisText = ZiWeiEngine.analyzeDeep(result, analysisType);
       } catch(e){}
+    }
+    // 喂给大师：小星辅曜 + 生年四化落宫（古籍权威口诀）
+    var smallStarCtx = collectSmallStarContext(result);
+    if(smallStarCtx){
+      analysisText += '\n\n' + smallStarCtx;
     }
     if(!analysisText && typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
       try {
@@ -1271,6 +1654,14 @@
       quote: quoteTpl,
       closing: closing
     };
+  }
+
+  /** 提取小星辅曜 + 生年四化落宫上下文，喂给大师点评（委托引擎权威实现，含破碎） */
+  function collectSmallStarContext(result){
+    if(typeof ZiWeiEngine !== 'undefined' && ZiWeiEngine.collectSmallStarContext){
+      return ZiWeiEngine.collectSmallStarContext(result);
+    }
+    return '';
   }
 
   /** 大师点评面板初始化（仿 EP2 initMasters 模式） */

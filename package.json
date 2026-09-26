@@ -16,5 +16,8 @@
     "prettier": "^3.3.0",
     "terser": "^5.51.2",
     "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "solarlunar": "^3.1.0"
   }
 }
