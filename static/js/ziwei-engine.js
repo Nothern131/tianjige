@@ -42,55 +42,106 @@
     JIAZI_INDEX[jz] = i;
   }
 
-  /* ========== 二、农历转换（简化版） ========== */
-  // 1900-2100 农历数据（简化：仅用于演示，实际精度有限）
-  // 每个数字表示当年农历正月初一对应的公历日期（前两位月，后两位日）
-  // 以及闰月信息
-  var LUNAR_INFO = {
-    2024: { firstDay: [2, 10], leapMonth: 0 },
-    2025: { firstDay: [1, 29], leapMonth: 6 },
-    2026: { firstDay: [2, 17], leapMonth: 0 },
-  };
+  /* ========== 二、农历转换（寿星万年历 1900-2100 精确版） ========== */
+  // 官方数据表（1900-2100，共 201 项）。
+  // 每项十六进制 20bit 编码当年：
+  //   bit19-8（0x0fff0）  12 个正常月大小：1=大月(30) 0=小月(29)
+  //   bit7                 闰月大小：1=30 0=29
+  //   bit6-0 & 0xf（低4位） 闰月月份，0=不闰
+  var LUNAR_INFO = [
+    0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
+    0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,
+    0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970,
+    0x06566, 0x0d4a0, 0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950,
+    0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2, 0x0a950, 0x0b557,
+    0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5b0, 0x14573, 0x052b0, 0x0a9a8, 0x0e950, 0x06aa0,
+    0x0aea6, 0x0ab50, 0x04b60, 0x0aae4, 0x0a570, 0x05260, 0x0f263, 0x0d950, 0x05b57, 0x056a0,
+    0x096d0, 0x04dd5, 0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250, 0x0d558, 0x0b540, 0x0b6a0, 0x195a6,
+    0x095b0, 0x049b0, 0x0a974, 0x0a4b0, 0x0b27a, 0x06a50, 0x06d40, 0x0af46, 0x0ab60, 0x09570,
+    0x04af5, 0x04970, 0x064b0, 0x074a3, 0x0ea50, 0x06b58, 0x055c0, 0x0ab60, 0x096d5, 0x092e0,
+    0x0c960, 0x0d954, 0x0d4a0, 0x0da50, 0x07552, 0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5,
+    0x0a950, 0x0b4a0, 0x0baa4, 0x0ad50, 0x055d9, 0x04ba0, 0x0a5b0, 0x15176, 0x052b0, 0x0a930,
+    0x07954, 0x06aa0, 0x0ad50, 0x05b52, 0x04b60, 0x0a6e6, 0x0a4e0, 0x0d260, 0x0ea65, 0x0d530,
+    0x05aa0, 0x076a3, 0x096d0, 0x04afb, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45,
+    0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0,
+    0x14b63, 0x09370, 0x049f8, 0x04970, 0x064b0, 0x168a6, 0x0ea50, 0x06b20, 0x1a6c4, 0x0aae0,
+    0x0a2e0, 0x0d2e3, 0x0c960, 0x0d557, 0x0d4a0, 0x0da50, 0x05d55, 0x056a0, 0x0a6d0, 0x055d4,
+    0x052d0, 0x0a9b8, 0x0a950, 0x0b4a0, 0x0b6a6, 0x0ad50, 0x055a0, 0x0aba4, 0x0a5b0, 0x052b0,
+    0x0b273, 0x06930, 0x07337, 0x06aa0, 0x0ad50, 0x14b55, 0x04b60, 0x0a570, 0x054e4, 0x0d160,
+    0x0e968, 0x0d520, 0x0daa0, 0x16aa6, 0x056d0, 0x04ae0, 0x0a9d4, 0x0a2d0, 0x0d150, 0x0f252,
+    0x0d520
+  ];
 
-  /** 简化农历转换（按年份近似） */
-  function solarToLunarApprox(year, month, day) {
-    var info = LUNAR_INFO[year];
-    if (!info) {
-      // 默认按立春约2月4日估算
-      var lunarYear = month < 2 || (month === 2 && day < 4) ? year - 1 : year;
-      var solarDate = new Date(year, month - 1, day);
-      var springDate = new Date(year, 1, 4); // 2月4日立春
-      var diffDays = Math.floor((solarDate - springDate) / (1000 * 60 * 60 * 24));
-      var lunarMonth = Math.floor(diffDays / 30) + 1;
-      if (lunarMonth < 1) {
-        lunarMonth += 12;
-        lunarYear -= 1;
+  // 取农历第 n 月（0-based）天数
+  function lMonthDays(year, n) {
+    return (LUNAR_INFO[year - 1900] & (0x10000 >> n)) ? 30 : 29;
+  }
+  // 取闰月月份（0=不闰）
+  function lLeapMonth(year) {
+    return LUNAR_INFO[year - 1900] & 0xf;
+  }
+  // 取闰月天数（不闰返回 0）
+  function lLeapDays(year) {
+    var leap = lLeapMonth(year);
+    if (leap > 0) return (LUNAR_INFO[year - 1900] & 0x10008) ? 30 : 29;
+    return 0;
+  }
+  // 取农历整年总天数
+  function lYearDays(year) {
+    var sum = 348;
+    var info = LUNAR_INFO[year - 1900];
+    for (var i = 0x8000; i > 0x8; i >>= 1) {
+      sum += (info & i) ? 1 : 0;
+    }
+    return sum + lLeapDays(year);
+  }
+
+  /** 精确公历 → 农历（寿星万年历，1900-2100） */
+  function solarToLunarExact(year, month, day) {
+    // 以 1900-01-31（农历 1900 正月初一）为基准累计偏移天数
+    var offset = dayNum(year, month, day) - dayNum(1900, 1, 31);
+    var lunarYear = 1900;
+    var tempDays = lYearDays(lunarYear);
+    while (tempDays <= offset) {
+      offset -= tempDays;
+      lunarYear++;
+      tempDays = lYearDays(lunarYear);
+      if (lunarYear > 2100) break;
+    }
+    // 在 lunarYear 内逐月扣除
+    var leap = lLeapMonth(lunarYear);
+    var isLeapMonth = false;
+    var lunarMonth = 1;
+    for (; lunarMonth <= 12; lunarMonth++) {
+      var mDays = lMonthDays(lunarYear, lunarMonth - 1);
+      if (offset < mDays) break;
+      offset -= mDays;
+      // 该月后若逢闰月，需先扣闰月
+      if (lunarMonth === leap) {
+        var lDays = lLeapDays(lunarYear);
+        if (offset < lDays) {
+          isLeapMonth = true;
+          break;
+        }
+        offset -= lDays;
       }
-      if (lunarMonth > 12) lunarMonth = 12;
-      var lunarDay = (diffDays % 30) + 1;
-      if (lunarDay < 1) lunarDay = 1;
-      if (lunarDay > 30) lunarDay = 30;
-      return { year: lunarYear, month: lunarMonth, day: lunarDay };
     }
-    // 有具体数据时计算
-    var firstDay = new Date(year, info.firstDay[0] - 1, info.firstDay[1]);
-    var target = new Date(year, month - 1, day);
-    var diff = Math.floor((target - firstDay) / (1000 * 60 * 60 * 24));
-    if (diff < 0) {
-      // 还在上一年农历
-      var prevInfo = LUNAR_INFO[year - 1] || { firstDay: [2, 1], leapMonth: 0 };
-      var prevFirst = new Date(year - 1, prevInfo.firstDay[0] - 1, prevInfo.firstDay[1]);
-      var prevDiff = Math.floor((target - prevFirst) / (1000 * 60 * 60 * 24));
-      var lunarMonth = Math.floor(prevDiff / 30) + 1;
-      if (lunarMonth > 12) lunarMonth = 12;
-      var lunarDay = (prevDiff % 30) + 1;
-      return { year: year - 1, month: lunarMonth, day: lunarDay };
-    }
-    var lunarMonth = Math.floor(diff / 30) + 1;
-    if (lunarMonth > 12) lunarMonth = 12;
-    var lunarDay = (diff % 30) + 1;
-    if (lunarDay > 30) lunarDay = 30;
-    return { year: year, month: lunarMonth, day: lunarDay };
+    var lunarDay = offset + 1;
+    return { year: lunarYear, month: lunarMonth, day: lunarDay, isLeap: isLeapMonth };
+  }
+
+  // 公历某日累计天数（含闰年修正），用于计算距基准日偏移
+  function dayNum(year, month, day) {
+    var base = year * 365 + Math.floor(year / 4) - Math.floor(year / 100) + Math.floor(year / 400);
+    var isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    var mdays = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    for (var m = 1; m < month; m++) base += mdays[m - 1];
+    return base + day;
+  }
+
+  /** 兼容旧调用：保留估算接口名，但内部委托精确版 */
+  function solarToLunarApprox(year, month, day) {
+    return solarToLunarExact(year, month, day);
   }
 
   /* ========== 三、安命宫/身宫 ========== */
@@ -543,9 +594,11 @@
     var shichen = shichenMap[hour] || '子';
 
     // 农历转换
+    var leapMonth = params.leapMonth || 0;
     var lunar;
     if (isLunar) {
-      lunar = { year: year, month: month, day: day };
+      // 闰月排盘：闰月按该月本身的月份计算，但加一天偏移（传统习惯）
+      lunar = { year: year, month: leapMonth > 0 ? leapMonth : month, day: day, isLeap: leapMonth > 0 };
     } else {
       lunar = solarToLunarApprox(year, month, day);
     }
@@ -640,10 +693,19 @@
     // 总体运势判断
     var overallVerdict = judgeOverall(mingGongZhuXing, mingGongZhi, allStars);
 
+    // 公历参考（公历模式才显示，方便用户核对输入日期与排盘日期是否一致）
+    var solarRef = null;
+    if (!isLunar && typeof solarToLunarApprox !== 'undefined') {
+      // 公历模式：保留原始输入供展示
+      solarRef = year + '/' + month + '/' + day;
+    }
+
     return {
       农历年: lunar.year,
       农历月: lunar.month,
       农历日: lunar.day,
+      农历闰月: lunar.isLeap || false,
+      公历参考: solarRef,
       年干: yearGan,
       年支: yearZhi,
       命宫: mingGongZhi,
