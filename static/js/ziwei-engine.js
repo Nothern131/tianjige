@@ -919,6 +919,199 @@
     };
   }
 
+  /* ========== 十四、深度解读（对齐八字丰富度） ========== */
+
+  // 主星性情速查
+  var STAR_TRAITS = {
+    紫微: '帝星，主领导与管理，具统御之才',
+    天机: '智星，主谋略与机变，思路敏捷',
+    太阳: '日星，主光明与发散，热情利他',
+    武曲: '财星，主刚毅与执行，理财果断',
+    天同: '福星，主温和与知足，性情圆融',
+    廉贞: '囚星，主细腻与艺术，情绪丰沛',
+    天府: '库星，主稳重与守成，包容厚实',
+    太阴: '月星，主柔婉与审美，心思细腻',
+    贪狼: '桃花星，主多才与欲望，交际广泛',
+    巨门: '暗星，主口才与辩论，思辨犀利',
+    天相: '印星，主公正与服务，循规有序',
+    天梁: '荫星，主长者风范与提携，清高孤介',
+    七杀: '将星，主开拓与果决，行动迅猛',
+    破军: '耗星，主创新与破坏，敢破敢立',
+  };
+
+  // 宫位职司速查（用于三方四正与事域研判）
+  var GONG_DUTY = {
+    命宫: '本命性格与一生基调',
+    兄弟: '手足缘分与兄弟助力',
+    夫妻: '婚姻感情与配偶特质',
+    子女: '子嗣缘分与晚辈关系',
+    财帛: '财富来源与理财能力',
+    疾厄: '健康状况与体质弱点',
+    迁移: '外出运势与社会活动',
+    交友: '朋友贵人与同事关系',
+    官禄: '事业成就与职业方向',
+    田宅: '家宅不动产与家庭资产',
+    福德: '精神享受与福报厚薄',
+    父母: '父母缘分与长辈关系',
+  };
+
+  /** 三方四正：命宫 + 冲对宫 + 三合宫 */
+  function sanFangSiZheng(result) {
+    var mingPos = ZHI_NUM[result.命宫];
+    var chong = ZHI[(mingPos + 6) % 12];
+    var he1 = ZHI[(mingPos + 4) % 12];
+    var he2 = ZHI[(mingPos + 8) % 12];
+    return [result.命宫, chong, he1, he2];
+  }
+
+  /**
+   * 紫微深度解读（多段结构化文本，对齐八字大师分析的丰富度）
+   * @param {object} result - ZiWeiEngine.paipan 返回结果
+   * @param {string} analysisType - full/minggong/career/wealth/love/health
+   * @returns {string} 多段文本
+   */
+  function analyzeDeep(result, analysisType) {
+    var lines = [];
+    var gongs = result.十二宫 || [];
+    var siHua = result.四化 || {};
+    var mingGong = findGong(gongs, result.命宫);
+    var mingStars = (mingGong && mingGong.stars) || [];
+    var zhuXing = result.命宫主星 || '无主星';
+
+    // 【第一段】命造全貌
+    lines.push('【命造全貌】');
+    lines.push(
+      '此造年干支为' + (result.年干 || '?') + (result.年支 || '?') +
+      '，命宫落' + result.命宫 + '，' + (result.五行局 || '?') +
+      '，身宫落' + result.身宫 + '。紫微帝星安于' + (result.紫微星落 || '?') + '宫。'
+    );
+    lines.push('命宫主星为「' + zhuXing + '」。' + starNatureDesc(mingStars) + '。');
+
+    // 【第二段】旺衰与格局
+    lines.push('');
+    lines.push('【星曜庙旺】');
+    var mingJudge = judgeOverall([zhuXing.indexOf('、') === -1 ? zhuXing : zhuXing], result.命宫, result.所有星曜 || {});
+    lines.push(mingJudge);
+    var starList = zhuXing.split('、');
+    for (var si = 0; si < starList.length; si++) {
+      var sName = starList[si];
+      if (STAR_TRAITS[sName]) lines.push('  ' + sName + '：' + STAR_TRAITS[sName] + '。');
+    }
+
+    // 【第三段】三方四正
+    lines.push('');
+    lines.push('【三方四正】');
+    var sfz = sanFangSiZheng(result);
+    var sfzDesc = [];
+    for (var fz = 0; fz < sfz.length; fz++) {
+      var g = findGong(gongs, sfz[fz]);
+      if (g) {
+        var gStars = (g.stars || []).filter(function (x) { return STAR_TRAITS[x]; });
+        sfzDesc.push(g.name + '（' + sfz[fz] + '）' + (gStars.length > 0 ? gStars.join('、') : '空宫'));
+      }
+    }
+    lines.push('命宫三方四正汇聚：' + sfzDesc.join('，') + '。四宫星曜互参，共定格局高低。');
+
+    // 【第四段】四化飞星
+    lines.push('');
+    lines.push('【四化飞星】');
+    if (siHua.lu) lines.push('  ' + siHua.lu + '化禄——主财禄丰盈，所得之宫为一生进财之钥。');
+    if (siHua.quan) lines.push('  ' + siHua.quan + '化权——主权柄加重，掌事之宫得主导之力。');
+    if (siHua.ke) lines.push('  ' + siHua.ke + '化科——主声名显达，得贵人之宫添文章之誉。');
+    if (siHua.ji) lines.push('  ' + siHua.ji + '化忌——主阻滞波折，受克之宫须防耗损之患。');
+
+    // 【第五段】事域专论（按类型）
+    lines.push('');
+    lines.push('【' + (analysisTypeLabel(analysisType) || '事域专论') + '】');
+    lines.push(domainAnalysisDeep(result, analysisType));
+
+    // 【第六段】因果推演
+    lines.push('');
+    lines.push('【因果推演】');
+    lines.push(causalChain(result, analysisType));
+
+    // 【第七段】吉凶总断
+    lines.push('');
+    lines.push('【吉凶总断】');
+    lines.push(
+      result.总体运势 || '命途平顺' +
+      '。命宫与三方四正星曜互参，四化飞星定吉凶之向，顺势而运则吉，逆势而执则凶。'
+    );
+
+    return lines.join('\n');
+  }
+
+  function starNatureDesc(stars) {
+    if (!stars || stars.length === 0) return '命宫空宫，借对宫迁移之星曜为用';
+    var desc = [];
+    for (var i = 0; i < stars.length; i++) {
+      if (STAR_TRAITS[stars[i]]) desc.push(stars[i] + '之性');
+    }
+    return desc.length > 0 ? desc.join('、') + '为命宫基调' : '';
+  }
+
+  function analysisTypeLabel(type) {
+    var map = {
+      full: '全盘研判',
+      minggong: '命宫专论',
+      career: '事业研判',
+      wealth: '财运研判',
+      love: '感情研判',
+      health: '健康研判',
+    };
+    return map[type] || null;
+  }
+
+  /** 事域深度分析：取相关宫位星曜 + 四化交互 */
+  function domainAnalysisDeep(result, analysisType) {
+    var gongs = result.十二宫 || [];
+    var siHua = result.四化 || {};
+    // 事域 → 相关宫位映射
+    var domainGong = {
+      career: ['官禄', '迁移', '命宫'],
+      wealth: ['财帛', '田宅', '命宫'],
+      love: ['夫妻', '福德', '命宫'],
+      health: ['疾厄', '身宫', '命宫'],
+      minggong: ['命宫', '身宫'],
+      full: ['命宫', '官禄', '财帛', '夫妻'],
+    };
+    var targetGongs = domainGong[analysisType] || domainGong.full;
+    var lines = [];
+    for (var i = 0; i < targetGongs.length; i++) {
+      var g = null;
+      for (var j = 0; j < gongs.length; j++) {
+        if (gongs[j].name === targetGongs[i]) { g = gongs[j]; break; }
+      }
+      if (g) {
+        var gStars = (g.stars || []).filter(function (x) { return STAR_TRAITS[x]; });
+        var duty = GONG_DUTY[g.name] || '';
+        lines.push(
+          '  ' + g.name + '宫（' + g.zhi + '）主' + duty + '，' +
+          (gStars.length > 0 ? '主星' + gStars.join('、') + '坐此，' + gStars.map(function(s){return STAR_TRAITS[s].split('，')[0];}).join('；') + '。' : '此宫无主星，借三方四正参看。')
+        );
+        // 四化落入此宫
+        var siHuaHere = [];
+        if (siHua.lu && gStars.indexOf(siHua.lu) !== -1) siHuaHere.push(siHua.lu + '化禄');
+        if (siHua.quan && gStars.indexOf(siHua.quan) !== -1) siHuaHere.push(siHua.quan + '化权');
+        if (siHua.ke && gStars.indexOf(siHua.ke) !== -1) siHuaHere.push(siHua.ke + '化科');
+        if (siHua.ji && gStars.indexOf(siHua.ji) !== -1) siHuaHere.push(siHua.ji + '化忌');
+        if (siHuaHere.length > 0) lines.push('  → 四化' + siHuaHere.join('、') + '同落此宫，' + GONG_DUTY[g.name] + '方面吉凶加剧。');
+      }
+    }
+    return lines.join('\n');
+  }
+
+  /** 因果链：解释为何得出以上结论 */
+  function causalChain(result, analysisType) {
+    var mingJudge = judgeOverall([result.命宫主星], result.命宫, result.所有星曜 || {});
+    var siHua = result.四化 || {};
+    return [
+      '命宫主星定一生基调，' + (result.命宫主星 || '空宫') + '居' + result.命宫 + '，',
+      '三方四正之星曜共参格局高低；四化飞星以' + (siHua.lu || '—') + '禄、' + (siHua.ji || '—') + '忌为进退之枢。',
+      '吉星汇聚则运途向明，煞星重叠则早年多舛。'
+    ].join('');
+  }
+
   /* ========== 公开 API ========== */
   global.ZiWeiEngine = {
     paipan: paipan,
@@ -926,5 +1119,6 @@
     calcDaXian: calcDaXian,
     calcLiuNian: calcLiuNian,
     calcLiuYue: calcLiuYue,
+    analyzeDeep: analyzeDeep,
   };
 })(typeof window !== 'undefined' ? window : this);

@@ -917,8 +917,14 @@
     };
     var question = currentQuestion || typeQuestionMap[analysisType] || typeQuestionMap.full;
 
+    // 深度解读：优先调用 ziwei-engine 的 analyzeDeep（对齐八字丰富度）
     var analysisText = '';
-    if(typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
+    if(typeof ZiWeiEngine !== 'undefined' && ZiWeiEngine.analyzeDeep){
+      try {
+        analysisText = ZiWeiEngine.analyzeDeep(result, analysisType);
+      } catch(e){}
+    }
+    if(!analysisText && typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze){
       try {
         var da = DomainAnalysis.analyze('ziwei', result, question);
         if(da && da.analysis) analysisText = da.analysis;
