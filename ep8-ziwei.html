@@ -458,7 +458,16 @@
         position: relative; padding: 8px 7px 9px;
         border: 1px solid var(--border);
         min-height: 104px; display: flex; flex-direction: column;
-        cursor: pointer; transition: background 0.2s; overflow: hidden;
+        cursor: pointer; transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        overflow: hidden; animation: panCellIn 0.45s ease both; animation-delay: calc(var(--i, 0) * 32ms);
+      }
+      @keyframes panCellIn {
+        from { opacity: 0; transform: translateY(12px) scale(0.96); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .pan-cell:hover {
+        background: rgba(184,154,92,0.05); transform: translateY(-2px);
+        box-shadow: 0 4px 18px rgba(0,0,0,0.35); border-color: var(--border-gold); z-index: 1;
       }
       /* 12 宫 + 中心 显式定位到 4×4 grid（grid-area 行/列）
          标准紫微盘地支环（仿文墨天机专业版）：
@@ -470,10 +479,11 @@
       .pc-chou { grid-area: 4 / 1 / 5 / 2; } .pc-chen{ grid-area: 4 / 2 / 5 / 3; }
       .pc-zi   { grid-area: 4 / 3 / 5 / 4; } .pc-hai { grid-area: 4 / 4 / 5 / 5; }
       .pan-center { grid-area: 2 / 2 / 4 / 4; }
-      .pan-cell:hover { background: rgba(184,154,92,0.05); }
       .pan-cell.expanded { background: rgba(184,154,92,0.09); z-index: 2; box-shadow: 0 0 0 1px var(--border-gold) inset; }
-      .pan-cell.is-ming { background: rgba(184,154,92,0.07); }
-      .pan-cell.is-shen { background: rgba(122,106,160,0.07); }
+      .pan-cell.is-ming { background: rgba(184,154,92,0.07); animation: panCellIn 0.45s ease both, mingBreath 2.6s ease-in-out 1.2s infinite; }
+      .pan-cell.is-shen { background: rgba(122,106,160,0.07); animation: panCellIn 0.45s ease both, shenBreath 2.6s ease-in-out 1.2s infinite; }
+      @keyframes mingBreath { 0%,100%{ box-shadow: inset 0 0 0 0 rgba(184,154,92,0); } 50%{ box-shadow: inset 0 0 18px 0 rgba(184,154,92,0.16); } }
+      @keyframes shenBreath { 0%,100%{ box-shadow: inset 0 0 0 0 rgba(122,106,160,0); } 50%{ box-shadow: inset 0 0 18px 0 rgba(122,106,160,0.16); } }
       .pc-top {
         display: flex; align-items: flex-start; justify-content: space-between;
         gap: 4px; margin-bottom: 4px;
@@ -506,16 +516,24 @@
 
       /* 中心命主信息格 */
       .pan-center {
-        grid-column: 2 / 4; grid-row: 2 / 4;
+        grid-area: 2 / 2 / 4 / 4;
         border: 1px solid var(--border-gold); background: rgba(184,154,92,0.05);
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         text-align: center; padding: 12px; position: relative; z-index: 1;
+        animation: centerIn 0.6s ease both; animation-delay: 0.4s;
       }
+      @keyframes centerIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
       .center-main { font-family: var(--font-serif); font-size: 0.78rem; color: var(--gold); line-height: 1.7; }
       .center-main .big { font-size: 1.05rem; font-weight: 700; color: var(--gold-light); }
       .center-main .sub { font-size: 0.68rem; color: var(--text2); }
       .center-sihua { display: flex; gap: 5px; margin-top: 10px; }
-      .center-sihua span { font-size: 0.6rem; padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border); }
+      .center-sihua span { font-size: 0.6rem; padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border);
+        animation: sihuaPop 0.4s ease both; }
+      .center-sihua span:nth-child(1) { animation-delay: 0.7s; }
+      .center-sihua span:nth-child(2) { animation-delay: 0.78s; }
+      .center-sihua span:nth-child(3) { animation-delay: 0.86s; }
+      .center-sihua span:nth-child(4) { animation-delay: 0.94s; }
+      @keyframes sihuaPop { from { opacity: 0; transform: translateY(6px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
       .center-sihua .c-lu { color: var(--gold-light); border-color: rgba(184,154,92,0.3); }
       .center-sihua .c-quan { color: var(--red-light); border-color: rgba(192,64,64,0.3); }
       .center-sihua .c-ke { color: var(--blue-light); border-color: rgba(74,106,138,0.35); }
@@ -527,8 +545,11 @@
         grid-column: 1 / 5;
         border-top: 1px solid var(--border-gold); background: rgba(184,154,92,0.03);
         padding: 10px 12px;
+        animation: footIn 0.5s ease both; animation-delay: 0.55s;
       }
-      .foot-row { display: grid; grid-template-columns: 38px 1fr; gap: 6px; margin-bottom: 5px; align-items: center; }
+      @keyframes footIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      .foot-row { display: grid; grid-template-columns: 38px 1fr; gap: 6px; margin-bottom: 5px; align-items: center; transition: background 0.2s ease; }
+      .foot-row:hover { background: rgba(184,154,92,0.04); }
       .foot-row:last-child { margin-bottom: 0; }
       .foot-label { font-family: var(--font-serif); font-size: 0.7rem; color: var(--gold); letter-spacing: 0.1em; }
       .foot-content { font-size: 0.66rem; color: var(--text2); line-height: 1.5; }
@@ -549,7 +570,9 @@
         line-height: 1.6; white-space: normal; word-break: break-word;
         position: absolute; left: 4px; right: 4px; bottom: 4px; z-index: 3;
         box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+        animation: expandIn 0.28s ease both;
       }
+      @keyframes expandIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
       .pc-expand .gi-title { color: var(--gold-light); font-weight: 600; margin-bottom: 4px; font-family: var(--font-serif); }
       .pc-expand .gi-stars b { color: var(--gold-light); }
       .pc-expand .gi-sihua { color: var(--red-light); margin-top: 4px; }
@@ -574,6 +597,19 @@
       /* ===== Fade In ===== */
       .fade-up { animation: fadeUp 0.6s ease-out both; }
       @keyframes fadeUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+
+      /* ===== 无障碍：偏好减少动效时全部降级 ===== */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+        .pan-cell, .pan-center, .pan-foot, .center-sihua span, .pc-expand {
+          animation: none !important;
+        }
+        .pan-cell, .master-card, .glass-card { transform: none !important; }
+      }
 
       /* ===== Footer ===== */
       .footer { text-align: center; padding: 40px 0 0; color: var(--text3); font-size: 0.7rem; letter-spacing: 0.06em; }
@@ -1142,6 +1178,7 @@
 
     var html = '<div class="pan-board">';
     // 扁平 16 格直接进单一 4×4 grid；中心 2×2（行2-3 列2-3）放命主信息格
+    var cellIdx = 0;
     for(var r=0; r<4; r++){
       for(var c=0; c<4; c++){
         var zhi = PAN_GRID[r][c];
@@ -1172,7 +1209,7 @@
         var cls = classifyStars(g.stars || []);
         var dx = dxMap[g.zhi];
         var clsAttr = g.isMingGong ? ' is-ming' : (g.isShenGong ? ' is-shen' : '');
-        html += '<div class="pan-cell pc-'+ZHI_CLASS[zhi]+clsAttr+'" data-gong="'+escHtml(g.name)+'">';
+        html += '<div class="pan-cell pc-'+ZHI_CLASS[zhi]+clsAttr+'" data-gong="'+escHtml(g.name)+'" style="--i:'+cellIdx+++'">';
         // 顶：宫名 + 大限年龄
         html += '<div class="pc-top">';
         html += '<div class="pc-gong">'+escHtml(g.name)+(g.isMingGong?'<span class="ming-badge">命</span>':'')+(g.isShenGong?'<span class="shen-badge">身</span>':'')+'</div>';
