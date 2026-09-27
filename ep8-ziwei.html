@@ -452,19 +452,14 @@
         margin: 20px auto 0; width: 100%; max-width: 560px;
         border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
         background: rgba(10,8,6,0.55); overflow: hidden;
+        display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; grid-auto-rows: minmax(104px, auto);
       }
-      .pan-row {
-        display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
-        border-top: 1px solid var(--border);
-      }
-      .pan-row:first-child { border-top: none; }
       .pan-cell {
         position: relative; padding: 8px 7px 9px;
-        border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+        border: 1px solid var(--border);
         min-height: 104px; display: flex; flex-direction: column;
         cursor: pointer; transition: background 0.2s; overflow: hidden;
       }
-      .pan-cell:nth-child(4n) { border-right: none; }
       .pan-cell:hover { background: rgba(184,154,92,0.05); }
       .pan-cell.expanded { background: rgba(184,154,92,0.09); z-index: 2; box-shadow: 0 0 0 1px var(--border-gold) inset; }
       .pan-cell.is-ming { background: rgba(184,154,92,0.07); }
@@ -519,6 +514,7 @@
 
       /* 底部 大限/流年/流月/流日/流时 行 */
       .pan-foot {
+        grid-column: 1 / 5;
         border-top: 1px solid var(--border-gold); background: rgba(184,154,92,0.03);
         padding: 10px 12px;
       }
@@ -1092,17 +1088,19 @@
     }, 400);
   });
 
-  // ===== 渲染专业版 4×4 命盘格子（仿参考图：上四格 + 中心命主 + 下八格 + 底部行） =====
-  // 标准紫微盘 4×4 布局：
-  //   行0: 戌 亥 子 丑
-  //   行1: 寅 [中][中] 申
-  //   行2: 卯 [中][中] 酉
-  //   行3: 辰 巳 午 未
+  // ===== 渲染专业版 4×4 命盘格子（仿参考图：外圈 12 宫顺时针 + 中心 2×2 命主 + 底部行） =====
+  // 标准紫微盘 4×4 = 16 格：顶 4 宫 + 左 4 宫 + 右 4 宫 + 底 4 宫 = 12 宫沿外圈顺时针
+  // 行0: 子 丑 寅 卯   （顶排，从左到右）
+  // 行1: 巳 [中] [中] 戌
+  // 行2: 辰 [中] [中] 亥
+  // 行3: 酉 申 未 午   （底排）
+  // 12 宫顺时针环：子(顶左) → 丑寅卯(顶) → 巳(右上) → 辰戌(右列) → 酉申(右下) → 未午(底) → 亥(左下)...
+  // 标准紫微盘地支环（顺时针，从顶左 子 起）：子 丑 寅 卯 / 巳  戌 / 辰  亥 / 酉 申 未 午
   var PAN_GRID = [
-    ['戌','亥','子','丑'],
-    ['寅',null,null,'申'],
-    ['卯',null,null,'酉'],
-    ['辰','巳','午','未']
+    ['子','丑','寅','卯'],
+    ['巳',null,null,'戌'],
+    ['辰',null,null,'亥'],
+    ['酉','申','未','午']
   ];
   var PAN_CENTER_CELL = { r: 1, c: 1 };
 
@@ -1138,15 +1136,16 @@
     gongs.forEach(function(g){ byZhi[g.zhi] = g; });
 
     var html = '<div class="pan-board">';
+    // 扁平 16 格直接进单一 4×4 grid；中心 2×2（行2-3 列2-3）放命主信息格
     for(var r=0; r<4; r++){
-      html += '<div class="pan-row">';
       for(var c=0; c<4; c++){
         var zhi = PAN_GRID[r][c];
-        if(zhi === null){
-          // 中心 2×2 格只在第一个 null 位置 (r=1,c=1) 放命主信息
+        var isCenter = (zhi === null);
+        if(isCenter){
+          // 中心 2×2 只在 (r=1,c=1) 位置输出，其余 3 个 null 位置用空 div 占位保持网格
           if(r === PAN_CENTER_CELL.r && c === PAN_CENTER_CELL.c){
             var mingGongZhi = result['命宫'];
-            html += '<div class="pan-center">';
+            html += '<div class="pan-center" style="grid-column:2/4;grid-row:2/4;">';
             html += '<div class="center-main">';
             html += '<div class="big">'+escHtml(String(result['命宫主星']||'空宫'))+'</div>';
             html += '<div class="sub">'+escHtml(String(result['五行局']||''))+' · 命主'+escHtml(getMingZhu(mingGongZhi)||'?')+' 身主'+escHtml(getShenZhu(result['身宫'])||'?')+'</div>';
@@ -1160,6 +1159,9 @@
             html += '</div>';
             html += '<div class="center-hint">点击任一宫位 → 展开该宫解读</div>';
             html += '</div>';
+          } else {
+            // 其余 3 个中心占位格：空白 div（保持网格完整）
+            html += '<div class="pan-cell" style="border-color:transparent;background:rgba(184,154,92,0.03);cursor:default;"></div>';
           }
           continue;
         }
@@ -1195,7 +1197,6 @@
         html += '</div>';
         html += '</div>';
       }
-      html += '</div>';
     }
     // 底部：大限/流年/流月/流日/流时 行
     var now = new Date();
