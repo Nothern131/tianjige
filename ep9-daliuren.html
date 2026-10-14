@@ -444,12 +444,87 @@
         line-height: 1.85; color: var(--text);
       }
 
+      /* ===== 大师解析·增强维度模块（细节拆解/多视角/背景关联/延伸参考） ===== */
+      .daliuren-enhanced {
+        margin-top: 4px;
+      }
+      .daliuren-enhanced-header {
+        display: flex; align-items: center; gap: 8px;
+        padding: 12px 0 8px; border-top: 1px dashed var(--border-gold);
+        margin-bottom: 6px;
+      }
+      .daliuren-enhanced-header .deh-lead {
+        font-size: 0.72rem; letter-spacing: 0.22em; color: var(--gold-dim);
+      }
+      .daliuren-enhanced-header .deh-lead::before {
+        content: '◆'; margin-right: 8px; color: var(--gold); font-size: 0.6rem;
+      }
+
+      .enh-mod {
+        opacity: 0; transform: translateY(14px);
+        animation: enhModIn 0.6s ease forwards;
+        animation-delay: var(--delay, 0s);
+        position: relative;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+        background: linear-gradient(180deg, rgba(184,154,92,0.05) 0%, rgba(184,154,92,0.015) 100%);
+        border: 1px solid var(--border-gold);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      /* 左侧金线滑入，与内容同向，强化"展开"感 */
+      .enh-mod::before {
+        content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 0;
+        background: linear-gradient(180deg, var(--gold), transparent);
+        animation: enhBarIn 0.6s ease forwards; animation-delay: var(--delay, 0s);
+      }
+      @keyframes enhModIn {
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes enhBarIn {
+        to { height: 100%; }
+      }
+      .enh-mod-title {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 0.82rem; color: var(--gold-light); letter-spacing: 0.08em;
+        margin-bottom: 10px; font-family: var(--font-serif);
+      }
+      .enh-mod-title .emt-ico {
+        font-size: 1rem; filter: sepia(0.5) saturate(1.4);
+      }
+      .enh-mod-title .emt-num {
+        margin-left: auto; font-size: 0.66rem; color: var(--text3); letter-spacing: 0.1em;
+      }
+      .enh-mod-body {
+        font-family: var(--font-serif); font-size: 0.9rem; line-height: 1.85; color: var(--text);
+      }
+      .enh-mod-body .emb-line {
+        display: block; margin-bottom: 4px;
+      }
+      .enh-mod-body .emb-line:last-child { margin-bottom: 0; }
+      /* 三传节点高亮呼吸：初/中/末传逐层点亮 */
+      .enh-chu { display: block; }
+      .enh-chu .tag, .enh-persp .tag, .enh-bg .tag, .enh-ref .tag {
+        display: inline-block; font-size: 0.68rem; padding: 1px 7px;
+        border: 1px solid var(--border-gold); border-radius: 999px;
+        color: var(--gold-dim); margin-right: 8px; letter-spacing: 0.06em;
+        vertical-align: middle;
+        animation: tagGlow 2.6s ease-in-out infinite;
+        animation-delay: var(--delay, 0s);
+      }
+      @keyframes tagGlow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(184,154,92,0); border-color: var(--border-gold); }
+        50% { box-shadow: 0 0 8px 0 rgba(184,154,92,0.35); border-color: var(--gold); }
+      }
+
       /* ===== Footer / Misc ===== */
       .disclaimer {
         text-align: center; font-size: 0.72rem; color: var(--text3);
         line-height: 1.8; padding: 30px 10px 0;
       }
       .disclaimer strong { color: var(--text2); }
+
+      /* ===== Accessibility: reduced motion ===== */
       .footer {
         text-align: center; font-size: 0.7rem; color: var(--text3);
         padding: 26px 0 0; letter-spacing: 0.1em;
@@ -489,7 +564,8 @@
       /* ===== Accessibility: reduced motion ===== */
       @media (prefers-reduced-motion: reduce) {
         html { scroll-behavior: auto; }
-        .fade-up, .master-result-section, .tianpan-cell {
+        .fade-up, .master-result-section, .tianpan-cell,
+        .enh-mod, .enh-mod::before, .enh-chu .tag, .enh-persp .tag, .enh-bg .tag, .enh-ref .tag {
           animation: none !important; opacity: 1 !important; transform: none !important;
         }
         .card, .glass-card { transition: none; }
@@ -804,7 +880,7 @@
         el.innerHTML = html;
       }
 
-      // ===== 构建大六壬大师分析（五段式） =====
+      // ===== 构建大六壬大师分析（五段式 + 增强维度） =====
       function buildDaliurenAnalysis(result, masterId, analysisType){
         var masters = window.MastersEngine.MASTERS || {};
         var master = masters[masterId];
@@ -815,11 +891,16 @@
         var keName = result.ke_name || '未知课';
         var level = result.level || '中平';
         var chuan = result.chuan || '?';
+        var sc = result.san_chuan || {};
+        var chu = sc.chu || '?', zhong = sc.zhong || '?', mo = sc.mo || '?';
+        var tianJiang = result.tian_jiang || {};
+        var jiangNames = window.DaLiuRenEngine && window.DaLiuRenEngine.JIANG_NAMES ? window.DaLiuRenEngine.JIANG_NAMES : {};
+        var yueJiangName = result.yue_jiang_name || (result.yue_jiang ? (jiangNames[result.yue_jiang] || '') : '');
 
         var conclusion;
         if(analysisType === 'keti') conclusion = '课体「' + keName + '」，' + level + '之象';
         else if(analysisType === 'sanchuan') conclusion = '三传 ' + chuan + '，首末相引，' + level + '之判';
-        else if(analysisType === 'chuchuan') conclusion = '初传 ' + (result.san_chuan.chu || '?') + ' 发用，' + level + '之机';
+        else if(analysisType === 'chuchuan') conclusion = '初传 ' + chu + ' 发用，' + level + '之机';
         else conclusion = '全盘观之，' + keName + '课，' + level + '之应';
 
         var shiDomain = currentDomain ? (DOMAIN_NAMES[currentDomain] || currentDomain) : '所问之事';
@@ -848,7 +929,46 @@
         } else if(analysisType === 'sanchuan'){
           sectionBody = '三传 ' + chuan + '。' + fill(openingTpl);
         } else {
-          sectionBody = '初传 ' + (result.san_chuan.chu || '?') + ' 发用。' + fill(openingTpl);
+          sectionBody = '初传 ' + chu + ' 发用。' + fill(openingTpl);
+        }
+
+        // ===== 增强维度：细节拆解（三传逐层 + 天将落宫） =====
+        function jiangAt(zhi){
+          var name = jiangNames[zhi] || '';
+          var tianJiangVal = tianJiang[zhi] || '';
+          if(name && tianJiangVal) return '值' + name + '，' + tianJiangVal + '宫';
+          if(name) return '值' + name;
+          return '将气临之';
+        }
+        var detailBreakdown =
+          '【发用·初传】' + chu + ' 动，' + jiangAt(chu) + '，主事机之始，' + (ZHI_WX[chu] || '土') + '性在此显发，' + (analysisType === 'chuchuan' ? '重点观之' : '观其起势') + '。' +
+          '【承转·中传】' + zhong + ' 行，' + jiangAt(zhong) + '，气机流转，主事之进行，由「' + (ZHI_WX[chu] || '土') + '」转「' + (ZHI_WX[zhong] || '土') + '」，机变在此。' +
+          '【归藏·末传】' + mo + ' 落，' + jiangAt(mo) + '，落宫定果，主事之终局，终气归「' + (ZHI_WX[mo] || '土') + '」，' + level + '之应。';
+        var detailLines = [
+          detailBreakdown.slice(0, detailBreakdown.indexOf('【承转')) ,
+          detailBreakdown.slice(detailBreakdown.indexOf('【承转'), detailBreakdown.indexOf('【归藏')),
+          detailBreakdown.slice(detailBreakdown.indexOf('【归藏'))
+        ];
+
+        // ===== 增强维度：多视角解读（三位大师各异取象） =====
+        var multiPerspective = [
+          '【邵彦和视角】独取初传「' + chu + '」断事，发用即是断语，' + jiangAt(chu) + '，机在此，' + level + '之机。',
+          '【陈公献视角】重课体「' + keName + '」全局，' + chuan + ' 三传相承，首 ' + chu + ' 末 ' + mo + ' 一脉贯通，' + level + '之判。',
+          '【程树勋视角】观三传六亲与天将同参，' + jiangAt(zhong) + ' 承中，气机最活，' + advice + '。'
+        ];
+
+        // ===== 增强维度：背景关联（渊源 + 典籍 + 本师） =====
+        var background =
+          '大六壬为古「三式」之首，以式占事，历传千年。月将「' + yueJiangName + '」临天盘，' + (result.ri_zhi ? '日支「' + result.ri_zhi + '」' : '') + '与占时「' + shiStr + '」相配，推得课体「' + keName + '」。' +
+          '本师' + escInline(master.name) + '（' + escInline(master.title || '名师') + '），其法承「' + escInline(master.style || '传统') + '」一脉，立言「' + escInline(master.phrase || '察象知机') + '」。';
+
+        // ===== 增强维度：延伸参考（研读方向 + 典籍） =====
+        var references =
+          '【延伸阅读】一、『六壬指南』——课体分类与三传取象之纲；二、『壬学琐记』——六亲六神细断之法；三、本师' + escInline(master.name) + '所著「' + escInline(master.style || '传统') + '」。' +
+          '【进阶方向】天盘逆顺、四课加临、神煞同参，三者合断可深化对「' + keName + '」课之理解。';
+
+        function escInline(s){
+          return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
 
         return {
@@ -856,8 +976,80 @@
           overview: sectionBody,
           specialty: '此课「' + keName + '」，三传 ' + chuan + '。日干' + dayGan + '属' + dayWx + '，占时' + shiStr + '，' + level + '之象。' + (currentQuestion ? '就「' + currentQuestion + '」而言：' : '') + conclusion + '。',
           quote: fill(quoteTpl),
-          closing: fill(closingTpl)
+          closing: fill(closingTpl),
+          enhanced: {
+            detailBreakdown: detailBreakdown,
+            detailLines: detailLines,
+            multiPerspective: multiPerspective,
+            background: background,
+            references: references
+          }
         };
+      }
+
+      // ===== 大师解析·增强维度模块渲染（细节拆解/多视角/背景/延伸参考 + 动效） =====
+      function renderEnhancedModules(resultCard, masterId, analysisType){
+        if(!resultCard || !window.MastersEngine) return;
+        var a = buildDaliurenAnalysis(currentResult, masterId, analysisType);
+        if(!a || !a.enhanced) return;
+        var enh = a.enhanced;
+        var master = window.MastersEngine.MASTERS[masterId];
+
+        // 每个模块：编号递增的 --delay，形成 stagger 滑入
+        var mods = [];
+        if(enh.detailLines && enh.detailLines.length){
+          mods.push({ cls:'enh-chu', ico:'⚙️', label:'细节拆解 · 三传逐层', num:'01', lines: enh.detailLines });
+        }
+        if(enh.multiPerspective && enh.multiPerspective.length){
+          mods.push({ cls:'enh-persp', ico:'👁️', label:'多视角解读 · 三师各异', num:'02', lines: enh.multiPerspective });
+        }
+        if(enh.background){
+          mods.push({ cls:'enh-bg', ico:'📜', label:'背景关联 · 渊源典籍', num:'03', lines: [enh.background] });
+        }
+        if(enh.references){
+          mods.push({ cls:'enh-ref', ico:'📚', label:'延伸参考 · 研读方向', num:'04', lines: [enh.references] });
+        }
+
+        var html = '<div class="daliuren-enhanced">';
+        html += '<div class="daliuren-enhanced-header"><span class="deh-lead">' +
+          escHtml(master ? master.name : '大师') + ' · 深度解析</span></div>';
+        var base = 5; // 五段主分析已完成 stagger（0-4 × 0.08s），增强模块从第 6 段起
+        for(var i = 0; i < mods.length; i++){
+          var m = mods[i];
+          var delay = ((base + i) * 0.10).toFixed(2);
+          html += '<div class="enh-mod ' + m.cls + '" style="--delay:' + delay + 's;">';
+          html += '<div class="enh-mod-title"><span class="emt-ico">' + m.ico + '</span>' +
+                  '<span>' + escHtml(m.label) + '</span><span class="emt-num">' + m.num + '</span></div>';
+          html += '<div class="enh-mod-body">';
+          for(var j = 0; j < m.lines.length; j++){
+            var line = m.lines[j];
+            // 各行按【..】提取标签；有标签→胶囊tag+正文，无标签→整体作正文
+            var lab = sectionLabel(line), body = sectionBody(line);
+            if(lab){
+              html += '<span class="emb-line"><span class="tag">' + escHtml(lab) + '</span>' + escHtml(body) + '</span>';
+            } else {
+              html += '<span class="emb-line">' + escHtml(line) + '</span>';
+            }
+          }
+          html += '</div></div>';
+        }
+        html += '</div>';
+
+        // 双保险：移除旧增强模块（renderMasterResult 已 innerHTML 清空，此处防重复追加）
+        var oldEnh = resultCard.querySelector('.daliuren-enhanced');
+        if(oldEnh) oldEnh.remove();
+        resultCard.insertAdjacentHTML('beforeend', html);
+      }
+      // 提取「【标签】正文」中【】内的标签名；无【】时返回空串
+      function sectionLabel(line){
+        var mm = String(line).match(/【([^】]*)】/);
+        return mm ? mm[1] : '';
+      }
+      // 提取「【标签】正文」中【】之后的正文；无【】时返回整行
+      function sectionBody(line){
+        var s = String(line);
+        var idx = s.indexOf('】');
+        return idx >= 0 ? s.slice(idx + 1) : s;
       }
 
       // ===== 初始化大六壬大师 =====
@@ -882,6 +1074,24 @@
             },
             resultData: result
           });
+          // 在分析按钮 click（capture）上挂增强模块渲染：
+          // renderMastersPanel 内部会 setTimeout(50ms) 调 renderMasterResult 填充主分析，
+          // 我们 capture 阶段先读选中态，再延时追加增强模块。
+          var analyzeBtn = mastersContent.querySelector('#master-analyze-btn');
+          if(analyzeBtn){
+            analyzeBtn.addEventListener('click', function(){
+              var mSel = mastersContent.querySelector('.master-card.selected');
+              var tSel = mastersContent.querySelector('#master-type-tabs .tab-btn.active');
+              var mid = mSel && mSel.dataset.masterId ? mSel.dataset.masterId : null;
+              var tid = tSel && tSel.dataset.type ? tSel.dataset.type : 'full';
+              if(!mid) return;
+              // 等主分析 stagger（5 段 × 0.08s ≈ 0.4s）基本展开后插入增强模块
+              setTimeout(function(){
+                var rc = mastersContent.querySelector('#master-result-card');
+                if(rc) renderEnhancedModules(rc, mid, tid);
+              }, 620);
+            }, true);
+          }
         } else {
           mastersContent.innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px;">大师面板加载失败。</p>';
         }
