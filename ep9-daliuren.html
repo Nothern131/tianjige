@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>天机阁 EP9 · 大六壬</title>
+    <meta name="description" content="天机阁EP9——大六壬。天地盘起课，四课三传定吉凶，十二天将察神机。邵彦和《六壬断案》体系，纯前端实现。">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+      :root {
+        --ink: #0a0806;
+        --parchment: #1a1612;
+        --surface: rgba(20,16,12,0.94);
+        --card: rgba(24,20,14,0.82);
+        --gold: #b89a5c;
+        --gold-light: #d4bb7c;
+        --gold-dim: #8a7040;
+        --gold-glow: rgba(184,154,92,0.15);
+        --red: #c04040;
+        --red-light: #e06060;
+        --green: #5a8a5a;
+        --green-light: #7aaa7a;
+        --blue: #4a6a8a;
+        --blue-light: #6a8aaa;
+        --purple: #7a6aa0;
+        --purple-light: #9a8ac0;
+        --text: #e0dcd0;
+        --text2: #8a8576;
+        --text3: #4a4640;
+        --border: rgba(255,255,255,0.05);
+        --border-gold: rgba(184,154,92,0.18);
+        --font-serif: 'Noto Serif SC','SimSun','KaiTi',serif;
+        --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+        --radius: 14px;
+        --radius-sm: 8px;
+        --gold-subtle: rgba(184,154,92,0.04);
+        --gold-wash: rgba(184,154,92,0.04);
+      }
+      html {
+        background: var(--ink);
+        color: var(--text);
+        font-family: var(--font-sans);
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+      }
+      body {
+        min-height: 100vh;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      /* ===== Ink Canvas ===== */
+      #inkCanvas {
+        position: fixed; top:0; left:0; width:100%; height:100%;
+        z-index: 0; pointer-events: none;
+      }
+      .watermark {
+        position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+        font-family:'Ma Shan Zheng',cursive; font-size:18vw;
+        color:rgba(184,154,92,0.035); z-index:0; pointer-events:none; line-height:1;
+      }
+
+      /* ===== Layout ===== */
+      .wrap {
+        position: relative; z-index: 1;
+        max-width: 960px; margin: 0 auto;
+        padding: 40px 20px 60px;
+      }
+      .hidden { display: none; }
+
+      /* ===== Hero ===== */
+      .hero { text-align: center; padding: 50px 0 36px; }
+      .ep-tag {
+        display: inline-block;
+        font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase;
+        color: var(--gold-dim);
+        border: 1px solid var(--border-gold); border-radius: 999px;
+        padding: 5px 16px; margin-bottom: 18px;
+      }
+      .hero h1 {
+        font-family: var(--font-serif); font-weight: 900;
+        font-size: clamp(2.4rem, 7vw, 3.6rem);
+        color: var(--gold-light); letter-spacing: 0.08em;
+        text-shadow: 0 0 30px rgba(184,154,92,0.25);
+      }
+      .subtitle {
+        margin-top: 14px; font-size: 0.86rem; color: var(--text2);
+        letter-spacing: 0.06em; line-height: 1.7;
+      }
+      .hero-divider {
+        display: flex; align-items: center; justify-content: center; gap: 12px;
+        margin-top: 26px;
+      }
+      .hero-divider span {
+        display: block; width: 60px; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--gold-dim));
+      }
+      .hero-divider span:last-child {
+        background: linear-gradient(270deg, transparent, var(--gold-dim));
+      }
+      .hero-divider .diamond {
+        width: 7px; height: 7px; background: var(--gold);
+        transform: rotate(45deg);
+        box-shadow: 0 0 12px rgba(184,154,92,0.5);
+      }
+
+      /* ===== Section Title ===== */
+      .section-title {
+        font-family: var(--font-serif); font-weight: 700;
+        font-size: 1.15rem; color: var(--gold-light);
+        display: flex; align-items: baseline; gap: 10px;
+        border-left: 3px solid var(--gold);
+        padding-left: 12px; margin-bottom: 18px;
+        letter-spacing: 0.04em;
+      }
+      .section-title .num {
+        font-size: 0.6rem; color: var(--text3); letter-spacing: 0.2em;
+        margin-left: auto;
+      }
+
+      /* ===== Card ===== */
+      .card, .glass-card {
+        position: relative;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 26px;
+        margin-bottom: 22px;
+        backdrop-filter: blur(8px);
+        overflow: hidden;
+      }
+      .card::before, .glass-card::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+        opacity: 0.5;
+      }
+      .card:hover, .glass-card:hover {
+        border-color: var(--border-gold);
+        transition: border-color 0.3s;
+      }
+
+      /* ===== Form ===== */
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 16px;
+      }
+      .form-group { display: flex; flex-direction: column; gap: 6px; }
+      .form-group label {
+        font-size: 0.68rem; color: var(--text2);
+        letter-spacing: 0.1em; text-transform: uppercase;
+      }
+      .form-group input, .form-group select {
+        background: rgba(0,0,0,0.25);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text);
+        font-family: var(--font-serif);
+        font-size: 0.95rem;
+        padding: 11px 14px;
+        outline: none; transition: border-color 0.25s, box-shadow 0.25s;
+        width: 100%;
+      }
+      .form-group input:focus, .form-group select:focus {
+        border-color: var(--gold-dim);
+        box-shadow: 0 0 0 3px var(--gold-glow);
+      }
+      .form-group input { color-scheme: dark; }
+
+      .btn {
+        position: relative;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+        color: var(--ink); font-weight: 700;
+        font-family: var(--font-serif); font-size: 1rem;
+        padding: 13px 30px; border: none; border-radius: var(--radius-sm);
+        cursor: pointer; letter-spacing: 0.1em;
+        transition: transform 0.2s, box-shadow 0.25s;
+        overflow: hidden;
+      }
+      .btn::after {
+        content: '';
+        position: absolute; inset: 0;
+        background: radial-gradient(circle at 50% 120%, rgba(255,255,255,0.35), transparent 60%);
+        opacity: 0; transition: opacity 0.3s;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(184,154,92,0.35);
+      }
+      .btn:hover::after { opacity: 1; }
+      .btn:active { transform: translateY(0); }
+
+      /* ===== Domain Tags ===== */
+      .domain-tags {
+        display: flex; flex-wrap: wrap; gap: 8px;
+      }
+      .domain-tag {
+        background: var(--gold-subtle);
+        border: 1px solid var(--border-gold);
+        border-radius: 999px;
+        color: var(--text2); font-size: 0.78rem;
+        padding: 6px 14px; cursor: pointer;
+        font-family: var(--font-serif);
+        transition: all 0.25s;
+      }
+      .domain-tag:hover {
+        color: var(--gold-light);
+        border-color: var(--gold-dim);
+        background: var(--gold-glow);
+      }
+      .domain-tag.active {
+        color: var(--gold-light);
+        border-color: var(--gold);
+        background: var(--gold-glow);
+        box-shadow: 0 0 12px rgba(184,154,92,0.25);
+      }
+
+      /* ===== Info Panel ===== */
+      .info-panel {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+      }
+      .info-item {
+        background: var(--gold-subtle);
+        border-left: 3px solid var(--gold-dim);
+        border-radius: var(--radius-sm);
+        padding: 12px 14px;
+      }
+      .info-item .label {
+        font-size: 0.62rem; color: var(--text2);
+        letter-spacing: 0.12em; margin-bottom: 6px;
+        text-transform: uppercase;
+      }
+      .info-item .value {
+        font-family: var(--font-serif); font-size: 1.05rem;
+        color: var(--text);
+      }
+      .info-item .value .highlight { color: var(--gold-light); }
+      .info-item.info-gold { border-left-color: var(--gold); }
+      .info-item.info-green { border-left-color: var(--green-light); }
+      .info-item.info-purple { border-left-color: var(--purple-light); }
+      .info-item.info-red { border-left-color: var(--red-light); }
+      .info-item.info-blue { border-left-color: var(--blue-light); }
+
+      /* ===== San Chuan ===== */
+      .sanchuan-row {
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .chuan-card {
+        flex: 1; min-width: 110px;
+        background: var(--gold-subtle);
+        border: 1px solid var(--border-gold);
+        border-radius: var(--radius-sm);
+        padding: 12px; text-align: center;
+      }
+      .chuan-card .chuan-label {
+        font-size: 0.62rem; color: var(--text2); letter-spacing: 0.15em; margin-bottom: 6px;
+      }
+      .chuan-card .chuan-value {
+        font-family: var(--font-serif); font-size: 1.7rem; color: var(--gold-light);
+        text-shadow: 0 0 16px rgba(184,154,92,0.4);
+      }
+      .chuan-card .chuan-name {
+        font-size: 0.72rem; color: var(--text2); margin-top: 4px;
+      }
+      .chuan-card .chuan-jiang {
+        font-size: 0.72rem; color: var(--blue-light); margin-top: 2px;
+      }
+      .chuan-arrow { color: var(--gold-dim); font-size: 1.2rem; }
+
+      /* ===== Four Ke ===== */
+      .si-ke-grid {
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+        margin-bottom: 14px;
+      }
+      .si-ke-item {
+        background: var(--gold-subtle);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+      }
+      .si-ke-item .sk-label {
+        font-size: 0.62rem; color: var(--text2); letter-spacing: 0.1em; margin-bottom: 4px;
+      }
+      .si-ke-item .sk-value {
+        font-family: var(--font-serif); font-size: 1.1rem; color: var(--text);
+      }
+
+      /* ===== Tian Pan (12 zhi ring) ===== */
+      .tianpan-board {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      .tianpan-cell {
+        position: relative;
+        background: var(--gold-subtle);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 12px; text-align: center;
+        transition: all 0.25s;
+        opacity: 0; transform: translateY(10px);
+      }
+      .tianpan-cell.in { opacity: 1; transform: translateY(0); }
+      .tianpan-cell:hover {
+        border-color: var(--gold-dim);
+        box-shadow: 0 0 14px rgba(184,154,92,0.2);
+      }
+      .tp-top {
+        display: flex; flex-direction: column; gap: 2px;
+        border-bottom: 1px dashed var(--border-gold);
+        padding-bottom: 6px; margin-bottom: 8px;
+      }
+      .tp-di {
+        font-family: var(--font-serif); font-size: 0.78rem; color: var(--text2);
+        letter-spacing: 0.06em;
+      }
+      .tp-tian {
+        font-family: var(--font-serif); font-size: 1.5rem; color: var(--gold-light);
+        text-shadow: 0 0 14px rgba(184,154,92,0.4);
+      }
+      .tp-jiang {
+        font-size: 0.72rem; color: var(--blue-light); margin-top: 4px;
+      }
+
+      /* ===== Ke Level ===== */
+      .ke-level {
+        display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .ke-level .level-badge {
+        font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700;
+        padding: 6px 18px; border-radius: 999px; letter-spacing: 0.1em;
+      }
+      .level-good { color: var(--gold-light); background: var(--gold-glow); border: 1px solid var(--gold-dim); }
+      .level-neutral { color: var(--text2); background: var(--gold-subtle); border: 1px solid var(--border-gold); }
+      .level-bad { color: var(--red-light); background: rgba(192,64,64,0.12); border: 1px solid rgba(192,64,64,0.35); }
+      .ke-level .ke-name {
+        font-family: var(--font-serif); font-size: 1.6rem; color: var(--gold-light);
+        letter-spacing: 0.05em;
+      }
+
+      /* ===== Interpretation ===== */
+      .interp-block {
+        background: var(--gold-subtle);
+        border-left: 3px solid var(--gold);
+        border-radius: var(--radius-sm);
+        padding: 18px 20px;
+      }
+      .interp-block .block-label {
+        font-size: 0.7rem; color: var(--text2); letter-spacing: 0.15em;
+        margin-bottom: 10px;
+      }
+      .interp-block .block-content {
+        font-family: var(--font-serif); font-size: 0.95rem;
+        line-height: 1.9; color: var(--text);
+        white-space: pre-wrap;
+      }
+
+      /* ===== Masters ===== */
+      .master-cat-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+      }
+      .master-card {
+        position: relative;
+        background: var(--gold-subtle);
+        border: 1px solid var(--border-gold);
+        border-radius: var(--radius-sm);
+        padding: 16px 14px; cursor: pointer;
+        transition: all 0.25s;
+        text-align: center;
+      }
+      .master-card:hover {
+        border-color: var(--gold-dim);
+        box-shadow: 0 4px 18px rgba(184,154,92,0.2);
+        transform: translateY(-2px);
+      }
+      .master-card.selected {
+        border-color: var(--gold);
+        background: var(--gold-glow);
+        box-shadow: 0 0 18px rgba(184,154,92,0.3);
+      }
+      .master-card.selected::after {
+        content: '✓';
+        position: absolute; top: 8px; right: 10px;
+        color: var(--gold-light); font-size: 0.85rem;
+      }
+      .mc-avatar {
+        font-size: 2rem; margin-bottom: 8px;
+      }
+      .mc-name {
+        font-family: var(--font-serif); font-size: 1rem;
+        color: var(--gold-light); letter-spacing: 0.05em;
+      }
+      .mc-title {
+        font-size: 0.7rem; color: var(--text2); margin-top: 4px;
+      }
+      .mc-era {
+        font-size: 0.66rem; color: var(--text3); margin-top: 2px;
+        letter-spacing: 0.1em;
+      }
+
+      .master-result-header {
+        display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+        padding-bottom: 14px; border-bottom: 1px solid var(--border-gold);
+      }
+      .mrh-avatar {
+        width: 56px; height: 56px; border-radius: 50%;
+        background: var(--gold-glow);
+        border: 1px solid var(--gold-dim);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; flex-shrink: 0;
+      }
+      .mrh-info .mrh-name {
+        font-family: var(--font-serif); font-size: 1.2rem; color: var(--gold-light);
+      }
+      .mrh-info .mrh-title {
+        font-size: 0.72rem; color: var(--text2); margin-top: 3px;
+      }
+
+      .master-result-section {
+        opacity: 0; transform: translateY(12px);
+        animation: masterSectionIn 0.55s ease forwards;
+        animation-delay: var(--delay, 0s);
+        margin-bottom: 16px;
+      }
+      @keyframes masterSectionIn {
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .mrs-label {
+        font-size: 0.66rem; color: var(--gold-dim); letter-spacing: 0.2em;
+        margin-bottom: 8px;
+      }
+      .mrs-body {
+        font-family: var(--font-serif); font-size: 0.95rem;
+        line-height: 1.85; color: var(--text);
+      }
+
+      /* ===== Footer / Misc ===== */
+      .disclaimer {
+        text-align: center; font-size: 0.72rem; color: var(--text3);
+        line-height: 1.8; padding: 30px 10px 0;
+      }
+      .disclaimer strong { color: var(--text2); }
+      .footer {
+        text-align: center; font-size: 0.7rem; color: var(--text3);
+        padding: 26px 0 0; letter-spacing: 0.1em;
+      }
+
+      .spinner {
+        width: 30px; height: 30px;
+        border: 2px solid var(--border-gold);
+        border-top-color: var(--gold);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 24px auto;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .toast {
+        position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%);
+        background: var(--surface); border: 1px solid var(--gold-dim);
+        color: var(--gold-light); font-family: var(--font-serif);
+        padding: 12px 24px; border-radius: 999px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        z-index: 999; opacity: 0; pointer-events: none;
+        transition: opacity 0.3s, transform 0.3s;
+        font-size: 0.9rem;
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+      /* ===== Fade-up animation ===== */
+      .fade-up {
+        opacity: 0; transform: translateY(18px);
+        animation: fadeUp 0.7s ease forwards;
+      }
+      @keyframes fadeUp {
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* ===== Accessibility: reduced motion ===== */
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        .fade-up, .master-result-section, .tianpan-cell {
+          animation: none !important; opacity: 1 !important; transform: none !important;
+        }
+        .card, .glass-card { transition: none; }
+        .btn:hover, .master-card:hover, .tianpan-cell:hover { transform: none; }
+        .spinner { animation-duration: 2s; }
+        #inkCanvas { display: none; }
+      }
+
+      /* ===== Responsive ===== */
+      @media (max-width: 600px) {
+        .wrap { padding: 24px 14px 40px; }
+        .card, .glass-card { padding: 18px; }
+        .tianpan-board { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .sanchuan-row { gap: 6px; }
+        .chuan-card { min-width: 90px; padding: 10px; }
+        .chuan-card .chuan-value { font-size: 1.3rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="inkCanvas"></canvas>
+    <div class="watermark">六壬</div>
+    <div class="wrap">
+
+      <!-- Hero -->
+      <div class="hero fade-up">
+        <div class="ep-tag">EPISODE 9</div>
+        <h1>大六壬</h1>
+        <p class="subtitle">天地盘起课 · 四课三传定吉凶 · 邵彦和《六壬断案》体系</p>
+        <div class="hero-divider">
+          <span></span><div class="diamond"></div><span></span>
+        </div>
+      </div>
+
+      <!-- 01 起课参数 -->
+      <div class="card fade-up" id="inputCard">
+        <div class="section-title">起课参数<span class="num">01</span></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>起课日期</label>
+            <input type="date" id="daliuren-date" min="1900-01-01" max="2100-12-31" />
+          </div>
+          <div class="form-group">
+            <label>占时</label>
+            <select id="daliuren-hour">
+              <option value="子时">子时 (23:00-01:00)</option>
+              <option value="丑时">丑时 (01:00-03:00)</option>
+              <option value="寅时">寅时 (03:00-05:00)</option>
+              <option value="卯时">卯时 (05:00-07:00)</option>
+              <option value="辰时">辰时 (07:00-09:00)</option>
+              <option value="巳时" selected>巳时 (09:00-11:00)</option>
+              <option value="午时">午时 (11:00-13:00)</option>
+              <option value="未时">未时 (13:00-15:00)</option>
+              <option value="申时">申时 (15:00-17:00)</option>
+              <option value="酉时">酉时 (17:00-19:00)</option>
+              <option value="戌时">戌时 (19:00-21:00)</option>
+              <option value="亥时">亥时 (21:00-23:00)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:16px;">
+          <label>事域选择（可选）</label>
+          <div class="domain-tags" id="daliuren-domain-tags">
+            <button class="domain-tag" data-domain="career">💼 事业</button>
+            <button class="domain-tag" data-domain="love">💕 感情</button>
+            <button class="domain-tag" data-domain="wealth">💰 财运</button>
+            <button class="domain-tag" data-domain="health">🏥 健康</button>
+            <button class="domain-tag" data-domain="study">📚 学业</button>
+            <button class="domain-tag" data-domain="family">🏠 家庭</button>
+            <button class="domain-tag" data-domain="social">👯 人际</button>
+            <button class="domain-tag" data-domain="travel">✈️ 出行</button>
+          </div>
+          <input type="text" id="daliuren-question" placeholder="或输入你想问的具体问题，如：最近事业运如何？" style="margin-top:10px;" />
+        </div>
+        <button class="btn" id="daliuren-submit" style="width:100%;justify-content:center;margin-top:16px;">🔮 起课推演</button>
+      </div>
+
+      <!-- 02 课式总览 -->
+      <div class="card fade-up hidden" id="overviewCard">
+        <div class="section-title">课式总览<span class="num">02</span></div>
+        <div id="overviewContent"></div>
+      </div>
+
+      <!-- 03 课体研判 -->
+      <div class="card fade-up hidden" id="sanChuanCard">
+        <div class="section-title">三传 · 课体研判<span class="num">03</span></div>
+        <div id="sanChuanContent"></div>
+      </div>
+
+      <!-- 04 大师点评 -->
+      <div class="glass-card fade-up hidden" id="mastersCard">
+        <div class="section-title">大师点评<span class="num">04</span></div>
+        <div id="mastersContent"></div>
+        <div id="daliuren-followup-area" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:none;">
+          <div style="font-size:0.78rem;color:var(--text2);letter-spacing:0.04em;margin-bottom:10px;">追问 · 让大师继续深入解读</div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="daliuren-followup-input" placeholder="如：初传与末传之间有何机变？" style="flex:1;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px;font-size:0.82rem;" />
+            <button id="daliuren-followup-btn" style="background:var(--gold-dim);color:var(--ink-dark,#0a0806);border:none;border-radius:6px;padding:8px 14px;font-size:0.82rem;cursor:pointer;white-space:nowrap;">追问</button>
+          </div>
+          <div id="daliuren-followup-result" style="margin-top:12px;"></div>
+        </div>
+      </div>
+
+      <!-- 免责声明 -->
+      <div class="disclaimer">
+        <strong>声明：</strong>大六壬是中国传统文化的一部分，属于古典术数和文化遗产范畴。<br>
+        本系统仅供文化研究和娱乐参考，不构成任何人生决策建议。请相信科学，理性看待命运。
+      </div>
+      <div class="footer">天机阁 · TIAN JI GE</div>
+    </div>
+
+    <script src="static/js/daliuren-engine.js"></script>
+    <script src="static/js/domain-analysis.js"></script>
+    <script src="static/js/masters-engine.js"></script>
+    <script src="static/js/components/masters.js"></script>
+    <script>
+    (function(){
+      'use strict';
+
+      var currentResult = null;
+      var currentQuestion = '';
+      var currentDomain = '';
+      var currentHourStr = '';
+
+      var DOMAIN_NAMES = {
+        career: '事业', love: '感情', wealth: '财运', health: '健康',
+        study: '学业', family: '家庭', social: '人际', travel: '出行'
+      };
+
+      var HOUR_MAP = {
+        '子时':0, '丑时':1, '寅时':2, '卯时':3, '辰时':4, '巳时':5,
+        '午时':6, '未时':7, '申时':8, '酉时':9, '戌时':10, '亥时':11
+      };
+
+      // 地支五行（页面自实现，六亲由 interpretation 段承载）
+      var ZHI_WX = { 子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水' };
+      var GAN_WX = { 甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水' };
+
+      function escHtml(s){
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      // ===== 默认日期 = 当天 =====
+      var dateInput = document.getElementById('daliuren-date');
+      var now = new Date();
+      dateInput.value = now.toISOString().slice(0, 10);
+
+      // ===== 事域标签点击 =====
+      var domainBtns = document.querySelectorAll('.domain-tag');
+      domainBtns.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var isActive = btn.classList.contains('active');
+          domainBtns.forEach(function(b){ b.classList.remove('active'); });
+          if(!isActive){
+            btn.classList.add('active');
+            currentDomain = btn.dataset.domain;
+            var domainName = DOMAIN_NAMES[currentDomain] || currentDomain;
+            document.getElementById('daliuren-question').value = '请问' + domainName + '运势如何？';
+          }
+        });
+      });
+
+      // ===== 起课推演 =====
+      document.getElementById('daliuren-submit').addEventListener('click', function(){
+        var dateStr = dateInput.value;
+        var hourStr = document.getElementById('daliuren-hour').value;
+        var question = document.getElementById('daliuren-question').value.trim();
+        if(!dateStr){ showToast('请选择起课日期'); return; }
+        var hourNum = HOUR_MAP[hourStr] || 5;
+
+        currentQuestion = question;
+        currentHourStr = hourStr;
+
+        var overviewCard = document.getElementById('overviewCard');
+        var sanChuanCard = document.getElementById('sanChuanCard');
+        var mastersCard = document.getElementById('mastersCard');
+        overviewCard.classList.add('hidden');
+        sanChuanCard.classList.add('hidden');
+        mastersCard.classList.add('hidden');
+        document.getElementById('overviewContent').innerHTML = '<div class="spinner"></div>';
+
+        setTimeout(function(){
+          try {
+            var result = DaLiuRenEngine.divine(dateStr, hourNum);
+            if(!result){
+              document.getElementById('overviewContent').innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px;">起课失败，请重试。</p>';
+              overviewCard.classList.remove('hidden');
+              return;
+            }
+            currentResult = result;
+            renderOverview(result);
+            renderSanChuan(result);
+            initDaliurenMasters(result);
+
+            overviewCard.classList.remove('hidden');
+            sanChuanCard.classList.remove('hidden');
+            mastersCard.classList.remove('hidden');
+            var fu = document.getElementById('daliuren-followup-area');
+            if(fu) fu.style.display = '';
+            overviewCard.scrollIntoView({behavior:'smooth',block:'start'});
+          } catch(e){
+            document.getElementById('overviewContent').innerHTML = '<p style="color:var(--red-light);text-align:center;padding:20px;">' + escHtml(e.message || '起课出错，请重试。') + '</p>';
+            overviewCard.classList.remove('hidden');
+          }
+        }, 400);
+      });
+
+      // ===== 渲染课式总览（天盘12格 + 四课 + 信息） =====
+      function renderOverview(result){
+        var el = document.getElementById('overviewContent');
+        var tianPan = result.tian_pan || {};
+        var tianJiang = result.tian_jiang || {};
+        var siKe = result.si_ke || {};
+        var ZHI = DaLiuRenEngine.ZHI || [];
+
+        var html = '';
+        // 基本信息
+        html += '<div class="info-panel">';
+        html += '<div class="info-item info-gold"><div class="label">起课日期</div><div class="value"><span class="highlight">' + escHtml(String(result.date || '')) + '</span></div></div>';
+        html += '<div class="info-item info-blue"><div class="label">占时</div><div class="value"><span class="highlight">' + escHtml(String(currentHourStr || result.zhan_shi || '?')) + '</span></div></div>';
+        html += '<div class="info-item info-green"><div class="label">月将</div><div class="value"><span class="highlight">' + escHtml(String(result.yue_jiang_name || result.yue_jiang || '?')) + '</span>（' + escHtml(String(result.yue_jiang || '?')) + '）</div></div>';
+        html += '<div class="info-item info-purple"><div class="label">日干</div><div class="value"><span class="highlight">' + escHtml(String(result.ri_gan || '?')) + '</span></div></div>';
+        html += '<div class="info-item info-red"><div class="label">日支</div><div class="value"><span class="highlight">' + escHtml(String(result.ri_zhi || '?')) + '</span></div></div>';
+        html += '</div>';
+
+        // 天盘 12 格
+        html += '<div style="margin-top:22px;"><div class="section-title" style="font-size:0.9rem;">天盘 · 十二辰<span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;margin-left:8px;">地盘 × 天盘 × 天将</span></div>';
+        html += '<div class="tianpan-board" id="tianpanBoard">';
+        for(var i = 0; i < 12; i++){
+          var di = ZHI[i];
+          var tian = tianPan[di];
+          var jiang = tianJiang[di];
+          html += '<div class="tianpan-cell" style="--i:' + i + '" data-zhi="' + escHtml(di) + '">';
+          html += '<div class="tp-top">';
+          html += '<div class="tp-di">' + escHtml(di) + '（地）</div>';
+          html += '</div>';
+          html += '<div class="tp-tian">' + escHtml(String(tian || '?')) + '</div>';
+          html += '<div class="tp-jiang">' + escHtml(String(jiang || '')) + '</div>';
+          html += '</div>';
+        }
+        html += '</div></div>';
+
+        // 四课
+        html += '<div style="margin-top:22px;"><div class="section-title" style="font-size:0.9rem;">四课<span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;margin-left:8px;">日干寄宫 ' + escHtml(String(siKe.ganJi || '?')) + '</span></div>';
+        html += '<div class="si-ke-grid">';
+        ['ke1','ke2','ke3','ke4'].forEach(function(k, idx){
+          var ke = siKe[k];
+          html += '<div class="si-ke-item"><div class="sk-label">第' + (idx+1) + '课</div><div class="sk-value">' + (ke ? escHtml(ke.xia) + ' 上 ' + escHtml(ke.shang) : '?') + '</div></div>';
+        });
+        html += '</div></div>';
+
+        el.innerHTML = html;
+
+        // 天盘 12 格 stagger 入场
+        var cells = el.querySelectorAll('.tianpan-cell');
+        cells.forEach(function(c, idx){
+          setTimeout(function(){ c.classList.add('in'); }, 60 * idx);
+        });
+      }
+
+      // ===== 渲染三传 · 课体研判 =====
+      function renderSanChuan(result){
+        var el = document.getElementById('sanChuanContent');
+        var sc = result.san_chuan || {};
+        var jiangNames = DaLiuRenEngine.JIANG_NAMES || {};
+        var tianJiang = result.tian_jiang || {};
+
+        var level = result.level || '中平';
+        var levelClass = level === '吉' ? 'level-good' : level === '偏凶' ? 'level-bad' : 'level-neutral';
+
+        var html = '';
+        // 课体 + 吉凶
+        html += '<div class="ke-level">';
+        html += '<span class="level-badge ' + levelClass + '">' + escHtml(level) + '</span>';
+        html += '<span class="ke-name">' + escHtml(String(result.ke_name || '未知课')) + ' 课</span>';
+        html += '</div>';
+
+        // 三传
+        html += '<div class="sanchuan-row">';
+        var labels = ['初传','中传','末传'];
+        var keys = ['chu','zhong','mo'];
+        for(var i = 0; i < 3; i++){
+          var zhi = sc[keys[i]] || '?';
+          html += '<div class="chuan-card">';
+          html += '<div class="chuan-label">' + labels[i] + '</div>';
+          html += '<div class="chuan-value">' + escHtml(zhi) + '</div>';
+          html += '<div class="chuan-name">' + escHtml(jiangNames[zhi] || '') + '</div>';
+          html += '<div class="chuan-jiang">' + escHtml(tianJiang[zhi] || '') + '</div>';
+          html += '</div>';
+          if(i < 2) html += '<span class="chuan-arrow">→</span>';
+        }
+        html += '</div>';
+
+        // 全文解读（\n 分段）
+        var interp = result.interpretation || '';
+        var paragraphs = interp.split('\n').filter(function(s){ return s.trim(); });
+        html += '<div style="margin-top:18px;"><div class="section-title" style="font-size:0.9rem;">课式解读<span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;margin-left:8px;">邵彦和体系</span></div>';
+        html += '<div class="interp-block"><div class="block-content">' + paragraphs.map(escHtml).join('\n') + '</div></div>';
+
+        // 事域分析
+        if(currentQuestion && window.DomainAnalysis && DomainAnalysis.analyze){
+          var da = DomainAnalysis.analyze('daliuren', result, currentQuestion);
+          if(da && da.analysis){
+            html += '<div class="interp-block" style="margin-top:14px;border-left-color:var(--blue-light);">';
+            html += '<div class="block-label">事域分析 · ' + escHtml(currentQuestion) + '</div>';
+            html += '<div class="block-content">' + escHtml(da.analysis) + '</div>';
+            html += '</div>';
+          }
+        }
+        html += '</div>';
+
+        el.innerHTML = html;
+      }
+
+      // ===== 构建大六壬大师分析（五段式） =====
+      function buildDaliurenAnalysis(result, masterId, analysisType){
+        var masters = window.MastersEngine.MASTERS || {};
+        var master = masters[masterId];
+        if(!master) return null;
+        var dayGan = result.ri_gan || '甲';
+        var dayWx = GAN_WX[dayGan] || '土';
+        var shiStr = currentHourStr || result.zhan_shi || '巳时';
+        var keName = result.ke_name || '未知课';
+        var level = result.level || '中平';
+        var chuan = result.chuan || '?';
+
+        var conclusion;
+        if(analysisType === 'keti') conclusion = '课体「' + keName + '」，' + level + '之象';
+        else if(analysisType === 'sanchuan') conclusion = '三传 ' + chuan + '，首末相引，' + level + '之判';
+        else if(analysisType === 'chuchuan') conclusion = '初传 ' + (result.san_chuan.chu || '?') + ' 发用，' + level + '之机';
+        else conclusion = '全盘观之，' + keName + '课，' + level + '之应';
+
+        var shiDomain = currentDomain ? (DOMAIN_NAMES[currentDomain] || currentDomain) : '所问之事';
+        var advice = '宜守成慎行，察象知机';
+
+        var openingTpl = (master.openingTemplates || [''])[0] || '';
+        var quoteTpl = (master.quoteTemplates || [''])[0] || '';
+        var closingTpl = (master.closingTemplates || [''])[0] || '';
+
+        function fill(tpl){
+          return String(tpl)
+            .replace(/\{日主\}/g, dayGan)
+            .replace(/\{日主五行\}/g, dayWx)
+            .replace(/\{旺衰\}/g, level)
+            .replace(/\{事域\}/g, shiDomain)
+            .replace(/\{结论\}/g, conclusion)
+            .replace(/\{建议\}/g, advice)
+            .replace(/\{分数\}/g, level);
+        }
+
+        var sectionBody = '';
+        if(analysisType === 'full'){
+          sectionBody = fill(openingTpl);
+        } else if(analysisType === 'keti'){
+          sectionBody = '课体为「' + keName + '」，' + level + '之判。' + fill(openingTpl);
+        } else if(analysisType === 'sanchuan'){
+          sectionBody = '三传 ' + chuan + '。' + fill(openingTpl);
+        } else {
+          sectionBody = '初传 ' + (result.san_chuan.chu || '?') + ' 发用。' + fill(openingTpl);
+        }
+
+        return {
+          opening: fill(openingTpl),
+          overview: sectionBody,
+          specialty: '此课「' + keName + '」，三传 ' + chuan + '。日干' + dayGan + '属' + dayWx + '，占时' + shiStr + '，' + level + '之象。' + (currentQuestion ? '就「' + currentQuestion + '」而言：' : '') + conclusion + '。',
+          quote: fill(quoteTpl),
+          closing: fill(closingTpl)
+        };
+      }
+
+      // ===== 初始化大六壬大师 =====
+      function initDaliurenMasters(result){
+        var masters = Object.values(window.MastersEngine.MASTERS || {}).filter(function(m){
+          return m.category === '大六壬';
+        });
+        var analysisTypes = [
+          { id:'full', label:'全盘解读' },
+          { id:'keti', label:'课体研判' },
+          { id:'sanchuan', label:'三传研判' },
+          { id:'chuchuan', label:'初传研判' }
+        ];
+        var mastersContent = document.getElementById('mastersContent');
+        if(window.renderMastersPanel){
+          renderMastersPanel(mastersContent, {
+            category: '大六壬',
+            masters: masters,
+            analysisTypes: analysisTypes,
+            onAnalyze: function(masterId, analysisType){
+              return buildDaliurenAnalysis(result, masterId, analysisType);
+            },
+            resultData: result
+          });
+        } else {
+          mastersContent.innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px;">大师面板加载失败。</p>';
+        }
+      }
+
+      // ===== Toast =====
+      var toastEl = null;
+      function showToast(msg){
+        if(!toastEl){
+          toastEl = document.createElement('div');
+          toastEl.className = 'toast';
+          document.body.appendChild(toastEl);
+        }
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        setTimeout(function(){ toastEl.classList.remove('show'); }, 2600);
+      }
+
+      // ===== 追问事件 =====
+      document.getElementById('daliuren-followup-btn').addEventListener('click', function(){
+        var q = document.getElementById('daliuren-followup-input').value.trim();
+        var resultArea = document.getElementById('daliuren-followup-result');
+        if(!q){ showToast('请输入追问内容'); return; }
+        if(!currentResult){ showToast('请先起课'); return; }
+        resultArea.innerHTML = '<div class="spinner"></div>';
+        setTimeout(function(){
+          var masters = Object.values(window.MastersEngine.MASTERS || {}).filter(function(m){
+            return m.category === '大六壬';
+          });
+          var html = '<div style="font-size:0.8rem;color:var(--text2);margin-bottom:12px;">就「' + escHtml(q) + '」各大师回应：</div>';
+          masters.forEach(function(m, idx){
+            var a = buildDaliurenAnalysis(currentResult, m.id, 'full');
+            if(!a) return;
+            html += '<div class="master-result-section" style="--delay:' + (idx * 0.12) + 's;">';
+            html += '<div class="mrs-label">' + m.avatar + ' ' + escHtml(m.name) + '（' + escHtml(m.title) + '）</div>';
+            html += '<div class="mrs-body">' + escHtml(a.opening) + '\n\n' + escHtml(a.quote) + '\n\n' + escHtml(a.closing) + '</div>';
+            html += '</div>';
+          });
+          resultArea.innerHTML = html;
+        }, 500);
+      });
+
+      // ===== 水墨粒子 =====
+      (function initInk(){
+        var canvas = document.getElementById('inkCanvas');
+        if(!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var W, H, particles = [];
+        function resize(){
+          W = canvas.width = window.innerWidth;
+          H = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+        for(var i = 0; i < 50; i++){
+          particles.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            r: Math.random() * 1.6 + 0.3,
+            vx: (Math.random() - 0.5) * 0.25,
+            vy: -Math.random() * 0.25 - 0.05,
+            a: Math.random() * 0.5 + 0.1
+          });
+        }
+        function tick(){
+          ctx.clearRect(0, 0, W, H);
+          for(var i = 0; i < particles.length; i++){
+            var p = particles[i];
+            p.x += p.vx; p.y += p.vy;
+            if(p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+            if(p.x < -10) p.x = W + 10;
+            if(p.x > W + 10) p.x = -10;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(184,154,92,' + p.a + ')';
+            ctx.fill();
+          }
+          requestAnimationFrame(tick);
+        }
+        tick();
+      })();
+
+    })();
+    </script>
+  </body>
+</html>
