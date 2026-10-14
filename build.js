@@ -19,7 +19,7 @@ if (fs.existsSync(staticSrc)) {
 }
 
 // 2. 复制所有 HTML 入口 → dist/
-const htmlFiles = ['index.html', 'ep1-fengshui.html', 'ep2-bazi.html', 'ep3-liuyao.html', 'ep4-meihua.html', 'ep5-qimen.html', 'ep6-taiyi.html', 'ep7-zhuge.html', 'ep8-ziwei.html', 'architecture.html'];
+const htmlFiles = ['index.html', 'ep1-fengshui.html', 'ep2-bazi.html', 'ep3-liuyao.html', 'ep4-meihua.html', 'ep5-qimen.html', 'ep6-taiyi.html', 'ep7-zhuge.html', 'ep8-ziwei.html', 'ep9-daliuren.html', 'architecture.html'];
 htmlFiles.forEach((f) => {
   const src = path.join(root, f);
   if (fs.existsSync(src)) {
