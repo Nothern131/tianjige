@@ -20,6 +20,7 @@ export default defineConfig({
         'ep7-zhuge': 'ep7-zhuge.html',
         'ep8-ziwei': 'ep8-ziwei.html',
         'ep9-daliuren': 'ep9-daliuren.html',
+        'ep10-zhougong': 'ep10-zhougong.html',
         architecture: 'architecture.html',
       },
       // 静默非模块 script 的 bundle 警告（这些文件由 copy-static 单独复制）
