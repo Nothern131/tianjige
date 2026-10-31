@@ -21,6 +21,7 @@ export default defineConfig({
         'ep8-ziwei': 'ep8-ziwei.html',
         'ep9-daliuren': 'ep9-daliuren.html',
         'ep10-zhougong': 'ep10-zhougong.html',
+        'ep11-composite': 'ep11-composite.html',
         architecture: 'architecture.html',
       },
       // 静默非模块 script 的 bundle 警告（这些文件由 copy-static 单独复制）

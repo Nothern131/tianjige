@@ -19,7 +19,7 @@ if (fs.existsSync(staticSrc)) {
 }
 
 // 2. 复制所有 HTML 入口 → dist/
-const htmlFiles = ['index.html', 'ep1-fengshui.html', 'ep2-bazi.html', 'ep3-liuyao.html', 'ep4-meihua.html', 'ep5-qimen.html', 'ep6-taiyi.html', 'ep7-zhuge.html', 'ep8-ziwei.html', 'ep9-daliuren.html', 'ep10-zhougong.html', 'architecture.html'];
+const htmlFiles = ['index.html', 'ep1-fengshui.html', 'ep2-bazi.html', 'ep3-liuyao.html', 'ep4-meihua.html', 'ep5-qimen.html', 'ep6-taiyi.html', 'ep7-zhuge.html', 'ep8-ziwei.html', 'ep9-daliuren.html', 'ep10-zhougong.html', 'ep11-composite.html', 'architecture.html'];
 htmlFiles.forEach((f) => {
   const src = path.join(root, f);
   if (fs.existsSync(src)) {
@@ -29,7 +29,7 @@ htmlFiles.forEach((f) => {
 console.log('✓ HTML 入口已复制');
 
 // 3. 验证
-const verify = ['dist/static/js/ziwei-engine.js', 'dist/static/js/domain-analysis.js', 'dist/ep8-ziwei.html', 'dist/ep10-zhougong.html'];
+const verify = ['dist/static/js/ziwei-engine.js', 'dist/static/js/domain-analysis.js', 'dist/ep8-ziwei.html', 'dist/ep10-zhougong.html', 'dist/ep11-composite.html'];
 verify.forEach((v) => {
   const p = path.join(root, v);
   if (!fs.existsSync(p)) {
