@@ -2949,6 +2949,128 @@ textarea {
   opacity: 0.6;
 }
 
+/* === 大师解析增强模块（自 EP10 回填）=== */
+.zg-enhanced {
+  margin-top: 4px;
+}
+.zg-enhanced-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0 8px;
+  border-top: 1px dashed var(--border-gold);
+  margin-bottom: 6px;
+}
+.zg-enhanced-header .deh-lead {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: var(--gold-dark);
+}
+.zg-enhanced-header .deh-lead::before {
+  content: '◆';
+  margin-right: 8px;
+  color: var(--gold);
+  font-size: 0.6rem;
+}
+.enh-mod {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: enhModIn 0.6s var(--ease-out-expo) forwards;
+  animation-delay: var(--delay, 0s);
+  position: relative;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: linear-gradient(180deg, rgba(184, 154, 92, 0.05) 0%, rgba(184, 154, 92, 0.015) 100%);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+/* 左侧金线滑入，与内容同向，强化「展开」感 */
+.enh-mod::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 0;
+  background: linear-gradient(180deg, var(--gold), transparent);
+  animation: enhBarIn 0.6s var(--ease-out-expo) forwards;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes enhModIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes enhBarIn {
+  to {
+    height: 100%;
+  }
+}
+.enh-mod-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--gold-light);
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  font-family: var(--font-serif);
+}
+.enh-mod-title .emt-num {
+  margin-left: auto;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+.enh-mod-body {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  line-height: 1.85;
+  color: var(--text-primary);
+}
+.enh-mod-body .emb-line {
+  display: block;
+  margin-bottom: 4px;
+}
+.enh-mod-body .emb-line:last-child {
+  margin-bottom: 0;
+}
+.enh-mod-body .tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  padding: 1px 7px;
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-full);
+  color: var(--gold-dark);
+  margin-right: 8px;
+  letter-spacing: 0.06em;
+  vertical-align: middle;
+  animation: enhTagGlow 2.6s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes enhTagGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(184, 154, 92, 0);
+    border-color: var(--border-gold);
+  }
+  50% {
+    box-shadow: 0 0 8px 0 rgba(184, 154, 92, 0.35);
+    border-color: var(--gold);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .enh-mod,
+  .enh-mod::before,
+  .enh-mod-body .tag {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* 响应式 */
 @media (max-width: 640px) {
   .master-result-header {

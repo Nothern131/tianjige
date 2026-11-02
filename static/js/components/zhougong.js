@@ -228,6 +228,321 @@ function renderZhougongResult(container, result) {
     `;
   }
 
+  html += '<div id="zhougong-masters-content" class="mt-24"></div>';
   html += '</div>';
   container.innerHTML = html;
+  initZhougongMasters(container, result);
+}
+
+/* ========== 周公点评 + 四维增强（自 EP10 回填） ========== */
+var ZG_CATEGORIES = {
+  天象: '天象气候',
+  地理: '山水地理',
+  人物: '人物鬼神',
+  身体: '身体器官',
+  动物: '鸟兽虫鱼',
+  植物: '草木花实',
+  建筑: '宫室屋宇',
+  器物: '器用财物',
+  衣饰: '衣冠服饰',
+  饮食: '饮食酒水',
+  文书: '文书典籍',
+  交通: '车船出行',
+  水火: '水火雷电',
+  佛道: '佛道仙灵',
+  丧葬: '丧葬殡殓',
+  其他: '杂事百态',
+};
+
+// 五行关键词（与引擎 WUXING_CAT 同源，页面本地统计用）
+var ZG_WUXING_CAT = {
+  金: ['刀', '剑', '金', '银', '铁', '铜', '钟', '戒指', '金属', '钱币', '锁', '钥匙'],
+  木: ['树', '花', '草', '竹', '木', '植物', '森林', '林', '梅花', '荷花', '兰花'],
+  水: ['水', '海', '河', '雨', '雪', '冰', '泉', '鱼', '船', '游泳', '洗澡'],
+  火: ['火', '灯', '光', '太阳', '炉', '烛', '烧', '热', '红', '赤', '亮'],
+  土: ['山', '地', '土', '石', '墙', '屋', '房', '墓', '坟', '塔', '城'],
+};
+
+function zgGetWuxing(keyword) {
+  for (var wx in ZG_WUXING_CAT) {
+    var list = ZG_WUXING_CAT[wx];
+    for (var i = 0; i < list.length; i++) {
+      if (String(keyword).indexOf(list[i]) !== -1) return wx;
+    }
+  }
+  return '土';
+}
+
+function zgCountJi(results) {
+  var counts = { ji: 0, xiong: 0, mid: 0 };
+  (results || []).forEach(function (r) {
+    if (r.ji === '吉') counts.ji++;
+    else if (r.ji === '凶') counts.xiong++;
+    else counts.mid++;
+  });
+  return counts;
+}
+
+function zgDominantWuxing(results) {
+  var counts = {};
+  (results || []).forEach(function (r) {
+    var wx = zgGetWuxing(r.keyword);
+    counts[wx] = (counts[wx] || 0) + 1;
+  });
+  var best = '土';
+  var bestCount = -1;
+  Object.keys(counts).forEach(function (wx) {
+    if (counts[wx] > bestCount) {
+      bestCount = counts[wx];
+      best = wx;
+    }
+  });
+  return best;
+}
+
+function zgEscInline(s) {
+  return String(s).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/** 构建周公五段式分析（供 renderMastersPanel onAnalyze 与增强模块共用） */
+function buildZhougongAnalysis(result, masterId, analysisType) {
+  if (!result) return null;
+  var master = window.MastersEngine ? (window.MastersEngine.MASTERS || {})[masterId] : null;
+  if (!master) return null;
+
+  var results = result.results || [];
+  var counts = zgCountJi(results);
+  var ji = result.ji || '中';
+  var dominant = zgDominantWuxing(results);
+  var keywords = results.map(function (r) {
+    return r.keyword;
+  });
+  var question = result.question || '';
+  var domainName = result.domain ? result.domain.name : '所问之事';
+  var catNames = (result.categories || []).map(function (c) {
+    return ZG_CATEGORIES[c] || c;
+  });
+
+  var conclusion = '';
+  if (analysisType === 'elements') {
+    conclusion = keywords.length
+      ? '梦中「' + keywords.join('、') + '」诸象并见，' + ji + '之应'
+      : '梦中无经典条目可对，' + ji + '之判';
+  } else if (analysisType === 'ji') {
+    conclusion = '吉象' + counts.ji + '、中象' + counts.mid + '、凶象' + counts.xiong + '，综判为' + ji;
+  } else if (analysisType === 'domain') {
+    conclusion = '就「' + domainName + '」而言，此梦呈' + ji + '之兆';
+  } else {
+    conclusion = keywords.length ? '此梦共应' + results.length + '象，' + ji + '之兆' : '梦象未明，' + ji + '之判';
+  }
+
+  var advice =
+    ji === '吉'
+      ? '乘吉梦之兆，主动把握机缘'
+      : ji === '凶'
+        ? '惕凶梦之警，谨言慎行，先安而后动'
+        : '守中观察，取吉惕凶，不可偏执';
+
+  var openingTpl = (master.openingTemplates || [''])[0] || '';
+  var quoteTpl = (master.quoteTemplates || [''])[0] || '';
+  var closingTpl = (master.closingTemplates || [''])[0] || '';
+
+  function fill(tpl) {
+    return String(tpl)
+      .replace(/\{日主\}/g, '梦中主象')
+      .replace(/\{日主五行\}/g, dominant)
+      .replace(/\{旺衰\}/g, ji)
+      .replace(/\{事域\}/g, domainName)
+      .replace(/\{结论\}/g, conclusion)
+      .replace(/\{建议\}/g, advice)
+      .replace(/\{分数\}/g, ji);
+  }
+
+  var opening = fill(openingTpl);
+  var overview = result.interpretation || '';
+
+  var specialty = '';
+  if (analysisType === 'elements') {
+    specialty =
+      '【梦境拆解】' +
+      (keywords.length
+        ? '梦中见于' + catNames.join('、') + '诸类，逐条已列于上。'
+        : '本次梦境未匹配到经典条目。') +
+      '主导五行属' + dominant + '，' +
+      (question ? '就「' + question + '」而言，' : '') +
+      conclusion +
+      '。';
+  } else if (analysisType === 'ji') {
+    specialty =
+      '【吉凶研判】吉象' + counts.ji + '，中象' + counts.mid + '，凶象' + counts.xiong + '。' + conclusion + '。' + advice + '。';
+  } else if (analysisType === 'domain') {
+    specialty =
+      '【事域研判】所问「' + (question || domainName) + '」，梦象归于' + domainName + '。' + conclusion + '。' + advice + '。';
+  } else {
+    specialty = '【全盘解梦】' + conclusion + '。主导五行属' + dominant + '，' + advice + '。';
+  }
+
+  // 增强维度 01：逐条梦境元素拆解
+  var detailLines = results.length
+    ? results.map(function (r) {
+        return '【' + r.keyword + '】' + (ZG_CATEGORIES[r.cat] || r.cat) + '类 · ' + r.ji + '。' + r.interpretation;
+      })
+    : ['【无匹配】经典文库中未找到精确条目，当以梦中情绪与近事合参。'];
+
+  // 增强维度 02：五行归经
+  var wxCounts = {};
+  results.forEach(function (r) {
+    var wx = zgGetWuxing(r.keyword);
+    wxCounts[wx] = (wxCounts[wx] || 0) + 1;
+  });
+  var wxLine = Object.keys(wxCounts)
+    .map(function (wx) {
+      return wx + '（' + wxCounts[wx] + '象）';
+    })
+    .join('、');
+  var wuxing =
+    '【主导】此梦五行以' + dominant + '为主' + (wxLine ? '，兼见' + wxLine : '') + '。' +
+    '【取象】' + dominant + '气当令，' +
+    (dominant === '金'
+      ? '主决断、收敛，宜断舍离'
+      : dominant === '木'
+        ? '主生发、成长，宜谋新局'
+        : dominant === '水'
+          ? '主流动、智慧，宜顺势而为'
+          : dominant === '火'
+            ? '主热烈、显扬，宜把握时机'
+            : '主承载、稳固，宜守成蓄势') +
+    '。';
+
+  // 增强维度 03：背景关联
+  var background =
+    '周公解梦源自西周，后世辑为《周公解梦》经典文库，以梦象反推人事。' +
+    '本次梦境涉' + catNames.join('、') + '诸类，共' + (result.count || 0) + '象，综判为' + ji + '。' +
+    '本师' + zgEscInline(master.name) + '（' + zgEscInline(master.title || '解梦之祖') + '），其法承「' +
+    zgEscInline(master.style || '梦兆解析') + '」一脉，立言「' + zgEscInline(master.phrase || '梦者，魂之游也') + '」。';
+
+  // 增强维度 04：延伸参考
+  var references =
+    '【延伸阅读】一、《周公解梦》——梦象分类与吉凶断语之纲；二、《梦林玄解》——梦象与五行人事合参之法；三、本师' +
+    zgEscInline(master.name) + '所传「' + zgEscInline(master.style || '梦兆解析') + '」。' +
+    '【进阶方向】梦象与近事对照、五行归经、事域交叉，三者合观可深化对「' +
+    (keywords.join('、') || '此梦') + '」之理解。';
+
+  return {
+    opening: opening,
+    overview: overview,
+    specialty: specialty,
+    quote: fill(quoteTpl),
+    closing: fill(closingTpl),
+    enhanced: {
+      detailLines: detailLines,
+      wuxing: wuxing,
+      background: background,
+      references: references,
+    },
+  };
+}
+
+/** 增强维度模块渲染（细节拆解/五行归经/背景关联/延伸参考 + stagger 动效） */
+function zgRenderEnhancedModules(resultCard, masterId, analysisType, result) {
+  if (!resultCard || !window.MastersEngine) return;
+  var analysis = buildZhougongAnalysis(result, masterId, analysisType);
+  if (!analysis || !analysis.enhanced) return;
+  var enh = analysis.enhanced;
+  var master = window.MastersEngine.MASTERS[masterId];
+
+  var mods = [
+    { cls: 'enh-elem', ico: '🔍', label: '细节拆解 · 逐条梦境元素', num: '01', lines: enh.detailLines },
+    { cls: 'enh-wx', ico: '☯️', label: '五行归经 · 象义取用', num: '02', lines: [enh.wuxing] },
+    { cls: 'enh-bg', ico: '📜', label: '背景关联 · 梦学渊源', num: '03', lines: [enh.background] },
+    { cls: 'enh-ref', ico: '📚', label: '延伸参考 · 研读方向', num: '04', lines: [enh.references] },
+  ];
+
+  var html = '<div class="zg-enhanced">';
+  html += '<div class="zg-enhanced-header"><span class="deh-lead">' + zgEscInline(master ? master.name : '周公') + ' · 深度解析</span></div>';
+  var base = 5;
+  for (var i = 0; i < mods.length; i++) {
+    var m = mods[i];
+    var delay = ((base + i) * 0.1).toFixed(2);
+    html += '<div class="enh-mod ' + m.cls + '" style="--delay:' + delay + 's;">';
+    html +=
+      '<div class="enh-mod-title"><span class="emt-ico">' + m.ico + '</span><span>' + m.label + '</span><span class="emt-num">' + m.num + '</span></div>';
+    html += '<div class="enh-mod-body">';
+    for (var j = 0; j < m.lines.length; j++) {
+      var line = m.lines[j];
+      var lab = zgSectionLabel(line);
+      var body = zgSectionBody(line);
+      if (lab) {
+        html += '<span class="emb-line"><span class="tag">' + zgEscInline(lab) + '</span>' + zgEscInline(body) + '</span>';
+      } else {
+        html += '<span class="emb-line">' + zgEscInline(line) + '</span>';
+      }
+    }
+    html += '</div></div>';
+  }
+  html += '</div>';
+
+  var oldEnh = resultCard.querySelector('.zg-enhanced');
+  if (oldEnh) oldEnh.remove();
+  resultCard.insertAdjacentHTML('beforeend', html);
+}
+
+// 提取「【标签】正文」中【】内的标签名；无【】时返回空串
+function zgSectionLabel(line) {
+  var mm = String(line).match(/【([^】]*)】/);
+  return mm ? mm[1] : '';
+}
+// 提取「【标签】正文」中【】之后的正文；无【】时返回整行
+function zgSectionBody(line) {
+  var s = String(line);
+  var idx = s.indexOf('】');
+  return idx >= 0 ? s.slice(idx + 1) : s;
+}
+
+/** 初始化周公点评面板 */
+function initZhougongMasters(container, result) {
+  var panel = container.querySelector('#zhougong-masters-content');
+  if (!panel || !window.MastersEngine || !window.renderMastersPanel) return;
+
+  var masters = Object.values(window.MastersEngine.MASTERS || {}).filter(function (m) {
+    return m.category === '解梦';
+  });
+  if (masters.length === 0) return;
+
+  renderMastersPanel(panel, {
+    category: '解梦',
+    masters: masters,
+    analysisTypes: [
+      { id: 'full', label: '全盘解梦' },
+      { id: 'elements', label: '梦境拆解' },
+      { id: 'ji', label: '吉凶研判' },
+      { id: 'domain', label: '事域研判' },
+    ],
+    onAnalyze: function (masterId, analysisType) {
+      return buildZhougongAnalysis(result, masterId, analysisType);
+    },
+    resultData: result,
+  });
+
+  // 在分析按钮 click（capture）上挂增强模块渲染：
+  // renderMastersPanel 内部会 setTimeout(50ms) 调 renderMasterResult 填充主分析，
+  // 这里 capture 阶段先读选中态，再延时追加增强模块。
+  var analyzeBtn = panel.querySelector('#master-analyze-btn');
+  if (analyzeBtn) {
+    analyzeBtn.addEventListener(
+      'click',
+      function () {
+        var mSel = panel.querySelector('.master-card.selected');
+        var tSel = panel.querySelector('#master-type-tabs .tab-btn.active');
+        var mid = mSel && mSel.dataset.masterId ? mSel.dataset.masterId : null;
+        var tid = tSel && tSel.dataset.type ? tSel.dataset.type : 'full';
+        if (!mid) return;
+        setTimeout(function () {
+          var rc = panel.querySelector('#master-result-card');
+          if (rc) zgRenderEnhancedModules(rc, mid, tid, result);
+        }, 620);
+      },
+      true
+    );
+  }
 }
