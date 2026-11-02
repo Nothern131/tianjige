@@ -277,6 +277,22 @@
       .result-item .label { font-size: 0.72rem; color: var(--text3); margin-bottom: 4px; letter-spacing: 0.05em; }
       .result-item .value { font-size: 0.92rem; color: var(--text); font-family: var(--font-serif); }
 
+      /* ===== 高亮信息条 ===== */
+      .qimen-highlight {
+        display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px;
+      }
+      .qimen-highlight .hl-chip {
+        display: flex; align-items: baseline; gap: 8px;
+        padding: 8px 12px; background: rgba(184,154,92,0.06);
+        border: 1px solid rgba(184,154,92,0.18); border-radius: var(--radius-sm);
+      }
+      .qimen-highlight .hl-label {
+        font-size: 0.68rem; color: var(--text3); letter-spacing: 0.08em;
+      }
+      .qimen-highlight .hl-value {
+        font-size: 0.84rem; color: var(--gold-light); font-family: var(--font-serif);
+      }
+
       /* ===== Interpretation ===== */
       .interp-block {
         padding: 16px 20px; background: rgba(10,8,6,0.4); border-radius: var(--radius-sm);
@@ -496,6 +512,7 @@
   <!-- 九宫格展示 -->
   <div class="card fade-up hidden" id="gridCard">
     <div class="section-title">奇门九宫盘<span class="num">02</span></div>
+    <div id="qimenHighlight" class="qimen-highlight"></div>
     <div id="gridDisplay"></div>
     <div class="legend">
       <span><i class="dot dot-gold"></i> 地盘干</span>
@@ -619,6 +636,19 @@
 
     html += '</div>';
     display.innerHTML = html;
+
+    // 高亮信息条：把断局最常用的四项提到盘面顶部
+    var goodDoors = [];
+    gridOrder.forEach(function(pos){
+      if(pos === 5) return;
+      var c = cells[pos] || {};
+      if(auspiciousDoors.indexOf(c.door) >= 0) goodDoors.push(c.door + '·' + gongNames[pos]);
+    });
+    document.getElementById('qimenHighlight').innerHTML =
+      '<div class="hl-chip"><span class="hl-label">遁局</span><span class="hl-value">'+escHtml(result.period||'')+' '+escHtml(result.ju_num||'')+'局 · '+escHtml(result.san_yuan||'')+'</span></div>' +
+      '<div class="hl-chip"><span class="hl-label">值符</span><span class="hl-value">'+escHtml(result.zhi_fu_star||'')+' · '+escHtml(gongNames[result.zhi_fu_gong]||'')+'</span></div>' +
+      '<div class="hl-chip"><span class="hl-label">值使</span><span class="hl-value">'+escHtml(result.zhi_shi_door||'')+' · '+escHtml(gongNames[result.zhi_shi_gong]||'')+'</span></div>' +
+      '<div class="hl-chip"><span class="hl-label">三吉门</span><span class="hl-value">'+(goodDoors.length ? escHtml(goodDoors.join('、')) : '未现')+'</span></div>';
 
     // 基本信息
     info.innerHTML =
