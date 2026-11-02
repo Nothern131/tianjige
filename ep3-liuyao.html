@@ -1616,7 +1616,7 @@
       }
 
       // ===== 渲染六爻结果 =====
-      function renderLiuyaoResult(result, question) {
+      function renderLiuyaoResult(result, question, castLabel) {
         var area = document.getElementById('resultArea');
         if (!result) {
           area.innerHTML = '<p class="text-muted text-center">起卦失败，请重试</p>';
@@ -1637,6 +1637,16 @@
         var yueJian = result.yue_jian || '';
         var chongHe = result.chong_he || {};
         var interpretation = result.interpretation || '';
+        var benGong = result.original_gua && result.original_gua.gong ? result.original_gua.gong : '';
+        // 神煞按爻位归集，引擎已计算但此前未展示
+        var shenShaByYao = {};
+        if (result.shen_sha && result.shen_sha.length) {
+          for (var ssi = 0; ssi < result.shen_sha.length; ssi++) {
+            var ssItem = result.shen_sha[ssi];
+            if (!ssItem || !ssItem.yao) continue;
+            shenShaByYao[ssItem.yao] = (shenShaByYao[ssItem.yao] || []).concat(ssItem.sha || []);
+          }
+        }
 
         // ── 辅助计算 ──
         var jiaZiIdx = JIAZI_INDEX[riJian] || 0;
@@ -1807,6 +1817,7 @@
             '<td>' + escHtml(liuQin[ri] || '—') + tags + '</td>' +
             '<td>' + escHtml(liuShou[ri] || '—') + '</td>' +
             '<td style="font-size:0.82rem;color:var(--text2);">' + escHtml(najia[ri] ? najia[ri].gan + najia[ri].zhi : '—') + '</td>' +
+            '<td style="font-size:0.75rem;">' + (shenShaByYao[ri + 1] ? shenShaByYao[ri + 1].map(function (shaName) { return '<span class="yao-tag" style="background:rgba(120,160,120,0.15);color:#8fb88f;">' + escHtml(shaName) + '</span>'; }).join('') : '—') + '</td>' +
             '</tr>';
         }
 
@@ -1956,8 +1967,9 @@
           '<div class="card fade-up fade-up-d1">' +
             '<div class="section-title">核心断语 <span class="num">02</span></div>' +
             '<div class="verdict-card">' +
-              '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">' +
+              '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">' +
                 '<span class="trend-badge ' + trendBadgeClass + '" style="font-size:0.88rem;padding:5px 16px;">' + escHtml(trendBadgeLabel) + '</span>' +
+                '<span class="yao-tag" style="background:rgba(184,154,92,0.12);color:var(--gold);font-size:0.78rem;">' + escHtml(castLabel || '铜钱摇卦') + '</span>' +
                 '<span style="font-size:0.82rem;color:var(--text2);">' + escHtml(domainName) + ' · ' + escHtml(guaName) + '</span>' +
               '</div>' +
               '<div class="verdict-main" style="font-size:1.08rem;">' + verdictHtml + '</div>' +
@@ -1996,8 +2008,14 @@
         resultHtml +=
           '<div class="card fade-up fade-up-d3">' +
             '<div class="section-title">六爻排盘 <span class="num">04</span></div>' +
+            '<div style="font-size:0.8rem;color:var(--text2);margin-bottom:10px;line-height:1.8;">' +
+              '本卦<span class="highlight">' + escHtml(guaName) + '</span>' +
+              (benGong ? ' · 属<span class="highlight">' + escHtml(benGong) + '宫</span>' : '') +
+              ' · 世在<span class="highlight">' + escHtml(yaoPos(shiYao)) + '</span>' +
+              (yingYao ? ' · 应在<span class="highlight">' + escHtml(yaoPos(yingYao)) + '</span>' : '') +
+            '</div>' +
             '<div class="table-wrap"><table class="yao-table">' +
-              '<thead><tr><th>爻位</th><th>阴阳</th><th>动</th><th>六亲</th><th>六兽</th><th>纳甲</th></tr></thead>' +
+              '<thead><tr><th>爻位</th><th>阴阳</th><th>动</th><th>六亲</th><th>六兽</th><th>纳甲</th><th>神煞</th></tr></thead>' +
               '<tbody>' + yaoTableRows + '</tbody>' +
             '</table></div>' +
             '<div style="font-size:0.75rem;color:var(--text3);margin-top:8px;line-height:1.7;">' +
@@ -3488,6 +3506,7 @@
         var day = parseInt(document.getElementById('castDay').value) || new Date().getDate();
         var question = document.getElementById('question').value.trim();
         currentQuestion = question;
+        var castMethodLabel = { 'manual-shake': '铜钱摇卦', quick: '一键起卦', specify: '手工指定' }[source] || '铜钱摇卦';
 
         var liuyaoResult = null;
         try {
@@ -3499,7 +3518,7 @@
 
         var resultCard = document.getElementById('resultCard');
         resultCard.classList.remove('hidden');
-        renderLiuyaoResult(liuyaoResult, question);
+        renderLiuyaoResult(liuyaoResult, question, castMethodLabel);
 
         var mastersCard = document.getElementById('mastersCard');
         mastersCard.classList.remove('hidden');
