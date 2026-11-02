@@ -267,6 +267,12 @@
       .god-badge.badge-daji { background: rgba(224,96,96,0.15); color: var(--red-light); }
       .god-badge.badge-ji { background: rgba(90,138,90,0.15); color: var(--green-light); }
       .god-badge.badge-xiong { background: rgba(184,154,92,0.12); color: var(--gold-dim); }
+      .taiyi-cell .sishen-badge {
+        display: inline-block; margin-top: 3px; padding: 1px 6px;
+        font-size: 0.58rem; color: var(--purple-light);
+        background: rgba(150,120,200,0.12); border: 1px solid rgba(150,120,200,0.25);
+        border-radius: 10px;
+      }
 
       /* ===== Gods Bar ===== */
       .gods-bar {
@@ -687,6 +693,14 @@
       }
     });
 
+    // 四神落宫标记：图例已声明四神，盘面需实际标注
+    var sishenLabels = [
+      { key: 'tianyi', label: '天乙' },
+      { key: 'diyi', label: '地乙' },
+      { key: 'zhifu', label: '直符' },
+      { key: 'sishen', label: '四神' },
+    ];
+
     var html = '<div class="taiyi-grid">';
 
     TAIYI_GRID_ORDER.forEach(function(pos){
@@ -710,6 +724,11 @@
       if(isWufu){
         html += '<div style="font-size:0.6rem;color:var(--green-light);margin-top:2px;letter-spacing:0.04em;">福</div>';
       }
+      sishenLabels.forEach(function(item){
+        if(sishenGongs[item.key] === gName){
+          html += '<div class="sishen-badge">' + item.label + '</div>';
+        }
+      });
 
       // 神
       cellGods.forEach(function(g){
