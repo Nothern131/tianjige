@@ -893,7 +893,7 @@
         <label>闰月</label>
         <div class="lunar-month-check">
           <input type="checkbox" id="ziwei-lunar-leap" />
-          <span>该年有闰月</span>
+          <span id="ziwei-leap-label">该年有闰月</span>
         </div>
         <select id="ziwei-lunar-leap-month" style="display:none;margin-top:6px;">
           <option value="0">请选择闰月</option>
@@ -904,6 +904,7 @@
           <option value="9">闰九月</option><option value="10">闰十月</option>
           <option value="11">闰十一月</option><option value="12">闰十二月</option>
         </select>
+        <div style="font-size:0.7rem;color:var(--text3);margin-top:6px;">闰月整月按所闰之月排盘</div>
       </div>
       <div class="form-group">
         <label>出生时辰</label>
@@ -1006,7 +1007,7 @@
 </div>
 
 <script src="static/js/solarlunar.min.js"></script>
-<script src="static/js/ziwei-engine.js"></script>
+<script src="static/js/ziwei-engine.js?v=20261103"></script>
 <script src="static/js/domain-analysis.js"></script>
 <script src="static/js/masters-engine.js"></script>
 <script src="static/js/components/masters.js"></script>
@@ -1068,13 +1069,43 @@
   // 初始化：公历 pane 默认显示
   solarPane.classList.add('active');
 
-  // ===== 闰月复选框联动 =====
+  // ===== 闰月联动：按所选农历年校验真实闰月 =====
+  var lunarYearSelect = document.getElementById('ziwei-lunar-year');
   var leapCheckbox = document.getElementById('ziwei-lunar-leap');
   var leapMonthSelect = document.getElementById('ziwei-lunar-leap-month');
-  leapCheckbox.addEventListener('change', function(){
+  var leapLabel = document.getElementById('ziwei-leap-label');
+
+  function syncLeapMonth(){
+    var y = parseInt(lunarYearSelect.value, 10);
+    var leap = ZiWeiEngine.getLeapMonth(y);
+    if(!leap){
+      leapCheckbox.checked = false;
+      leapCheckbox.disabled = true;
+      leapLabel.textContent = '该年无闰月';
+      leapMonthSelect.innerHTML = '<option value="0">该年无闰月</option>';
+      leapMonthSelect.value = '0';
+      leapMonthSelect.style.display = 'none';
+      return;
+    }
+    leapCheckbox.disabled = false;
+    leapLabel.textContent = '该年闰' + leap + '月';
+    leapMonthSelect.innerHTML = '<option value="0">请选择闰月</option>' +
+      '<option value="' + leap + '">闰' + leap + '月</option>';
+    leapMonthSelect.value = leapCheckbox.checked ? String(leap) : '0';
     leapMonthSelect.style.display = leapCheckbox.checked ? '' : 'none';
-    if(!leapCheckbox.checked) leapMonthSelect.value = '0';
+  }
+
+  leapCheckbox.addEventListener('change', function(){
+    if(leapCheckbox.checked){
+      var leap = ZiWeiEngine.getLeapMonth(parseInt(lunarYearSelect.value, 10));
+      if(leap) leapMonthSelect.value = String(leap);
+    } else {
+      leapMonthSelect.value = '0';
+    }
+    leapMonthSelect.style.display = leapCheckbox.checked ? '' : 'none';
   });
+  lunarYearSelect.addEventListener('change', syncLeapMonth);
+  syncLeapMonth();
 
   // ===== 事域标签点击 =====
   var domainBtns = document.querySelectorAll('.domain-tag');
@@ -1111,6 +1142,7 @@
         isLunar: false
       };
     } else {
+      syncLeapMonth();
       var ly = parseInt(document.getElementById('ziwei-lunar-year').value) || 2000;
       var lm = parseInt(document.getElementById('ziwei-lunar-month').value) || 1;
       var ld = parseInt(document.getElementById('ziwei-lunar-day').value) || 1;
@@ -1118,6 +1150,11 @@
       var lGender = document.getElementById('ziwei-lunar-gender').value;
       var leap = document.getElementById('ziwei-lunar-leap').checked;
       var leapMonthVal = parseInt(document.getElementById('ziwei-lunar-leap-month').value) || 0;
+      if(leap){
+        var yearLeap = ZiWeiEngine.getLeapMonth(ly);
+        if(!yearLeap){ showToast('所选农历年无闰月'); return; }
+        if(leapMonthVal !== yearLeap){ showToast('该年闰' + yearLeap + '月，请重新选择闰月'); return; }
+      }
       params = {
         year: ly,
         month: leap ? leapMonthVal : lm,

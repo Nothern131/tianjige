@@ -148,9 +148,9 @@
         offset += lLeapDays(year);
       }
     }
-    // 闰月查询：先加 month 本月 + 闰月天数
+    // 闰月查询：闰月排在本月之后，只需加本月天数，不能再加闰月天数
     if (isLeap && leap > 0) {
-      offset += lMonthDays(year, month) + lLeapDays(year) + day - 1;
+      offset += lMonthDays(year, month) + day - 1;
     } else {
       offset += day - 1;
     }
@@ -733,7 +733,15 @@
     var leapMonth = params.leapMonth || 0;
     var lunar;
     if (isLunar) {
-      // 闰月排盘：闰月按该月本身的月份计算，但加一天偏移（传统习惯）
+      // 闰月口径：整月按所闰之月计（本项目统一口径，不做半月拆分）
+      if (leapMonth > 0) {
+        var yearLeap = lLeapMonth(year);
+        if (yearLeap !== leapMonth) {
+          throw new Error(
+            year + '年' + (yearLeap ? '闰' + yearLeap + '月，不存在闰' + leapMonth + '月' : '无闰月') + '，请核对农历闰月'
+          );
+        }
+      }
       lunar = { year: year, month: leapMonth > 0 ? leapMonth : month, day: day, isLeap: leapMonth > 0 };
     } else {
       lunar = solarToLunarApprox(year, month, day);
@@ -1521,6 +1529,7 @@
   /* ========== 公开 API ========== */
   global.ZiWeiEngine = {
     paipan: paipan,
+    getLeapMonth: lLeapMonth,
     GONG_NAMES: GONG_NAMES,
     calcDaXian: calcDaXian,
     calcLiuNian: calcLiuNian,
