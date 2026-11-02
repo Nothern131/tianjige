@@ -11,26 +11,27 @@ function generateTaiyiAnalysis(master, result, question) {
   var interp = result.interpretation || '';
   var opening = '', overview = '', specialty = '', quote = '', closing = '';
   var gods = result.gods || [];
-  var taiyiGong = result.taiyi_gong || '中';
-  var juShu = result.ju_shu || 0;
+  var taiyiGong = result.taiyi_gong || '—';
+  var taiyiYearIn = result.taiyi_year_in || 0;
+  var taiyiGod = result.taiyi_god || {};
 
   var taiyiQuotes = {
-    '王朴': '《太乙金镜式经》云："太乙者，天地之神也，运行于九宫之间，察天时之变，定人事之机。"',
+    '王朴': '《太乙金镜式经》云："太乙者，天帝之神也，主使十六神，知风雨水旱兵革饥馑疾疫灾害之国。"',
   };
 
   // 开口
   var gongDir = '';
   if (typeof TaiyiEngine !== 'undefined' && TaiyiEngine.GONG_DIR) {
-    gongDir = TaiyiEngine.GONG_DIR[taiyiGong] || '中';
+    gongDir = TaiyiEngine.GONG_DIR[taiyiGong] || '—';
   }
-  opening = '太乙积年' + _esc(String(result.ji_nian || '')) + '，局数' + _esc(String(juShu)) + '，太乙落' + _esc(taiyiGong) + '宫（' + _esc(gongDir) + '）。';
+  opening = '太乙积年' + _esc(String(result.ji_nian || '')) + '，' + _esc(result.epoch || '') + '，太乙落' + _esc(taiyiGong) + '宫（' + _esc(gongDir) + '），入宫第' + _esc(String(taiyiYearIn)) + '年，值' + _esc(taiyiGod.name || '—') + '神。';
   if (question) opening += '所问者：' + _esc(question) + '。';
 
   // 总论
   var jiCount = gods.filter(function (g) { return g.auspicious === '大吉' || g.auspicious === '吉'; }).length;
   var xiongCount = gods.filter(function (g) { return g.auspicious === '凶'; }).length;
-  var verdict = jiCount >= 10 ? '大吉' : jiCount >= 7 ? '平吉' : jiCount >= 4 ? '平' : '凶';
-  overview = '此局总断为' + verdict + '。十六神中，吉神' + jiCount + '尊，凶神' + xiongCount + '尊。太乙落' + taiyiGong + '宫，当察其卦象与神煞之交感。';
+  var verdict = taiyiGod.auspicious === '吉' ? '平吉' : '平';
+  overview = '此局总断为' + verdict + '。十六神吉凶各半，吉神' + jiCount + '尊、凶神' + xiongCount + '尊，须以太乙值神与五福落宫为断。太乙值' + _esc(taiyiGod.name || '—') + '神（' + _esc(taiyiGod.auspicious || '—') + '），落' + taiyiGong + '宫。';
 
   // 专论
   specialty = interp;
@@ -39,7 +40,7 @@ function generateTaiyiAnalysis(master, result, question) {
   }
 
   // 引经据典
-  quote = taiyiQuotes[master.name] || '《太乙金镜式经》云："太乙巡行九宫，吉凶自见，顺势者昌，逆势者亡。"';
+  quote = taiyiQuotes[master.name] || '《太乙金镜式经》云："太乙常考之，顺行八宫，不游中五，三年徙一宫。"';
 
   // 结语
   if (verdict === '大吉') {
