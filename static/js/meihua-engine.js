@@ -614,14 +614,17 @@
       xiaNum = parseInt(params.lower) || 1;
       movingNum = parseInt(params.moving) || 1;
     } else {
-      // datetime模式：用当前时间
+      // datetime模式：优先采用页面传入的时间参数，缺省才取当前时间
       var now = new Date();
       var year = now.getFullYear();
       var month = now.getMonth() + 1;
       var day = now.getDate();
-      shangNum = year;
-      xiaNum = month;
-      movingNum = day;
+      shangNum = params.upper != null ? parseInt(params.upper, 10) : year;
+      xiaNum = params.lower != null ? parseInt(params.lower, 10) : month;
+      movingNum = params.moving != null ? parseInt(params.moving, 10) : day;
+      if (isNaN(shangNum)) shangNum = year;
+      if (isNaN(xiaNum)) xiaNum = month;
+      if (isNaN(movingNum)) movingNum = day;
     }
 
     // 上卦、下卦、动爻
@@ -668,6 +671,7 @@
       original_gua: original,
       hu_gua: hu,
       changed_gua: changed,
+      moving_yao: movingYao,
       ti_gua: tiGua,
       yong_gua: yongGua,
       sheng_ke: shengKe,

@@ -214,6 +214,8 @@
       .gua-line.yang { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
       .gua-line.yin { display: flex; gap: 10px; align-items: center; }
       .gua-line.yin::before, .gua-line.yin::after { content: ''; flex: 1; height: 10px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 2px; }
+      .gua-line.moving { filter: drop-shadow(0 0 8px rgba(232,200,120,0.8)); transform: scaleX(1.08); }
+      .gua-moving-label { font-size: 0.68rem; color: var(--gold); margin-top: 8px; letter-spacing: 0.06em; }
       .gua-divider { width: 1px; height: 100px; background: linear-gradient(180deg,transparent,var(--border-gold),transparent); }
 
       /* ===== Result Items ===== */
@@ -237,6 +239,7 @@
       .tiyong-label { font-size: 0.75rem; color: var(--text3); margin-bottom: 8px; letter-spacing: 0.08em; }
       .tiyong-gua { font-size: 1.4rem; color: var(--gold-light); font-family: var(--font-serif); }
       .tiyong-desc { font-size: 0.72rem; color: var(--text3); margin-top: 8px; }
+      .tiyong-wx { font-size: 0.72rem; color: var(--gold); margin-top: 4px; letter-spacing: 0.05em; }
 
       .sheng-ke-box {
         padding: 20px; background: rgba(10,8,6,0.5); border-radius: var(--radius-sm);
@@ -497,7 +500,7 @@
   </div>
 </div>
 
-<script src="static/js/meihua-engine.js"></script>
+<script src="static/js/meihua-engine.js?v=20261103"></script>
 <script src="static/js/masters-engine.js"></script>
 <script src="static/js/components/masters.js"></script>
 <script src="static/js/components/profile.js?v=20260811"></script>
@@ -576,34 +579,42 @@
 
     var mainUpper = getBaguaByName(result.original_gua.shang_gua);
     var mainLower = getBaguaByName(result.original_gua.xia_gua);
+    var huUpper = getBaguaByName(result.hu_gua.shang_gua);
+    var huLower = getBaguaByName(result.hu_gua.xia_gua);
     var changeUpper = getBaguaByName(result.changed_gua.shang_gua);
     var changeLower = getBaguaByName(result.changed_gua.xia_gua);
+    var movingYao = result.moving_yao || 0;
+    var movingIdx = movingYao ? (6 - movingYao) : -1;
 
-    // 本卦线条（从下往上：下卦三爻，上卦三爻）
-    var mainLines = (mainLower ? mainLower.yao : [1,0,1]).concat(mainUpper ? mainUpper.yao : [1,1,1]).reverse();
-    var changeLines = (changeLower ? changeLower.yao : [1,0,1]).concat(changeUpper ? changeUpper.yao : [1,1,1]).reverse();
+    // 六爻统一按“上爻在上、初爻在下”渲染
+    function guaLines(upper, lower){
+      return (lower ? lower.yao : [1,0,1]).concat(upper ? upper.yao : [1,1,1]).reverse();
+    }
+    function guaBox(label, gua, lines, opts){
+      var h = '<div class="gua-box"><div class="gua-lines">';
+      lines.forEach(function(line, idx){
+        h += '<div class="gua-line '+(line===1?'yang':'yin')+((opts && opts.movingIdx===idx)?' moving':'')+'"></div>';
+      });
+      h += '</div><div class="gua-label">'+label+'</div><div class="gua-name">'+escHtml(gua.name)+'</div>';
+      if(opts && opts.note) h += '<div class="gua-moving-label">'+escHtml(opts.note)+'</div>';
+      h += '</div>';
+      return h;
+    }
 
-    var mainHtml = '<div class="gua-box"><div class="gua-lines">';
-    mainLines.forEach(function(line){
-      mainHtml += '<div class="gua-line '+(line===1?'yang':'yin')+'"></div>';
-    });
-    mainHtml += '</div><div class="gua-label">本卦</div><div class="gua-name">'+escHtml(result.original_gua.name)+'</div></div>';
+    var mainHtml = guaBox('本卦', result.original_gua, guaLines(mainUpper, mainLower), { movingIdx: movingIdx, note: movingYao ? '动爻 · 第'+movingYao+'爻' : '' });
+    var huHtml = guaBox('互卦', result.hu_gua, guaLines(huUpper, huLower));
+    var changeHtml = guaBox('变卦', result.changed_gua, guaLines(changeUpper, changeLower));
 
-    var changeHtml = '<div class="gua-box"><div class="gua-lines">';
-    changeLines.forEach(function(line){
-      changeHtml += '<div class="gua-line '+(line===1?'yang':'yin')+'"></div>';
-    });
-    changeHtml += '</div><div class="gua-label">变卦</div><div class="gua-name">'+escHtml(result.changed_gua.name)+'</div></div>';
-
-    display.innerHTML = mainHtml + '<div class="gua-divider"></div>' + changeHtml;
+    display.innerHTML = mainHtml + '<div class="gua-divider"></div>' + huHtml + '<div class="gua-divider"></div>' + changeHtml;
 
     // 卦象信息
     var tiWx = mainUpper ? mainUpper.wuxing : '';
     var yongWx = mainLower ? mainLower.wuxing : '';
     info.innerHTML =
       '<div class="result-item"><div class="label">本卦</div><div class="value">'+escHtml(result.original_gua.name)+'（'+escHtml(result.original_gua.shang_gua)+'上'+escHtml(result.original_gua.xia_gua)+'下）</div></div>' +
+      '<div class="result-item"><div class="label">互卦</div><div class="value">'+escHtml(result.hu_gua.name)+'（'+escHtml(result.hu_gua.shang_gua)+'上'+escHtml(result.hu_gua.xia_gua)+'下）</div></div>' +
       '<div class="result-item"><div class="label">变卦</div><div class="value">'+escHtml(result.changed_gua.name)+'（'+escHtml(result.changed_gua.shang_gua)+'上'+escHtml(result.changed_gua.xia_gua)+'下）</div></div>' +
-      '<div class="result-item"><div class="label">互卦</div><div class="value">'+escHtml(result.hu_gua.name)+'</div></div>' +
+      '<div class="result-item"><div class="label">动爻</div><div class="value">'+(movingYao ? '第 '+movingYao+' 爻' : '—')+'</div></div>' +
       '<div class="result-item"><div class="label">体卦</div><div class="value">'+escHtml(result.ti_gua)+'（'+escHtml(tiWx)+'）</div></div>' +
       '<div class="result-item"><div class="label">用卦</div><div class="value">'+escHtml(result.yong_gua)+'（'+escHtml(yongWx)+'）</div></div>';
 
@@ -616,9 +627,12 @@
     var box = document.getElementById('tiyongBox');
     var shengKe = document.getElementById('shengKeBox');
 
+    var wanwu = result.wanwu_leixiang || {};
+    var tiWx = wanwu['体卦'] ? (wanwu['体卦'].五行 || '') : '';
+    var yongWx = wanwu['用卦'] ? (wanwu['用卦'].五行 || '') : '';
     box.innerHTML =
-      '<div class="tiyong-card ti-card"><div class="tiyong-label">体卦（自己）</div><div class="tiyong-gua">'+escHtml(result.ti_gua)+'</div><div class="tiyong-desc">代表占问者自身</div></div>' +
-      '<div class="tiyong-card yong-card"><div class="tiyong-label">用卦（所问之事）</div><div class="tiyong-gua">'+escHtml(result.yong_gua)+'</div><div class="tiyong-desc">代表所问之事的现状</div></div>';
+      '<div class="tiyong-card ti-card"><div class="tiyong-label">体卦（自己）</div><div class="tiyong-gua">'+escHtml(result.ti_gua)+'</div><div class="tiyong-wx">五行 · '+escHtml(tiWx)+'</div><div class="tiyong-desc">代表占问者自身</div></div>' +
+      '<div class="tiyong-card yong-card"><div class="tiyong-label">用卦（所问之事）</div><div class="tiyong-gua">'+escHtml(result.yong_gua)+'</div><div class="tiyong-wx">五行 · '+escHtml(yongWx)+'</div><div class="tiyong-desc">代表所问之事的现状</div></div>';
 
     var relation = result.sheng_ke;
     var relClass = relation.等级 >= 3 ? 'good' : relation.等级 >= 2 ? 'warn' : 'bad';
