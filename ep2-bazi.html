@@ -442,6 +442,46 @@
         color: var(--gold-dim);
         font-size: 0.62rem;
       }
+      .canggan-item .cg-qi {
+        font-size: 0.58rem;
+        margin-left: 3px;
+        color: var(--text3);
+      }
+      .canggan-item .cg-qi.qi-ben {
+        color: var(--gold);
+      }
+      .canggan-item .cg-qi.qi-zhong {
+        color: #9a8f7a;
+      }
+      .canggan-item .cg-qi.qi-yu {
+        color: #6f6a60;
+      }
+
+      /* ===== 十神力量分布 ===== */
+      .shishen-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+      }
+      .shishen-summary .ss-title {
+        width: 100%;
+        font-size: 0.72rem;
+        color: var(--text3);
+      }
+      .shishen-summary .ss-item {
+        font-size: 0.78rem;
+        color: var(--text2);
+      }
+      .shishen-summary .ss-item b {
+        color: var(--gold-light);
+        font-weight: 600;
+      }
+      .shishen-summary .ss-item.ss-max b {
+        color: var(--gold);
+      }
 
       /* ===== Wuxing Stats ===== */
       .wuxing-bars {
@@ -1722,6 +1762,7 @@
               <tbody id="cangganBody"></tbody>
             </table>
           </div>
+          <div class="shishen-summary" id="shishenSummary"></div>
         </div>
 
         <!-- 五行统计 -->
@@ -2930,11 +2971,17 @@
             if (ss && ss.地支藏干) {
               for (var j = 0; j < ss.地支藏干.length; j++) {
                 var cg = ss.地支藏干[j];
+                var qiLabels = ['本气', '中气', '余气'];
+                var qiClasses = ['ben', 'zhong', 'yu'];
                 cgItems +=
                   '<span class="canggan-item"><span class="cg-gan">' +
                   cg.干 +
                   '</span> <span class="cg-shishen">' +
                   cg.十神 +
+                  '</span><span class="cg-qi qi-' +
+                  (qiClasses[j] || 'yu') +
+                  '">' +
+                  (qiLabels[j] || '余气') +
                   '</span></span>';
               }
             }
@@ -2958,6 +3005,52 @@
               '</tr>';
           }
           document.getElementById('cangganBody').innerHTML = cangganHtml;
+
+          // 十神力量分布：日干不计，只叠加年/月/时天干与四支藏干
+          var ssCount = {};
+          for (var si = 0; si < pillarKeys.length; si++) {
+            var ssPillar = shishen[pillarKeys[si]];
+            if (!ssPillar) continue;
+            if (si !== 2 && ssPillar.天干十神) {
+              ssCount[ssPillar.天干十神] = (ssCount[ssPillar.天干十神] || 0) + 1;
+            }
+            if (ssPillar.地支藏干) {
+              for (var sj = 0; sj < ssPillar.地支藏干.length; sj++) {
+                var ssCg = ssPillar.地支藏干[sj];
+                if (ssCg.十神) ssCount[ssCg.十神] = (ssCount[ssCg.十神] || 0) + 1;
+              }
+            }
+          }
+          var ssGroups = [
+            { name: '比劫', keys: ['比肩', '劫财'] },
+            { name: '食伤', keys: ['食神', '伤官'] },
+            { name: '财星', keys: ['正财', '偏财'] },
+            { name: '官杀', keys: ['正官', '七杀', '偏官'] },
+            { name: '印星', keys: ['正印', '偏印', '枭神'] },
+          ];
+          var ssMax = 0,
+            ssGroupCounts = [];
+          for (var sg = 0; sg < ssGroups.length; sg++) {
+            var sgCount = 0;
+            for (var sk = 0; sk < ssGroups[sg].keys.length; sk++) {
+              sgCount += ssCount[ssGroups[sg].keys[sk]] || 0;
+            }
+            ssGroupCounts.push(sgCount);
+            if (sgCount > ssMax) ssMax = sgCount;
+          }
+          var ssHtml = '<div class="ss-title">十神力量分布（含藏干，日干不计）</div>';
+          for (var sg2 = 0; sg2 < ssGroups.length; sg2++) {
+            ssHtml +=
+              '<span class="ss-item' +
+              (ssGroupCounts[sg2] === ssMax && ssMax > 0 ? ' ss-max' : '') +
+              '">' +
+              ssGroups[sg2].name +
+              ' <b>' +
+              ssGroupCounts[sg2] +
+              '</b></span>';
+          }
+          if (ssMax === 0) ssHtml += '<span class="ss-item">十神力量均衡</span>';
+          document.getElementById('shishenSummary').innerHTML = ssHtml;
 
           // 五行统计
           var wuxingCount = BaziEngine.countWuxing ? BaziEngine.countWuxing(pillars) : {};
