@@ -289,46 +289,88 @@
       .si-ke-item .sk-label {
         font-size: 0.62rem; color: var(--text2); letter-spacing: 0.1em; margin-bottom: 4px;
       }
-      .si-ke-item .sk-value {
-        font-family: var(--font-serif); font-size: 1.1rem; color: var(--text);
-      }
+      .si-ke-item.ke-gan { background: rgba(184,154,92,0.07); border-color: var(--border-gold); }
+      .sk-pair { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin: 2px 0 3px; }
+      .sk-shang { font-family: var(--font-serif); font-size: 1.3rem; color: var(--gold-light); }
+      .sk-arrow { font-size: 0.58rem; color: var(--text3); }
+      .sk-xia { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text2); }
+      .sk-meta { font-size: 0.6rem; color: var(--text3); line-height: 1.6; }
 
       /* ===== Tian Pan (12 zhi ring) ===== */
       .tianpan-board {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
+        grid-template-rows: repeat(4, minmax(86px, auto));
+        gap: 6px; max-width: 560px; margin: 0 auto;
       }
       .tianpan-cell {
         position: relative;
         background: var(--gold-subtle);
         border: 1px solid var(--border);
         border-radius: var(--radius-sm);
-        padding: 12px; text-align: center;
+        padding: 7px 5px; text-align: center;
         transition: all 0.25s;
         opacity: 0; transform: translateY(10px);
+        display: flex; flex-direction: column; justify-content: center;
       }
       .tianpan-cell.in { opacity: 1; transform: translateY(0); }
       .tianpan-cell:hover {
         border-color: var(--gold-dim);
         box-shadow: 0 0 14px rgba(184,154,92,0.2);
       }
+      /* 4×4 环位，顺时针：顶巳午未申 / 右酉戌 / 底亥子丑寅 / 左卯辰 */
+      .tianpan-cell[data-zhi="巳"] { grid-area: 1 / 1 / 2 / 2; }
+      .tianpan-cell[data-zhi="午"] { grid-area: 1 / 2 / 2 / 3; }
+      .tianpan-cell[data-zhi="未"] { grid-area: 1 / 3 / 2 / 4; }
+      .tianpan-cell[data-zhi="申"] { grid-area: 1 / 4 / 2 / 5; }
+      .tianpan-cell[data-zhi="酉"] { grid-area: 2 / 4 / 3 / 5; }
+      .tianpan-cell[data-zhi="戌"] { grid-area: 3 / 4 / 4 / 5; }
+      .tianpan-cell[data-zhi="亥"] { grid-area: 4 / 4 / 5 / 5; }
+      .tianpan-cell[data-zhi="子"] { grid-area: 4 / 3 / 5 / 4; }
+      .tianpan-cell[data-zhi="丑"] { grid-area: 4 / 2 / 5 / 3; }
+      .tianpan-cell[data-zhi="寅"] { grid-area: 4 / 1 / 5 / 2; }
+      .tianpan-cell[data-zhi="卯"] { grid-area: 3 / 1 / 4 / 2; }
+      .tianpan-cell[data-zhi="辰"] { grid-area: 2 / 1 / 3 / 2; }
+
+      .tianpan-center {
+        grid-area: 2 / 2 / 4 / 4;
+        border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
+        background: rgba(184,154,92,0.05);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center; padding: 8px 6px; gap: 2px;
+      }
+      .tpc-title { font-family: var(--font-serif); font-size: 0.72rem; color: var(--gold); letter-spacing: 0.12em; }
+      .tpc-main { font-size: 0.64rem; color: var(--text2); line-height: 1.5; }
+      .tpc-main b { color: var(--gold-light); }
+      .tpc-ke { margin-top: 5px; font-family: var(--font-serif); font-size: 0.86rem; color: var(--gold-light); }
+      .tpc-chuan { font-size: 0.64rem; color: var(--text2); }
+      .tpc-hint { margin-top: 5px; font-size: 0.54rem; color: var(--text3); line-height: 1.5; }
+
       .tp-top {
         display: flex; flex-direction: column; gap: 2px;
         border-bottom: 1px dashed var(--border-gold);
-        padding-bottom: 6px; margin-bottom: 8px;
+        padding-bottom: 4px; margin-bottom: 5px;
       }
       .tp-di {
-        font-family: var(--font-serif); font-size: 0.78rem; color: var(--text2);
+        font-family: var(--font-serif); font-size: 0.7rem; color: var(--text2);
         letter-spacing: 0.06em;
       }
+      .tp-badges { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; min-height: 12px; }
+      .tp-badge { font-size: 0.5rem; line-height: 1.2; border: 1px solid currentColor; border-radius: 3px; padding: 0 3px; }
+      .tp-badge.gan { color: var(--gold-light); }
+      .tp-badge.zhi { color: var(--red-light); }
+      .tp-badge.gui { color: var(--blue-light); }
       .tp-tian {
-        font-family: var(--font-serif); font-size: 1.5rem; color: var(--gold-light);
-        text-shadow: 0 0 14px rgba(184,154,92,0.4);
+        font-family: var(--font-serif); font-size: 1.32rem; color: var(--gold-light);
+        text-shadow: 0 0 14px rgba(184,154,92,0.4); line-height: 1.3;
       }
       .tp-jiang {
-        font-size: 0.72rem; color: var(--blue-light); margin-top: 4px;
+        font-size: 0.64rem; color: var(--blue-light); margin-top: 2px;
       }
+      .tianpan-legend {
+        max-width: 560px; margin: 8px auto 0; font-size: 0.62rem; color: var(--text3); line-height: 1.7;
+      }
+      .tianpan-legend span { color: var(--text2); }
 
       /* ===== Ke Level ===== */
       .ke-level {
@@ -578,7 +620,12 @@
       @media (max-width: 600px) {
         .wrap { padding: 24px 14px 40px; }
         .card, .glass-card { padding: 18px; }
-        .tianpan-board { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .tianpan-board { gap: 4px; }
+        .tianpan-cell { padding: 5px 3px; }
+        .tp-tian { font-size: 1.05rem; }
+        .tp-jiang { font-size: 0.55rem; }
+        .tpc-title { font-size: 0.62rem; }
+        .tpc-main, .tpc-chuan { font-size: 0.54rem; }
         .sanchuan-row { gap: 6px; }
         .chuan-card { min-width: 90px; padding: 10px; }
         .chuan-card .chuan-value { font-size: 1.3rem; }
@@ -708,6 +755,24 @@
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       }
 
+      // 日干寄宫：甲寅、乙辰、丙戊巳、丁己未、庚申、辛戌、壬亥、癸丑
+      var GAN_JI_GONG = { 甲:'寅', 乙:'辰', 丙:'巳', 丁:'未', 戊:'巳', 己:'未', 庚:'申', 辛:'戌', 壬:'亥', 癸:'丑' };
+      var WX_KE = { 木:'土', 火:'金', 土:'水', 金:'木', 水:'火' };      // 我克
+      var WX_KE_BY = { 木:'金', 火:'水', 土:'木', 金:'火', 水:'土' };   // 克我
+      var WX_SHENG = { 木:'火', 火:'土', 土:'金', 金:'水', 水:'木' };   // 我生
+
+      /** 六亲：同我兄弟、我克妻财、克我官鬼、我生子孙、生我父母 */
+      function liuQinOf(dayGan, zhi){
+        var dw = GAN_WX[dayGan] || '土';
+        var zw = ZHI_WX[zhi] || '土';
+        if(zw === dw) return '兄弟';
+        if(WX_KE[dw] === zw) return '妻财';
+        if(WX_KE_BY[dw] === zw) return '官鬼';
+        if(WX_SHENG[dw] === zw) return '子孙';
+        if(WX_SHENG[zw] === dw) return '父母';
+        return '—';
+      }
+
       // ===== 默认日期 = 当天 =====
       var dateInput = document.getElementById('daliuren-date');
       var now = new Date();
@@ -773,25 +838,31 @@
         }, 400);
       });
 
-      // ===== 渲染课式总览（天盘12格 + 四课 + 信息） =====
+      // ===== 渲染课式总览（4×4 十二辰环盘 + 中心信息格 + 四课） =====
       function renderOverview(result){
         var el = document.getElementById('overviewContent');
         var tianPan = result.tian_pan || {};
         var tianJiang = result.tian_jiang || {};
         var siKe = result.si_ke || {};
+        var sc = result.san_chuan || {};
         var ZHI = DaLiuRenEngine.ZHI || [];
+        var riGan = result.ri_gan || '?';
+        var riZhi = result.ri_zhi || '?';
+        var ganJi = siKe.ganJi || GAN_JI_GONG[riGan] || '';
+        var zhanShi = currentHourStr || result.zhan_shi || '?';
+        var yueJiang = String(result.yue_jiang || '?');
 
         var html = '';
         // 基本信息
         html += '<div class="info-panel">';
         html += '<div class="info-item info-gold"><div class="label">起课日期</div><div class="value"><span class="highlight">' + escHtml(String(result.date || '')) + '</span></div></div>';
-        html += '<div class="info-item info-blue"><div class="label">占时</div><div class="value"><span class="highlight">' + escHtml(String(currentHourStr || result.zhan_shi || '?')) + '</span></div></div>';
-        html += '<div class="info-item info-green"><div class="label">月将</div><div class="value"><span class="highlight">' + escHtml(String(result.yue_jiang_name || result.yue_jiang || '?')) + '</span>（' + escHtml(String(result.yue_jiang || '?')) + '）</div></div>';
-        html += '<div class="info-item info-purple"><div class="label">日干</div><div class="value"><span class="highlight">' + escHtml(String(result.ri_gan || '?')) + '</span></div></div>';
-        html += '<div class="info-item info-red"><div class="label">日支</div><div class="value"><span class="highlight">' + escHtml(String(result.ri_zhi || '?')) + '</span></div></div>';
+        html += '<div class="info-item info-blue"><div class="label">占时</div><div class="value"><span class="highlight">' + escHtml(String(zhanShi)) + '</span></div></div>';
+        html += '<div class="info-item info-green"><div class="label">月将</div><div class="value"><span class="highlight">' + escHtml(String(result.yue_jiang_name || yueJiang)) + '</span>（' + escHtml(yueJiang) + '）</div></div>';
+        html += '<div class="info-item info-purple"><div class="label">日干支</div><div class="value"><span class="highlight">' + escHtml(riGan + riZhi) + '</span></div></div>';
+        html += '<div class="info-item info-red"><div class="label">课体</div><div class="value"><span class="highlight">' + escHtml(String(result.ke_name || '?')) + '</span> · ' + escHtml(String(result.level || '中平')) + '</div></div>';
         html += '</div>';
 
-        // 天盘 12 格
+        // 4×4 十二辰环盘
         html += '<div style="margin-top:22px;"><div class="section-title" style="font-size:0.9rem;">天盘 · 十二辰<span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;margin-left:8px;">地盘 × 天盘 × 天将</span></div>';
         html += '<div class="tianpan-board" id="tianpanBoard">';
         for(var i = 0; i < 12; i++){
@@ -799,21 +870,44 @@
           var tian = tianPan[di];
           var jiang = tianJiang[di];
           html += '<div class="tianpan-cell" style="--i:' + i + '" data-zhi="' + escHtml(di) + '">';
-          html += '<div class="tp-top">';
-          html += '<div class="tp-di">' + escHtml(di) + '（地）</div>';
-          html += '</div>';
+          html += '<div class="tp-top"><div class="tp-di">' + escHtml(di) + '（地）</div>';
+          html += '<div class="tp-badges">';
+          if(di === ganJi) html += '<span class="tp-badge gan">干寄</span>';
+          if(di === riZhi) html += '<span class="tp-badge zhi">日支</span>';
+          if(jiang === '贵人') html += '<span class="tp-badge gui">贵人</span>';
+          html += '</div></div>';
           html += '<div class="tp-tian">' + escHtml(String(tian || '?')) + '</div>';
           html += '<div class="tp-jiang">' + escHtml(String(jiang || '')) + '</div>';
           html += '</div>';
         }
-        html += '</div></div>';
+        // 中心格（CSS 已显式定位 2/2 → 4/4）
+        html += '<div class="tianpan-center">';
+        html += '<div class="tpc-title">天地盘</div>';
+        html += '<div class="tpc-main">月将 <b>' + escHtml(String(result.yue_jiang_name || yueJiang)) + '</b><br>占时 <b>' + escHtml(String(zhanShi)) + '</b><br>日课 <b>' + escHtml(riGan + riZhi) + '</b></div>';
+        html += '<div class="tpc-ke">' + escHtml(String(result.ke_name || '?')) + '课</div>';
+        html += '<div class="tpc-chuan">三传 ' + escHtml(String(sc.chu || '?') + ' → ' + String(sc.zhong || '?') + ' → ' + String(sc.mo || '?')) + '</div>';
+        html += '<div class="tpc-hint">内圈地支为地盘<br>外显大字为天盘上神</div>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="tianpan-legend">徽标：<span>干寄</span> 日干寄宫 · <span>日支</span> 占事日支 · <span>贵人</span> 贵人临宫。天将按地盘宫位排布。</div></div>';
 
-        // 四课
-        html += '<div style="margin-top:22px;"><div class="section-title" style="font-size:0.9rem;">四课<span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;margin-left:8px;">日干寄宫 ' + escHtml(String(siKe.ganJi || '?')) + '</span></div>';
+        // 四课（上神临下神 + 天将 + 六亲）
+        html += '<div style="margin-top:22px;"><div class="section-title" style="font-size:0.9rem;">四课<span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;margin-left:8px;">日干 ' + escHtml(riGan) + ' 寄宫 ' + escHtml(String(ganJi || '?')) + '</span></div>';
         html += '<div class="si-ke-grid">';
+        var keLabels = ['第一课 · 干上', '第二课 · 干上神', '第三课 · 支上', '第四课 · 支上神'];
         ['ke1','ke2','ke3','ke4'].forEach(function(k, idx){
           var ke = siKe[k];
-          html += '<div class="si-ke-item"><div class="sk-label">第' + (idx+1) + '课</div><div class="sk-value">' + (ke ? escHtml(ke.xia) + ' 上 ' + escHtml(ke.shang) : '?') + '</div></div>';
+          var isGan = idx < 2;
+          html += '<div class="si-ke-item' + (isGan ? ' ke-gan' : '') + '">';
+          html += '<div class="sk-label">' + keLabels[idx] + '</div>';
+          if(ke){
+            var shang = String(ke.shang || '?');
+            html += '<div class="sk-pair"><span class="sk-shang">' + escHtml(shang) + '</span><span class="sk-arrow">临</span><span class="sk-xia">' + escHtml(String(ke.xia || '?')) + '</span></div>';
+            html += '<div class="sk-meta">天将 ' + escHtml(String(tianJiang[shang] || '—')) + ' · 六亲 ' + escHtml(liuQinOf(riGan, shang)) + '</div>';
+          } else {
+            html += '<div class="sk-pair"><span class="sk-shang">?</span></div><div class="sk-meta">—</div>';
+          }
+          html += '</div>';
         });
         html += '</div></div>';
 
