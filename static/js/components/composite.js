@@ -125,6 +125,17 @@ function renderCompositeComponent() {
       '<option value="戌时">戌时 (19-21)</option><option value="亥时">亥时 (21-23)</option>' +
       '</select></div>' +
       '</div>' +
+      '<div class="form-row mb-8" style="margin-top:12px;">' +
+      '<div class="form-group"><label class="form-label">风水坐山（仅空间层参考）</label><select class="form-select" id="comp-fs-sitting">' +
+      '<option value="子" selected>子</option><option value="午">午</option><option value="卯">卯</option><option value="酉">酉</option>' +
+      '<option value="乾">乾</option><option value="坤">坤</option><option value="艮">艮</option><option value="巽">巽</option>' +
+      '</select></div>' +
+      '<div class="form-group"><label class="form-label">风水朝向</label><select class="form-select" id="comp-fs-facing">' +
+      '<option value="子">子</option><option value="午" selected>午</option><option value="卯">卯</option><option value="酉">酉</option>' +
+      '<option value="乾">乾</option><option value="坤">坤</option><option value="艮">艮</option><option value="巽">巽</option>' +
+      '</select></div>' +
+      '<div class="form-group"><label class="form-label">建房年份（元运）</label><input type="number" class="form-input" id="comp-fs-year" min="1900" max="2100" placeholder="默认今年"></div>' +
+      '</div>' +
       '<div class="form-group" style="margin-top:12px;">' +
       '<label class="form-label">🔮 所问之事（输入您的具体问题，系统将自动识别事域）</label>' +
       '<input type="text" class="form-input" id="comp-question" placeholder="例如：最近事业晋升机会如何？这段感情有结果吗？">' +
@@ -254,6 +265,9 @@ function handleCompositeSubmit(container) {
     var question = container.querySelector('#comp-question').value.trim();
     var divDate = container.querySelector('#comp-div-date').value.trim();
     var divHour = container.querySelector('#comp-div-hour').value;
+    var fsSitting = container.querySelector('#comp-fs-sitting').value;
+    var fsFacing = container.querySelector('#comp-fs-facing').value;
+    var fsYear = container.querySelector('#comp-fs-year').value.trim();
 
     var methodChecks = container.querySelectorAll('input[name="compMethod"]:checked');
     var methods = [];
@@ -305,6 +319,10 @@ function handleCompositeSubmit(container) {
       // 实时盘用独立占测时间，不能拿出生日期时间代替
       date: divDate || todayStr,
       hour: divHour || '巳时',
+      // 风水只作空间层环境参考，由引擎按 weight 0 排除出合参打分
+      fengshuiSitting: fsSitting,
+      fengshuiFacing: fsFacing,
+      fengshuiBuildYear: fsYear ? parseInt(fsYear, 10) : 0,
       zhugeNum1: Math.floor(Math.random() * 999) + 1,
       zhugeNum2: Math.floor(Math.random() * 999) + 1,
       zhugeNum3: Math.floor(Math.random() * 999) + 1,
@@ -457,6 +475,11 @@ function renderCompositeResult(container, data, question, methods, masterIds, en
   var trend = data.trend || 'flat';
   var synthesis = data.synthesis || {};
   var results = data.individualResults || [];
+  var scoringCount = 0;
+  for (var sci = 0; sci < results.length; sci++) {
+    var scw = results[sci].weight;
+    if (typeof scw !== 'number' || scw > 0) scoringCount++;
+  }
 
   var html = '<div class="fade-in">';
 
@@ -465,26 +488,35 @@ function renderCompositeResult(container, data, question, methods, masterIds, en
   var trendText = trend === 'up' ? '呈上升态势' : trend === 'down' ? '需谨慎应对' : '趋于平稳';
   var stars = score >= 90 ? '★★★★★' : score >= 75 ? '★★★★☆' : score >= 60 ? '★★★☆☆' : score >= 45 ? '★★☆☆☆' : '★☆☆☆☆';
 
-  html +=
-    '' +
-    '<div class="glass-card mb-24" style="text-align:center;">' +
-    '<div style="font-size:0.9rem;color:var(--text-muted);margin-bottom:8px;">' +
-    safeHtml(synthesis.consensus || '合参推演') +
-    '</div>' +
-    '<div style="font-family:var(--font-serif);font-size:3.5rem;font-weight:900;color:var(--gold-light);line-height:1;">' +
-    score +
-    '</div>' +
-    '<div style="font-size:1.1rem;color:var(--gold);margin:8px 0;">' +
-    stars +
-    '</div>' +
-    '<div style="font-size:0.9rem;color:var(--text-muted);">' +
-    trendEmoji +
-    ' ' +
-    trendText +
-    ' · ' +
-    results.length +
-    ' 门术数参与</div>' +
-    '</div>';
+  if (scoringCount > 0) {
+    html +=
+      '' +
+      '<div class="glass-card mb-24" style="text-align:center;">' +
+      '<div style="font-size:0.9rem;color:var(--text-muted);margin-bottom:8px;">' +
+      safeHtml(synthesis.consensus || '合参推演') +
+      '</div>' +
+      '<div style="font-family:var(--font-serif);font-size:3.5rem;font-weight:900;color:var(--gold-light);line-height:1;">' +
+      score +
+      '</div>' +
+      '<div style="font-size:1.1rem;color:var(--gold);margin:8px 0;">' +
+      stars +
+      '</div>' +
+      '<div style="font-size:0.9rem;color:var(--text-muted);">' +
+      trendEmoji +
+      ' ' +
+      trendText +
+      ' · ' +
+      scoringCount +
+      ' 门参与评分' +
+      (results.length > scoringCount ? ' · ' + (results.length - scoringCount) + ' 门空间参考' : '') +
+      '</div>' +
+      '</div>';
+  } else {
+    html +=
+      '<div class="glass-card mb-24" style="text-align:center;">' +
+      '<div style="font-size:0.9rem;color:var(--text-muted);">本次所选均为空间层（风水），只输出环境参考，不参与吉凶评分。请再选择命局、事占或时空层术数。</div>' +
+      '</div>';
+  }
 
   // --- 时间语义 ---
   if (results.length > 0) {
@@ -504,7 +536,9 @@ function renderCompositeResult(container, data, question, methods, masterIds, en
       trend: engineParams
         ? '起盘 ' + safeHtml(engineParams.date || '未填') + ' ' + safeHtml(engineParams.hour || '')
         : '本次起盘',
-      space: '按坐向与朝向',
+      space: engineParams
+        ? '坐' + safeHtml(engineParams.fengshuiSitting || '未填') + '向' + safeHtml(engineParams.fengshuiFacing || '未填')
+        : '按坐向与朝向',
     };
     html +=
       '<div class="glass-card mb-24"><h3 style="color:var(--gold-light);margin-bottom:12px;">⏱ 时间语义 · 本次推演基准</h3>';
@@ -535,6 +569,7 @@ function renderCompositeResult(container, data, question, methods, masterIds, en
       var starMini = r.score >= 75 ? '★★★☆☆' : r.score >= 60 ? '★★☆☆☆' : '★☆☆☆☆';
       var verdictColor = r.score >= 72 ? '#c8d8a8' : r.score >= 55 ? '#e6e2d8' : '#d8a8a8';
       var trendArr = r.trend === 'up' ? '↑' : r.trend === 'down' ? '↓' : '→';
+      var isSpace = COMPOSITE_METHOD_TIME[r.method] === 'space';
       html +=
         '' +
         '<div class="glass-card" style="padding:14px;background:rgba(255,255,255,0.02);">' +
@@ -561,6 +596,7 @@ function renderCompositeResult(container, data, question, methods, masterIds, en
         ' ' +
         trendArr +
         '</div>' +
+        (isSpace ? '<div style="font-size:0.66rem;color:var(--text-muted);">环境分 · 不计入</div>' : '') +
         '</div>' +
         '</div>' +
         '<div style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6;">' +

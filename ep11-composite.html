@@ -492,6 +492,27 @@
           </div>
         </div>
 
+        <div class="form-row" style="margin-top:16px;">
+          <div class="form-group">
+            <label>风水坐山（仅空间层参考）</label>
+            <select id="comp-fs-sitting">
+              <option value="子" selected>子</option><option value="午">午</option><option value="卯">卯</option><option value="酉">酉</option>
+              <option value="乾">乾</option><option value="坤">坤</option><option value="艮">艮</option><option value="巽">巽</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>风水朝向</label>
+            <select id="comp-fs-facing">
+              <option value="子">子</option><option value="午" selected>午</option><option value="卯">卯</option><option value="酉">酉</option>
+              <option value="乾">乾</option><option value="坤">坤</option><option value="艮">艮</option><option value="巽">巽</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>建房年份（元运）</label>
+            <input type="number" id="comp-fs-year" min="1900" max="2100" placeholder="默认今年" />
+          </div>
+        </div>
+
         <div class="form-group" style="margin-top:16px;">
           <label>所问之事（可选，决定事域交叉方向）</label>
           <div class="domain-tags" id="comp-domain-tags">
@@ -590,9 +611,10 @@
     <script src="static/js/zhougong-engine.js"></script>
     <script src="static/js/daliuren-engine.js"></script>
     <script src="static/js/ziwei-engine.js"></script>
+    <script src="static/js/fengshui-engine.js?v=20260729"></script>
     <script src="static/js/domain-analysis.js?v=20261102"></script>
     <script src="static/js/engine-registry.js"></script>
-    <script src="static/js/composite-engine.js?v=20261102"></script>
+    <script src="static/js/composite-engine.js?v=20261102b"></script>
     <script>
     (function(){
       'use strict';
@@ -601,14 +623,16 @@
       var TIME_NATURE = {
         natal: { key:'natal', label:'非实时盘', short:'非实时', hint:'以出生信息定盘，长期有效，同一出生信息重复推演结果稳定' },
         realtime: { key:'realtime', label:'实时盘', short:'实时', hint:'以本次起盘时刻为基准，只反映当下事机，重算会换盘' },
-        trend: { key:'trend', label:'时空盘', short:'时空', hint:'按起盘时刻推大势节奏，中长期参考' }
+        trend: { key:'trend', label:'时空盘', short:'时空', hint:'按起盘时刻推大势节奏，中长期参考' },
+        space: { key:'space', label:'空间层', short:'空间', hint:'按坐向与朝向判环境格局，只作环境参考，不参与吉凶打分' }
       };
 
       // 分层元数据：命局=长期基线；事占=当下事机；时空=大势节奏
       var LAYERS = {
         natal: { key:'natal', name:'命局层', short:'命', nature:'natal', horizon:'长期基线', desc:'看底色、格局与长期趋势' },
         event: { key:'event', name:'事占层', short:'事', nature:'realtime', horizon:'当下事机', desc:'看此事成不成、何时动' },
-        trend: { key:'trend', name:'时空层', short:'势', nature:'trend', horizon:'大势节奏', desc:'看外部时空大势与节奏' }
+        trend: { key:'trend', name:'时空层', short:'势', nature:'trend', horizon:'大势节奏', desc:'看外部时空大势与节奏' },
+        space: { key:'space', name:'空间层', short:'空', nature:'space', horizon:'环境参考', desc:'看坐向与朝向的环境格局，不参与吉凶打分' }
       };
 
       var MAX_METHODS = 3;
@@ -623,7 +647,9 @@
         { id:'daliuren', name:'大六壬', icon:'🌊', layer:'event', nature:'realtime', checked:false },
         { id:'zhuge', name:'诸葛', icon:'📜', layer:'event', nature:'realtime', checked:false },
         { id:'zhougong', name:'解梦', icon:'🌙', layer:'event', nature:'realtime', timeNote:'按梦境当下', checked:false },
-        { id:'taiyi', name:'太乙', icon:'🌌', layer:'trend', nature:'trend', checked:false }
+        { id:'taiyi', name:'太乙', icon:'🌌', layer:'trend', nature:'trend', checked:false },
+        // 风水只提供环境参考，不占吉凶评分；合参层单独列为空间层
+        { id:'fengshui', name:'风水', icon:'🏔️', layer:'space', nature:'space', checked:false }
       ];
 
       var METHOD_NAMES = {};
@@ -636,6 +662,10 @@
         if(!uiParams) return '';
         if(nature === 'natal'){
           return '本命盘 · ' + (uiParams.birthDate || '未填') + ' ' + (uiParams.birthTime || '未填');
+        }
+        if(nature === 'space'){
+          return '空间 · 坐' + (uiParams.fengshuiSitting || '未填') + '向' + (uiParams.fengshuiFacing || '未填') +
+            (uiParams.fengshuiBuildYear ? ' · ' + uiParams.fengshuiBuildYear + '年建' : '');
         }
         return '起盘 · ' + (uiParams.date || '未填') + ' ' + (uiParams.hour || '未填');
       }
@@ -799,6 +829,9 @@
         var hour = document.getElementById('comp-hour').value;
         var question = document.getElementById('comp-question').value.trim();
         var dreamText = document.getElementById('comp-dream-text').value.trim();
+        var fsSitting = document.getElementById('comp-fs-sitting').value;
+        var fsFacing = document.getElementById('comp-fs-facing').value;
+        var fsYear = document.getElementById('comp-fs-year').value.trim();
         currentQuestion = question;
 
         var selected = [];
@@ -842,7 +875,10 @@
           date: date,
           hour: hour,
           question: question,
-          dreamText: dreamText
+          dreamText: dreamText,
+          fengshuiSitting: fsSitting,
+          fengshuiFacing: fsFacing,
+          fengshuiBuildYear: fsYear ? parseInt(fsYear, 10) : 0
         };
 
         CompositeEngine.run(selected, uiParams).then(function(data){
@@ -919,7 +955,7 @@
 
       // 按时效分组，供总览与研判说明「哪些盘实时、哪些盘长期」
       function natureGroups(results){
-        var groups = { natal: [], realtime: [], trend: [] };
+        var groups = { natal: [], realtime: [], trend: [], space: [] };
         results.forEach(function(r){
           var m = METHOD_META[r.method];
           var n = m ? m.nature : 'realtime';
@@ -931,6 +967,7 @@
       }
 
       function layerVerdict(score, layer){
+        if(layer === 'space') return '只作环境参考，不参与吉凶打分与命事互证';
         if(layer === 'natal'){
           if(score >= 72) return '长期底色偏吉，格局可支撑较大目标';
           if(score >= 60) return '长期底色平稳，宜稳中求进';
@@ -997,6 +1034,23 @@
           html += '<div class="warn-block">⚠️ ' + missing.map(function(k){ return escHtml(METHOD_NAMES[k] || k); }).join('、') +
             ' 未返回有效结果（已排除出评分），请检查输入参数。</div>';
         }
+
+        // 只选空间层时不做吉凶评分，避免凭空给一个合参总分
+        var scoringResults = results.filter(function(r){ return !(typeof r.weight === 'number' && r.weight <= 0); });
+        if(scoringResults.length === 0){
+          html += '<div class="layer-note">本次所选均为空间层（风水），只输出环境参考，不参与吉凶评分。请再选择命局、事占或时空层术数。</div>';
+          var onlyGroups = natureGroups(results);
+          html += '<div class="time-note"><div class="tn-title">时间语义 · 本次推演基准</div>';
+          ['space'].forEach(function(n){
+            if(!onlyGroups[n].length) return;
+            var T = TIME_NATURE[n];
+            html += '<div class="tn-row"><b>' + T.label + '</b>' + escHtml(onlyGroups[n].join('、')) + '：' +
+              T.hint + '。' + escHtml(momentText(n, uiParams)) + '。</div>';
+          });
+          html += '</div>';
+          document.getElementById('scoreContent').innerHTML = html;
+          return;
+        }
         html += '<div class="layer-overview">';
         ['natal', 'event', 'trend'].forEach(function(layer){
           var rs = layerResults(results, layer);
@@ -1022,7 +1076,7 @@
 
         var groups = natureGroups(results);
         html += '<div class="time-note"><div class="tn-title">时间语义 · 本次推演基准</div>';
-        ['natal', 'realtime', 'trend'].forEach(function(n){
+        ['natal', 'realtime', 'trend', 'space'].forEach(function(n){
           if(!groups[n].length) return;
           var T = TIME_NATURE[n];
           html += '<div class="tn-row"><b>' + T.label + '</b>' +
@@ -1044,7 +1098,7 @@
         if(missing.length > 0){
           html += '<div class="warn-block">⚠️ 本次未产出：' + missing.map(function(k){ return escHtml(METHOD_NAMES[k] || k); }).join('、') + '</div>';
         }
-        ['natal', 'event', 'trend'].forEach(function(layer){
+        ['natal', 'event', 'trend', 'space'].forEach(function(layer){
           var rs = layerResults(results, layer);
           if(rs.length === 0) return;
           var L = LAYERS[layer];
@@ -1179,6 +1233,7 @@
         var natal = layerResults(results, 'natal');
         var event = layerResults(results, 'event');
         var trend = layerResults(results, 'trend');
+        var space = layerResults(results, 'space');
         var nScore = natal.length ? layerScore(natal) : null;
         var eScore = event.length ? layerScore(event) : null;
         var tScore = trend.length ? layerScore(trend) : null;
@@ -1186,7 +1241,7 @@
         var html = '';
         var groups = natureGroups(results);
         html += '<div class="mutual-block time-block"><div class="mb-title">时间语义 · 本次推演基准</div><div class="mb-body">';
-        ['natal', 'realtime', 'trend'].forEach(function(n){
+        ['natal', 'realtime', 'trend', 'space'].forEach(function(n){
           if(!groups[n].length) return;
           var T = TIME_NATURE[n];
           html += '<div class="tn-row"><b>' + T.label + '</b>' + escHtml(groups[n].join('、')) + '：' +
@@ -1211,6 +1266,12 @@
             escHtml(trend.map(function(r){ return r.name || r.method; }).join('、')) + '综合 ' + tScore + ' 分。' +
             layerVerdict(tScore, 'trend') + '。此层作为外部节奏参考，不替代命局与事占。' +
             '<br><span style="color:var(--text3);font-size:0.78rem;">' + escHtml(momentText('trend', uiParams)) + '</span></div></div>';
+        }
+        if(space.length){
+          html += '<div class="mutual-block"><div class="mb-title">空间层 · 环境参考</div><div class="mb-body">' +
+            escHtml(space.map(function(r){ return r.name || r.method; }).join('、')) + '：' +
+            '按坐向与朝向判环境格局，只作环境参考，不参与吉凶打分与命事互证。' +
+            '<br><span style="color:var(--text3);font-size:0.78rem;">' + escHtml(momentText('space', uiParams)) + '</span></div></div>';
         }
 
         if(natal.length && event.length){

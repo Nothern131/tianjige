@@ -217,6 +217,23 @@
           verdict = raw.总体运势 || '中平';
           break;
         }
+        case 'fengshui': {
+          var sit = raw.sitting || '?';
+          var fac = raw.facing || '?';
+          var period = raw.periodNum || '?';
+          var fsLevel = raw.overallLevel || '中平';
+          var bestName = raw.bestPalace ? raw.bestPalace.name : '未判';
+          var worstName = raw.worstPalace ? raw.worstPalace.name : '未判';
+          summary = '坐' + sit + '向' + fac + '，' + period + '运飞星，环境整体' + fsLevel + '。';
+          detail =
+            '最佳方位：' + bestName + '；需留意方位：' + worstName + '。' +
+            (raw.sanBanGua ? raw.sanBanGua.desc : '') +
+            (raw.qiXingDJ ? raw.qiXingDJ.desc : '') +
+            (raw.chengMenJue ? raw.chengMenJue.desc : '');
+          keyInsights = ['坐向与元运定飞星格局', '最佳方位：' + bestName, '需留意方位：' + worstName];
+          verdict = '环境' + fsLevel;
+          break;
+        }
         default:
           summary = key + '推演完成';
           detail = raw.interpretation || (typeof raw === 'string' ? raw : JSON.stringify(raw).substring(0, 100));
@@ -240,7 +257,8 @@
       summary: summary,
       detail: detail,
       keyInsights: keyInsights,
-      weight: cfg.weight || 1.0,
+      // 显式保留 0 权重：风水等空间层只作环境参考，不能因 || 兜底变成 1.0 参与打分
+      weight: typeof cfg.weight === 'number' ? cfg.weight : 1.0,
     };
   }
 
@@ -540,19 +558,35 @@
     return lines.join('\n');
   }
   function synthesizeResults(results, question) {
-    var count = results.length;
+    // 空间层（weight 0）只作环境参考，不参与吉凶评分与融洽研判
+    var scoring = [];
+    for (var si = 0; si < results.length; si++) {
+      var sw = results[si].weight;
+      if (typeof sw !== 'number' || sw > 0) scoring.push(results[si]);
+    }
+    var count = scoring.length;
     if (count === 0) {
-      return { consensus: '无足够数据', confidence: 'low', narrative: '请至少选择一种术数进行推演。' };
+      return {
+        consensus: '仅空间参考',
+        confidence: 'low',
+        narrative:
+          '所选术数均为空间参考层（风水），按坐向与朝向判环境格局，不参与吉凶评分。请再选择命局、事占或时空层的术数。',
+        count: 0,
+        spread: 0,
+        hasConflict: false,
+        domainAnalysis: null,
+        harmonyAnalysis: null,
+      };
     }
 
     var totalWeight = 0,
       weightedSum = 0;
     var scores = [];
-    for (var i = 0; i < results.length; i++) {
-      var w = results[i].weight || 1.0;
+    for (var i = 0; i < scoring.length; i++) {
+      var w = typeof scoring[i].weight === 'number' ? scoring[i].weight : 1.0;
       totalWeight += w;
-      weightedSum += (results[i].score || 60) * w;
-      scores.push(results[i].score || 60);
+      weightedSum += (scoring[i].score || 60) * w;
+      scores.push(scoring[i].score || 60);
     }
     var avgScore = Math.round(weightedSum / totalWeight);
     var maxScore = Math.max.apply(null, scores);
@@ -563,17 +597,18 @@
     var domainKey = null;
     if (global.DomainAnalysis && global.DomainAnalysis.analyze && question && question.trim()) {
       try {
-        var firstMethod = results[0] && results[0].method ? results[0].method : 'bazi';
+        var firstMethod = scoring[0] && scoring[0].method ? scoring[0].method : 'bazi';
         var daResult = global.DomainAnalysis.analyze(firstMethod, {}, question);
         if (daResult && daResult.domain) {
           domainKey = daResult.domain.key;
         }
       } catch (daErr) {
+        if (typeof console !== 'undefined' && console.warn) console.warn('[合参] 事域识别失败，回退综合运势', daErr);
       }
     }
     if (!domainKey) domainKey = 'career';
 
-    var domainAnalysis = crossDomainAnalysis(results, question, domainKey);
+    var domainAnalysis = crossDomainAnalysis(scoring, question, domainKey);
 
     var narrative = '';
     var consensusLabel = '';
@@ -581,15 +616,15 @@
     var questionText = question || '当前运势';
     var domainName = domainAnalysis.domainName;
 
-    var sorted = results.slice().sort(function (a, b) {
+    var sorted = scoring.slice().sort(function (a, b) {
       return b.score - a.score;
     });
     var topMethod = sorted[0];
     var bottomMethod = sorted[sorted.length - 1];
 
     var detailBreakdown = '';
-    for (var di = 0; di < results.length; di++) {
-      var r = results[di];
+    for (var di = 0; di < scoring.length; di++) {
+      var r = scoring[di];
       detailBreakdown += '■ ' + r.icon + ' ' + r.name + '（' + r.score + '分）：' + r.summary;
       if (r.keyInsights && r.keyInsights.length > 0) {
         detailBreakdown += ' 关键提示：' + r.keyInsights.slice(0, 2).join('；');
@@ -745,7 +780,7 @@
       spread: range,
       hasConflict: !isConsistent,
       domainAnalysis: domainAnalysis,
-      harmonyAnalysis: harmonyAnalysis(results),
+      harmonyAnalysis: harmonyAnalysis(scoring),
     };
   }
 
@@ -846,11 +881,12 @@
     var totalW = 0,
       sumW = 0;
     for (var i = 0; i < results.length; i++) {
-      var w = results[i].weight || 1.0;
+      var w = typeof results[i].weight === 'number' ? results[i].weight : 1.0;
+      if (w <= 0) continue; // 空间层不计分
       totalW += w;
       sumW += (results[i].score || 60) * w;
     }
-    return Math.round(sumW / totalW);
+    return totalW ? Math.round(sumW / totalW) : 60;
   }
 
   function calculateOverallTrend(results) {
@@ -858,6 +894,8 @@
     var up = 0,
       down = 0;
     for (var i = 0; i < results.length; i++) {
+      var w = typeof results[i].weight === 'number' ? results[i].weight : 1.0;
+      if (w <= 0) continue; // 空间层不参与趋势
       if (results[i].trend === 'up') up++;
       if (results[i].trend === 'down') down++;
     }
