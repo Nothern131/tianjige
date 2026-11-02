@@ -340,23 +340,6 @@ textarea {
   line-height: 2;
   letter-spacing: 0.1em;
 }
-.ep-series-link {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-.ep-series-link a {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  text-decoration: none;
-  letter-spacing: 0.04em;
-  padding: 2px 0;
-  transition: color 0.25s;
-}
-.ep-series-link a:hover {
-  color: var(--gold);
-}
 
 /* === Main Content === */
 #main-content {
