@@ -456,10 +456,10 @@
       </p>
       <textarea class="question-input" id="wordInput" rows="3" placeholder="例如：今日财运" style="resize:none;"></textarea>
       <div class="char-count" id="charCount" style="display:none;">
-        字数：<strong id="charNum">0</strong> 字
+        字数：<strong id="charNum">0</strong> 字　·　上卦 <strong id="charUpper">0</strong> 字　/　下卦 <strong id="charLower">0</strong> 字
       </div>
       <p style="font-size:0.75rem;color:var(--text3);margin-top:12px;text-align:center;">
-        字数 ÷ 8 取余为上卦，字数 ÷ 8 取余为下卦，字数 ÷ 6 取余为动爻
+        字数平分：少一字为上卦，多一字为下卦；以总字数取动爻（至少两字）
       </p>
     </div>
 
@@ -532,10 +532,15 @@
   var wordInput = document.getElementById('wordInput');
   var charCount = document.getElementById('charCount');
   var charNum = document.getElementById('charNum');
+  var charUpper = document.getElementById('charUpper');
+  var charLower = document.getElementById('charLower');
   wordInput.addEventListener('input',function(){
     var len = this.value.replace(/\s/g,'').length;
     charCount.style.display = len > 0 ? 'block' : 'none';
     charNum.textContent = len;
+    var upperLen = Math.floor(len / 2);
+    charUpper.textContent = upperLen;
+    charLower.textContent = len - upperLen;
   });
 
   // ===== 随机数字 =====
@@ -788,7 +793,7 @@
       if(isNaN(num1)||isNaN(num2)||num1<1||num2<1){ alert('请输入有效的数字（1-999）'); return; }
     }else if(mode==='word'){
       wordCount=wordInput.value.replace(/\s/g,'').length;
-      if(wordCount===0){ alert('请输入至少一个字符'); return; }
+      if(wordCount<2){ alert('字数起卦至少两字；一字占需按笔画，暂未开放'); return; }
     }
 
     var result;
@@ -797,21 +802,24 @@
         method: 'datetime',
         upper: year,
         lower: month * 10 + day,
-        moving: ((hour * 100 + minute) % 6) + 1
+        moving: hour * 100 + minute
       });
     }else if(mode==='number'){
       result = MeihuaEngine.divine({
         method: 'number',
         upper: num1,
         lower: num2,
-        moving: ((num1 + num2) % 6) + 1
+        moving: num1 + num2
       });
     }else{
+      // 字占：少一字为上卦，多一字为下卦；总字数取动爻
+      var upperCount = Math.floor(wordCount / 2);
+      var lowerCount = wordCount - upperCount;
       result = MeihuaEngine.divine({
         method: 'number',
-        upper: wordCount,
-        lower: wordCount,
-        moving: (wordCount % 6) + 1
+        upper: upperCount,
+        lower: lowerCount,
+        moving: wordCount
       });
     }
 
