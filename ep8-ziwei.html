@@ -470,13 +470,13 @@
         box-shadow: 0 4px 18px rgba(0,0,0,0.35); border-color: var(--border-gold); z-index: 1;
       }
       /* 12 宫 + 中心 显式定位到 4×4 grid（grid-area 行/列）
-         标准紫微盘地支环（仿文墨天机专业版）：
-         顶排 巳 午 未 申 / 行2 酉[中]寅 / 行3 戌[中]卯 / 底排 丑 辰 子 亥 */
+         标准紫微盘地支环，顺时针：
+         顶排 巳 午 未 申 / 右列 酉 戌 / 底排 寅 丑 子 亥（左→右）/ 左列 卯 辰 */
       .pc-si   { grid-area: 1 / 1 / 2 / 2; } .pc-wu  { grid-area: 1 / 2 / 2 / 3; }
       .pc-wei  { grid-area: 1 / 3 / 2 / 4; } .pc-shen{ grid-area: 1 / 4 / 2 / 5; }
-      .pc-you  { grid-area: 2 / 1 / 3 / 2; } .pc-yin { grid-area: 2 / 4 / 3 / 5; }
-      .pc-xu   { grid-area: 3 / 1 / 4 / 2; } .pc-mao { grid-area: 3 / 4 / 4 / 5; }
-      .pc-chou { grid-area: 4 / 1 / 5 / 2; } .pc-chen{ grid-area: 4 / 2 / 5 / 3; }
+      .pc-you  { grid-area: 2 / 4 / 3 / 5; } .pc-yin { grid-area: 4 / 1 / 5 / 2; }
+      .pc-xu   { grid-area: 3 / 4 / 4 / 5; } .pc-mao { grid-area: 3 / 1 / 4 / 2; }
+      .pc-chou { grid-area: 4 / 2 / 5 / 3; } .pc-chen{ grid-area: 2 / 1 / 3 / 2; }
       .pc-zi   { grid-area: 4 / 3 / 5 / 4; } .pc-hai { grid-area: 4 / 4 / 5 / 5; }
       .pan-center { grid-area: 2 / 2 / 4 / 4; }
       .pan-cell.expanded { background: rgba(184,154,92,0.09); z-index: 2; box-shadow: 0 0 0 1px var(--border-gold) inset; }
