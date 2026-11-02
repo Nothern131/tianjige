@@ -550,11 +550,48 @@
       @keyframes footIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
       .foot-row { display: grid; grid-template-columns: 38px 1fr; gap: 6px; margin-bottom: 5px; align-items: center; transition: background 0.2s ease; }
       .foot-row:hover { background: rgba(184,154,92,0.04); }
+      .foot-row.active { background: rgba(184,154,92,0.08); box-shadow: inset 2px 0 0 var(--gold); }
       .foot-row:last-child { margin-bottom: 0; }
       .foot-label { font-family: var(--font-serif); font-size: 0.7rem; color: var(--gold); letter-spacing: 0.1em; }
       .foot-content { font-size: 0.66rem; color: var(--text2); line-height: 1.5; }
       .foot-content b { color: var(--text); font-weight: 600; }
       .foot-content .gong-name { color: var(--gold-light); }
+
+      /* 时间层切换：本命 / 大限 / 流年 / 流月 / 流日 在环盘上叠加 */
+      .pan-layer-bar { margin: 18px auto 0; max-width: 560px; display: flex; flex-wrap: wrap; gap: 6px; }
+      .pan-layer-btn {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: 999px;
+        color: var(--text2); font-family: var(--font-serif); font-size: 0.7rem;
+        padding: 4px 12px; cursor: pointer; letter-spacing: 0.06em; transition: color 0.25s, border-color 0.25s, background 0.25s;
+      }
+      .pan-layer-btn:hover { color: var(--gold-light); border-color: var(--gold-dim); background: var(--gold-glow); }
+      .pan-layer-btn.active { color: var(--gold-light); border-color: var(--gold); background: var(--gold-glow); box-shadow: 0 0 10px rgba(184,154,92,0.2); }
+      .pan-layer-btn[data-layer="daxian"].active { color: var(--purple-light); border-color: var(--purple); box-shadow: 0 0 10px rgba(122,106,160,0.25); }
+      .pan-layer-btn[data-layer="liunian"].active { color: var(--red-light); border-color: var(--red); box-shadow: 0 0 10px rgba(192,64,64,0.22); }
+      .pan-layer-btn[data-layer="liuyue"].active { color: var(--blue-light); border-color: var(--blue); box-shadow: 0 0 10px rgba(74,106,138,0.25); }
+      .pan-layer-btn[data-layer="liuri"].active { color: var(--green-light); border-color: var(--green); box-shadow: 0 0 10px rgba(90,138,90,0.25); }
+
+      .pan-layer-sum {
+        max-width: 560px; margin: 8px auto 0; padding: 8px 12px;
+        background: rgba(184,154,92,0.04); border: 1px dashed var(--border-gold); border-radius: var(--radius-sm);
+        font-size: 0.68rem; color: var(--text2); line-height: 1.7;
+      }
+      .pan-layer-sum b { color: var(--gold-light); }
+      .pan-layer-sum .sh { color: var(--text3); }
+
+      .pan-cell.is-layer { outline: 1px solid var(--gold); outline-offset: -2px; }
+      .pan-cell.is-layer.layer-daxian { outline-color: var(--purple); background: rgba(122,106,160,0.08); }
+      .pan-cell.is-layer.layer-liunian { outline-color: var(--red); background: rgba(192,64,64,0.07); }
+      .pan-cell.is-layer.layer-liuyue { outline-color: var(--blue); background: rgba(74,106,138,0.09); }
+      .pan-cell.is-layer.layer-liuri { outline-color: var(--green); background: rgba(90,138,90,0.08); }
+      .pc-layer-badge {
+        font-size: 0.54rem; padding: 0 4px; border: 1px solid currentColor;
+        border-radius: 3px; margin-left: 4px; vertical-align: 1px;
+      }
+      .pc-layer-badge.layer-daxian { color: var(--purple-light); }
+      .pc-layer-badge.layer-liunian { color: var(--red-light); }
+      .pc-layer-badge.layer-liuyue { color: var(--blue-light); }
+      .pc-layer-badge.layer-liuri { color: var(--green-light); }
       @media(max-width:600px){
         .pan-cell { min-height: 84px; padding: 6px 5px; }
         .pc-gong { font-size: 0.82rem; }
@@ -980,6 +1017,7 @@
   var currentResult = null;
   var currentQuestion = '';
   var currentDomain = '';
+  var currentPanLayer = 'natal';
 
   var DOMAIN_NAMES = {
     career: '事业', love: '感情', wealth: '财运', health: '健康',
@@ -1147,13 +1185,57 @@
 
   function buildDaXianMap(result){
     // 返回 { 地支: {startAge,endAge,ganZhi} }
-    var age = calcCurrentAge();
+    var age = calcCurrentAge(result);
     var dx = ZiWeiEngine.calcDaXian(result, age);
     var map = {};
     dx.list.forEach(function(item){
       map[item.gongZhi] = item;
     });
     return map;
+  }
+
+  /** 时间层：本命 / 大限 / 流年 / 流月 / 流日 → 该层命宫落点与四化 */
+  function getLayerInfo(result, layer){
+    var now = new Date();
+    function inputNum(id){
+      var el = document.getElementById(id);
+      var v = parseInt(el && el.value, 10);
+      return isNaN(v) ? null : v;
+    }
+    if(layer === 'daxian'){
+      var dx = ZiWeiEngine.calcDaXian(result, calcCurrentAge(result));
+      var idx = dx.currentLimit >= 0 ? dx.currentLimit : 0;
+      var it = dx.list[idx];
+      if(!it) return null;
+      return {
+        layer: 'daxian', label: '大限', zhi: it.gongZhi, ganZhi: it.ganZhi,
+        siHua: it.siHua || {}, gongName: it.gongName,
+        range: it.startAge + '-' + it.endAge + '岁'
+      };
+    }
+    if(layer === 'liunian' || layer === 'liuyue' || layer === 'liuri'){
+      var year = inputNum('ziwei-liunian-year') || now.getFullYear();
+      var month = inputNum('ziwei-liunian-month') || (now.getMonth() + 1);
+      var day = inputNum('ziwei-liunian-day') || now.getDate();
+      var obj;
+      if(layer === 'liunian') obj = ZiWeiEngine.calcLiuNian(result, year);
+      else if(layer === 'liuyue') obj = ZiWeiEngine.calcLiuYue(result, year, month);
+      else obj = ZiWeiEngine.calcLiuRi(result, year, month, day);
+      var label = layer === 'liunian' ? '流年' : (layer === 'liuyue' ? '流月' : '流日');
+      var range = layer === 'liunian' ? obj.year + '年'
+        : (layer === 'liuyue' ? obj.year + '年' + obj.month + '月（农历）'
+        : obj.year + '年' + obj.month + '月' + obj.day + '日（公历）');
+      return {
+        layer: layer, label: label, zhi: obj.mingGongZhi, ganZhi: obj.ganZhi,
+        siHua: obj.siHua || {}, gongName: obj.gongName, range: range
+      };
+    }
+    var natalZhi = result['命宫'];
+    var natalGan = (result.gongGan || {})[natalZhi] || '';
+    return {
+      layer: 'natal', label: '本命', zhi: natalZhi, ganZhi: natalGan + natalZhi,
+      siHua: result['四化'] || {}, gongName: '命宫', range: '先天格局'
+    };
   }
 
   function getMingZhu(shi){
@@ -1165,18 +1247,43 @@
     return SHEN_ZHU[shi] || '';
   }
 
-  function renderPanBoard(result){
+  function renderPanBoard(result, layer){
     var el = document.getElementById('panBoardContainer');
     if(!el) return;
+    layer = layer || currentPanLayer || 'natal';
+    currentPanLayer = layer;
     var gongs = result['十二宫'] || [];
     var siHua = result['四化'] || {};
     var dxMap = buildDaXianMap(result);
+    var layerInfo = getLayerInfo(result, layer);
 
     // 地支 → 宫对象
     var byZhi = {};
     gongs.forEach(function(g){ byZhi[g.zhi] = g; });
 
-    var html = '<div class="pan-board">';
+    var html = '';
+    // 顶部时间层切换：同一张命盘叠加本命/大限/流年/流月/流日
+    var layerBtns = [
+      { id:'natal', name:'本命' }, { id:'daxian', name:'大限' },
+      { id:'liunian', name:'流年' }, { id:'liuyue', name:'流月' }, { id:'liuri', name:'流日' }
+    ];
+    html += '<div class="pan-layer-bar">';
+    layerBtns.forEach(function(b){
+      html += '<button type="button" class="pan-layer-btn'+(b.id === layer ? ' active' : '')+
+        '" data-layer="'+b.id+'">'+b.name+'</button>';
+    });
+    html += '</div>';
+    if(layerInfo){
+      var lg = byZhi[layerInfo.zhi] || {};
+      var starText = (lg.stars || []).slice(0, 4).join('、') || '空宫';
+      var lsh = layerInfo.siHua || {};
+      html += '<div class="pan-layer-sum"><b>'+escHtml(layerInfo.label)+'</b> '+escHtml(layerInfo.range)+
+        ' · '+escHtml(layerInfo.ganZhi)+' · 命宫临<span style="color:var(--gold-light);">'+
+        escHtml(layerInfo.gongName)+'</span>（'+escHtml(starText)+'）'+
+        '<br><span class="sh">四化 禄['+(lsh.lu||'—')+'] 权['+(lsh.quan||'—')+
+        '] 科['+(lsh.ke||'—')+'] 忌['+(lsh.ji||'—')+']</span></div>';
+    }
+    html += '<div class="pan-board">';
     // 扁平 16 格直接进单一 4×4 grid；中心 2×2（行2-3 列2-3）放命主信息格
     var cellIdx = 0;
     for(var r=0; r<4; r++){
@@ -1208,11 +1315,14 @@
         if(!g) continue;
         var cls = classifyStars(g.stars || []);
         var dx = dxMap[g.zhi];
-        var clsAttr = g.isMingGong ? ' is-ming' : (g.isShenGong ? ' is-shen' : '');
+        var isLayerCell = !!(layerInfo && g.zhi === layerInfo.zhi);
+        var clsAttr = (g.isMingGong ? ' is-ming' : (g.isShenGong ? ' is-shen' : '')) +
+          (isLayerCell ? ' is-layer layer-'+layer : '');
         html += '<div class="pan-cell pc-'+ZHI_CLASS[zhi]+clsAttr+'" data-gong="'+escHtml(g.name)+'" style="--i:'+cellIdx+++'">';
         // 顶：宫名 + 大限年龄
         html += '<div class="pc-top">';
-        html += '<div class="pc-gong">'+escHtml(g.name)+(g.isMingGong?'<span class="ming-badge">命</span>':'')+(g.isShenGong?'<span class="shen-badge">身</span>':'')+'</div>';
+        html += '<div class="pc-gong">'+escHtml(g.name)+(g.isMingGong?'<span class="ming-badge">命</span>':'')+(g.isShenGong?'<span class="shen-badge">身</span>':'')+
+          (isLayerCell && layer !== 'natal' ? '<span class="pc-layer-badge layer-'+layer+'">'+escHtml(layerInfo.label)+'</span>' : '')+'</div>';
         if(dx){ html += '<div class="pc-dx"><b>'+dx.startAge+'-'+dx.endAge+'</b><br>'+escHtml(dx.ganZhi)+'</div>'; }
         html += '</div>';
         // 星曜（主/辅/小 + 四化角标）
@@ -1244,18 +1354,27 @@
     var ly = ZiWeiEngine.calcLiuYue(result, curYear, now.getMonth()+1);
     html += '<div class="pan-foot">';
     html += footRow('大限', (function(){
-      var age = calcCurrentAge();
+      var age = calcCurrentAge(result);
       var dx = ZiWeiEngine.calcDaXian(result, age);
       if(dx.currentLimit >= 0){ var it = dx.list[dx.currentLimit]; return '<b>'+it.startAge+'-'+it.endAge+'</b>岁 '+escHtml(it.ganZhi)+' 临<span class="gong-name">'+escHtml(it.gongName)+'</span>'; }
       return '—';
-    })());
-    html += footRow('流年', '<b>'+curYear+'</b>（'+escHtml(ln.ganZhi)+'）流年临<span class="gong-name">'+escHtml(ln.gongName)+'</span>·'+(ln.stars&&ln.stars.length?ln.stars.slice(0,3).join('、'):'无'));
-    html += footRow('流月', '<b>'+curYear+'年'+(now.getMonth()+1)+'月</b>（'+escHtml(ly.ganZhi)+'）临<span class="gong-name">'+escHtml(ly.gongName)+'</span>');
-    html += footRow('流日', '今日 <b>'+curYear+'/'+(now.getMonth()+1)+'/'+now.getDate()+'</b>（公历）');
+    })(), 'daxian');
+    html += footRow('流年', '<b>'+curYear+'</b>（'+escHtml(ln.ganZhi)+'）流年临<span class="gong-name">'+escHtml(ln.gongName)+'</span>·'+(ln.stars&&ln.stars.length?ln.stars.slice(0,3).join('、'):'无'), 'liunian');
+    html += footRow('流月', '<b>'+curYear+'年'+(now.getMonth()+1)+'月</b>（'+escHtml(ly.ganZhi)+'）临<span class="gong-name">'+escHtml(ly.gongName)+'</span>', 'liuyue');
+    var lr = ZiWeiEngine.calcLiuRi(result, curYear, now.getMonth()+1, now.getDate());
+    html += footRow('流日', '今日 <b>'+curYear+'/'+(now.getMonth()+1)+'/'+now.getDate()+'</b>（公历）' +
+      '（'+escHtml(lr.ganZhi)+'）临<span class="gong-name">'+escHtml(lr.gongName)+'</span>', 'liuri');
     html += footRow('流时', '当前 <b>'+(now.getHours()<0?'子':now.getHours()<2?'子':now.getHours()<4?'丑':now.getHours()<6?'寅':now.getHours()<8?'卯':now.getHours()<10?'辰':now.getHours()<12?'巳':now.getHours()<14?'午':now.getHours()<16?'未':now.getHours()<18?'申':now.getHours()<20?'酉':now.getHours()<22?'戌':'亥')+'时</b>');
     html += '</div>';
     html += '</div>';
     el.innerHTML = html;
+
+    // 时间层切换：只重绘叠加层，不重新排盘
+    el.querySelectorAll('.pan-layer-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        renderPanBoard(result, btn.dataset.layer);
+      });
+    });
 
     // 绑定宫位点击 → 原地展开（S3）
     bindPanCellClick(result, el);
@@ -1267,8 +1386,9 @@
     return '';
   }
   function gongMingZhu(zhi){ return getMingZhu(zhi); }
-  function footRow(label, content){
-    return '<div class="foot-row"><div class="foot-label">'+label+'</div><div class="foot-content">'+content+'</div></div>';
+  function footRow(label, content, layerId){
+    var active = layerId && layerId === currentPanLayer ? ' active' : '';
+    return '<div class="foot-row'+active+'"><div class="foot-label">'+label+'</div><div class="foot-content">'+content+'</div></div>';
   }
 
   /** 宫位点击 → 原地展开该宫解读 */
@@ -1502,7 +1622,7 @@
     var el = document.getElementById('dayunGrid');
     if(!el) return;
 
-    var age = calcCurrentAge();
+    var age = calcCurrentAge(result);
     var dx = ZiWeiEngine.calcDaXian(result, age);
     var html = '';
 
@@ -1532,18 +1652,15 @@
     el.innerHTML = html;
   }
 
-  /** 从排盘输入推算当前周岁 */
-  function calcCurrentAge(){
-    var bd = document.getElementById('ziwei-birthdate');
-    if(!bd || !bd.value) return 1;
-    var dp = bd.value.split('-');
-    var by = parseInt(dp[0],10) || 2000;
-    var bm = parseInt(dp[1],10) || 1;
-    var bd2 = parseInt(dp[2],10) || 1;
-    var now = new Date();
-    var age = now.getFullYear() - by;
-    if(now.getMonth()+1 < bm || (now.getMonth()+1 === bm && now.getDate() < bd2)) age--;
-    return Math.max(1, age);
+  /** 从排盘结果推算当前周岁：优先用农历生年，农历模式下也能算大限 */
+  function calcCurrentAge(result){
+    var by = result ? parseInt(result['农历年'], 10) : 0;
+    if(!by){
+      var bd = document.getElementById('ziwei-birthdate');
+      if(bd && bd.value) by = parseInt(bd.value.split('-')[0], 10) || 0;
+    }
+    if(!by) return 1;
+    return Math.max(1, new Date().getFullYear() - by);
   }
 
   // ===== 流年·流月·流日推演事件 =====
@@ -1845,7 +1962,7 @@
         }
 
         var domainKey = currentDomain || 'career';
-        var age = calcCurrentAge();
+        var age = calcCurrentAge(currentResult);
 
         // 构建大限/流年附加文本
         var extraText = '';
