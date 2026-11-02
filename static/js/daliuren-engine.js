@@ -687,7 +687,7 @@
     var baseDate = new Date(1900, 0, 1);
     var targetDate = new Date(year, month - 1, day);
     var diffDays = Math.floor((targetDate - baseDate) / (1000 * 60 * 60 * 24));
-    var baseIdx = 11; // 1900-01-01 甲戌
+    var baseIdx = JIAZI_INDEX['甲戌']; // 1900-01-01 为甲戌日，与六爻日干支基准一致
     var dayIdx = (((baseIdx + diffDays) % 60) + 60) % 60;
     var riGan = GAN[dayIdx % 10];
     var riZhi = ZHI[dayIdx % 12];

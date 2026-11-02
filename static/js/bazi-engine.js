@@ -397,7 +397,10 @@
 
   /** 完整排盘 */
   function paipan(year, month, day, hour) {
-    var yearGZ = calcYearGZ(year);
+    // 年柱以立春为界：1月及2月4日前仍属上一年
+    var effectiveYear = year;
+    if (month === 1 || (month === 2 && day < 4)) effectiveYear = year - 1;
+    var yearGZ = calcYearGZ(effectiveYear);
     var monthZhi = calcMonthZhi(month, day);
     var monthGZ = calcMonthGZ(yearGZ[0], monthZhi);
     var dayGZ = calcDayGZ(year, month, day);

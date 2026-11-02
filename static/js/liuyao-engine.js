@@ -990,7 +990,7 @@
     return 'neutral';
   }
 
-  function divine(lines) {
+  function divine(lines, year, month, day) {
     if (!lines || lines.length !== 6) {
       throw new Error('六爻起卦需要6个爻，从下到上排列');
     }
@@ -1020,13 +1020,14 @@
     var najia = getNajia(gua);
     var liuQin = getLiuQin(gua);
 
-    var today = new Date();
-    var riGanZhi = _getRiGanZhi(today);
+    // 占测日期：页面传参优先，组件单独调用时回退到当天
+    var useDate = year && month && day ? new Date(year, month - 1, day) : new Date();
+    var riGanZhi = _getRiGanZhi(useDate);
     var riGan = riGanZhi.gan;
     var riZhi = riGanZhi.zhi;
-    var yearGZ = calcYearGZ(today.getFullYear());
+    var yearGZ = calcYearGZ(useDate.getFullYear());
     var yearGan = yearGZ[0];
-    var yueZhi = _getYueZhi(today.getFullYear(), today.getMonth() + 1, today.getDate());
+    var yueZhi = _getYueZhi(useDate.getFullYear(), useDate.getMonth() + 1, useDate.getDate());
     var liuShou = getLiuShou(riGan);
 
     var interpretation = generateInterpretation(gua, dongYao, shiYao, yingYao, liuQin, liuShou, changedGua);

@@ -1906,7 +1906,7 @@
       // 暴露全局变量供大师组件使用
       var SHICHEN_NAMES = Tianjige.Const.SHICHEN_NAMES;
     </script>
-    <script src="static/js/bazi-engine.js"></script>
+    <script src="static/js/bazi-engine.js?v=20261103"></script>
     <script>
       // 暴露 ZHI_CANGGAN 全局变量（BaziEngine 内部变量，需在此处暴露）
       var ZHI_CANGGAN = {
@@ -3159,7 +3159,8 @@
           var year = parseInt(document.getElementById('birthYear').value) || 1990;
           var month = parseInt(document.getElementById('birthMonth').value) || 1;
           var day = parseInt(document.getElementById('birthDay').value) || 15;
-          var hour = parseInt(document.getElementById('birthHour').value) || 12;
+          var hourVal = document.getElementById('birthHour').value;
+          var hour = hourVal === '' ? 12 : parseInt(hourVal, 10); // 子时为 0，不能用 || 回退
 
           if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
             alert('请输入有效的出生日期');
@@ -3272,7 +3273,8 @@
           var year = parseInt(document.getElementById('birthYear').value) || 1990;
           var month = parseInt(document.getElementById('birthMonth').value) || 1;
           var day = parseInt(document.getElementById('birthDay').value) || 15;
-          var hour = parseInt(document.getElementById('birthHour').value) || 12;
+          var hourVal = document.getElementById('birthHour').value;
+          var hour = hourVal === '' ? 12 : parseInt(hourVal, 10); // 子时为 0，不能用 || 回退
           var bazi = BaziEngine.paipan(year, month, day, hour);
           renderResult(bazi);
         }, 500);
