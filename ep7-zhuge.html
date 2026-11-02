@@ -291,6 +291,12 @@
       .stroke-char .count {
         font-size: 0.7rem; color: var(--gold); letter-spacing: 0.06em;
       }
+      .stroke-formula {
+        width: 100%; text-align: center; margin-top: 10px;
+        font-size: 0.78rem; color: var(--text2); font-family: var(--font-serif);
+        letter-spacing: 0.03em;
+      }
+      .stroke-formula strong { color: var(--gold-light); }
 
       /* ===== Info Panel ===== */
       .info-panel {
@@ -667,19 +673,26 @@
     // 报字法显示笔画
     if(params.method === 'word' && params.words){
       var chars = params.words.replace(/\s/g,'').split('').slice(0,3);
+      var strokeParts = [];
+      var strokeSum = 0;
       html += '<div class="stroke-display">';
       chars.forEach(function(c){
         var strokes = ZhugeEngine.getStrokeCount(c);
+        strokeParts.push(strokes);
+        strokeSum += strokes;
         html += '<div class="stroke-char">';
         html += '<div class="char">' + escHtml(c) + '</div>';
         html += '<div class="count">' + strokes + ' 画</div>';
         html += '</div>';
       });
+      html += '<div class="stroke-formula">笔画 ' + strokeParts.join(' + ') + ' = ' + strokeSum + ' → ' + strokeSum + ' mod 384 + 1 = <strong>第 ' + escHtml(String(result.number)) + ' 签</strong></div>';
       html += '</div>';
     }
 
     // 报数法显示三数
     if(params.method === 'number' && params.numbers){
+      var numParts = params.numbers.map(function(n){ return parseInt(n, 10) || 0; });
+      var numSum = numParts.reduce(function(a, b){ return a + b; }, 0);
       html += '<div class="stroke-display">';
       params.numbers.forEach(function(n){
         html += '<div class="stroke-char">';
@@ -687,6 +700,7 @@
         html += '<div class="count">数</div>';
         html += '</div>';
       });
+      html += '<div class="stroke-formula">报数 ' + numParts.join(' + ') + ' = ' + numSum + ' → ' + numSum + ' mod 384 + 1 = <strong>第 ' + escHtml(String(result.number)) + ' 签</strong></div>';
       html += '</div>';
     }
 
