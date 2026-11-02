@@ -189,6 +189,15 @@
       .dream-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
       .dream-card-head .dc-ico { font-size: 1.1rem; }
       .dream-card-head .dc-key { font-family: var(--font-serif); font-size: 1rem; color: var(--gold-light); letter-spacing: 0.04em; }
+      .dream-card-head .dc-wx {
+        font-size: 0.6rem; line-height: 1.4; padding: 0 6px;
+        border: 1px solid currentColor; border-radius: 3px; letter-spacing: 0.08em;
+      }
+      .dc-wx.wx-jin { color: var(--gold-light); }
+      .dc-wx.wx-mu { color: var(--green-light); }
+      .dc-wx.wx-shui { color: var(--blue-light); }
+      .dc-wx.wx-huo { color: var(--red-light); }
+      .dc-wx.wx-tu { color: var(--text2); }
       .dream-card-head .dc-cat { font-size: 0.66rem; color: var(--text3); letter-spacing: 0.08em; margin-left: auto; }
       .dream-card-body { font-family: var(--font-serif); font-size: 0.86rem; line-height: 1.8; color: var(--text2); }
 
@@ -208,6 +217,24 @@
         border-radius: 999px; padding: 4px 12px; font-family: var(--font-serif);
       }
       .wx-chip strong { color: var(--gold-light); font-weight: 600; margin-left: 4px; }
+
+      /* ===== 吉凶统计 / 五行归经 ===== */
+      .jx-bar { display: flex; height: 8px; gap: 3px; margin-top: 14px; }
+      .jx-seg { border-radius: 999px; min-width: 0; }
+      .jx-seg.jx-ji { background: var(--gold); }
+      .jx-seg.jx-mid { background: var(--text3); }
+      .jx-seg.jx-xiong { background: var(--red); }
+      .jx-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 7px; font-size: 0.68rem; color: var(--text2); }
+      .jx-legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+      .jx-legend .lg-ji i { background: var(--gold); }
+      .jx-legend .lg-mid i { background: var(--text3); }
+      .jx-legend .lg-xiong i { background: var(--red); }
+      .wx-bars { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
+      .wx-row { display: flex; align-items: center; gap: 9px; }
+      .wx-row .wx-name { width: 22px; font-family: var(--font-serif); font-size: 0.78rem; color: var(--text2); }
+      .wx-track { flex: 1; height: 6px; background: rgba(255,255,255,0.04); border-radius: 999px; overflow: hidden; }
+      .wx-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+      .wx-row .wx-num { width: 26px; text-align: right; font-size: 0.68rem; color: var(--text3); }
 
       /* ===== Masters Panel（对齐 components/masters.js 类名） ===== */
       .section-header { margin-bottom: 24px; }
@@ -538,6 +565,7 @@
       };
 
       // 五行关键词（与引擎 WUXING_CAT 同源，页面本地统计用）
+      var WX_CLASS = { 金:'jin', 木:'mu', 水:'shui', 火:'huo', 土:'tu' };
       var WUXING_CAT = {
         金:['刀','剑','金','银','铁','铜','钟','戒指','金属','钱币','锁','钥匙'],
         木:['树','花','草','竹','木','植物','森林','林','梅花','荷花','兰花'],
@@ -678,9 +706,24 @@
         html += '<div class="info-item info-gold"><div class="label">匹配条目</div><div class="value"><span class="highlight">' + (result.count || 0) + '</span> 条</div></div>';
         html += '<div class="info-item info-blue"><div class="label">涉及分类</div><div class="value">' + (catNames.length ? escHtml(catNames.join('、')) : '—') + '</div></div>';
         html += '<div class="info-item info-purple"><div class="label">综合吉凶</div><div class="value"><span class="level-badge ' + jiBadgeClass + '">' + escHtml(result.ji || '中') + '</span></div></div>';
-        html += '<div class="info-item info-green"><div class="label">吉象 / 凶象</div><div class="value"><span class="highlight">' + counts.ji + '</span> / <span style="color:var(--red-light);">' + counts.xiong + '</span></div></div>';
+        html += '<div class="info-item info-green"><div class="label">吉 / 中 / 凶</div><div class="value"><span class="highlight">' + counts.ji + '</span> / ' + counts.mid + ' / <span style="color:var(--red-light);">' + counts.xiong + '</span></div></div>';
         html += '<div class="info-item info-red"><div class="label">所问之事</div><div class="value">' + (result.domain ? escHtml(result.domain.icon + ' ' + result.domain.name) : '—') + '</div></div>';
         html += '</div>';
+
+        // 吉凶分布条
+        var totalJi = counts.ji + counts.mid + counts.xiong;
+        if(totalJi > 0){
+          html += '<div class="jx-bar">';
+          if(counts.ji > 0) html += '<div class="jx-seg jx-ji" style="flex:' + counts.ji + '"></div>';
+          if(counts.mid > 0) html += '<div class="jx-seg jx-mid" style="flex:' + counts.mid + '"></div>';
+          if(counts.xiong > 0) html += '<div class="jx-seg jx-xiong" style="flex:' + counts.xiong + '"></div>';
+          html += '</div>';
+          html += '<div class="jx-legend">';
+          html += '<span class="lg-ji"><i></i>吉 ' + counts.ji + '</span>';
+          html += '<span class="lg-mid"><i></i>中 ' + counts.mid + '</span>';
+          html += '<span class="lg-xiong"><i></i>凶 ' + counts.xiong + '</span>';
+          html += '</div>';
+        }
 
         html += '<div class="interp-block" style="margin-top:16px;"><div class="block-label">梦境原述</div><div class="block-content">' + escHtml(result.input || '') + '</div></div>';
 
@@ -692,6 +735,8 @@
             html += '<div class="dream-card-head">';
             html += '<span class="dc-ico">' + (CAT_ICONS[item.cat] || '🔮') + '</span>';
             html += '<span class="dc-key">' + escHtml(item.keyword) + '</span>';
+            var wx = getWuxing(item.keyword);
+            html += '<span class="dc-wx wx-' + (WX_CLASS[wx] || 'tu') + '">' + escHtml(wx) + '</span>';
             html += '<span class="level-badge ' + levelClass(item.ji) + '" style="font-size:0.66rem;padding:1px 9px;">' + escHtml(item.ji) + '</span>';
             html += '<span class="dc-cat">' + escHtml(CATEGORIES[item.cat] || item.cat) + '</span>';
             html += '</div>';
@@ -727,7 +772,7 @@
           html += '</div>';
         }
 
-        // 五行归经摘要
+        // 五行归经摘要 + 分布
         if(result.results && result.results.length > 0){
           var counts = {};
           result.results.forEach(function(r){
@@ -735,10 +780,19 @@
             counts[wx] = (counts[wx] || 0) + 1;
           });
           var dominant = dominantWuxing(result.results);
+          var totalWx = result.results.length;
+          html += '<div class="section-title" style="font-size:0.9rem;margin-top:22px;">五行归经<span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;margin-left:8px;">象义取用</span></div>';
           html += '<div class="wx-summary">';
           html += '<span class="wx-chip">主导五行<strong>' + escHtml(dominant) + '</strong></span>';
-          Object.keys(counts).forEach(function(wx){
-            html += '<span class="wx-chip">' + escHtml(wx) + '<strong>' + counts[wx] + '</strong></span>';
+          html += '<span class="wx-chip">共<strong>' + totalWx + '</strong>象</span>';
+          html += '</div>';
+          var wxOrder = Object.keys(counts).sort(function(a, b){ return counts[b] - counts[a]; });
+          html += '<div class="wx-bars">';
+          wxOrder.forEach(function(wx){
+            var pct = Math.round(counts[wx] / totalWx * 100);
+            html += '<div class="wx-row"><span class="wx-name">' + escHtml(wx) + '</span>';
+            html += '<div class="wx-track"><i class="wx-fill" style="width:' + pct + '%"></i></div>';
+            html += '<span class="wx-num">' + counts[wx] + '</span></div>';
           });
           html += '</div>';
         }
