@@ -37,17 +37,24 @@ function renderCompositeComponent() {
 
     var MAX_METHODS = 3;
 
+    // 时效语义：非实时盘以出生信息定盘；实时盘以独立占测时间起盘；时空盘推大势节奏
+    var TIME_NATURE = {
+      natal: { label: '非实时盘', short: '非实时', hint: '以出生信息定盘，长期有效，同一出生信息重复推演结果稳定' },
+      realtime: { label: '实时盘', short: '实时', hint: '以本次占测时间为基准，只反映当下事机，重算会换盘' },
+      trend: { label: '时空盘', short: '时空', hint: '按起盘时刻推大势节奏，中长期参考' },
+    };
+
     var METHOD_CHECKS = [
-      { id: 'bazi', name: '八字排盘', icon: '📅', checked: true },
-      { id: 'liuyao', name: '六爻占卜', icon: '🪙', checked: true },
-      { id: 'meihua', name: '梅花易数', icon: '🌸', checked: true },
-      { id: 'qimen', name: '奇门遁甲', icon: '☯️', checked: false },
-      { id: 'taiyi', name: '太乙神数', icon: '🌌', checked: false },
-      { id: 'zhuge', name: '诸葛神数', icon: '📜', checked: false },
-      { id: 'zhougong', name: '周公解梦', icon: '🌙', checked: false },
-      { id: 'daliuren', name: '大六壬', icon: '🌊', checked: false },
-      { id: 'ziwei', name: '紫微斗数', icon: '⭐', checked: false },
-      { id: 'fengshui', name: '风水格局', icon: '🏔️', checked: false },
+      { id: 'bazi', name: '八字排盘', icon: '📅', nature: 'natal', checked: true },
+      { id: 'liuyao', name: '六爻占卜', icon: '🪙', nature: 'realtime', checked: true },
+      { id: 'meihua', name: '梅花易数', icon: '🌸', nature: 'realtime', checked: true },
+      { id: 'qimen', name: '奇门遁甲', icon: '☯️', nature: 'realtime', timeNote: '时家', checked: false },
+      { id: 'taiyi', name: '太乙神数', icon: '🌌', nature: 'trend', checked: false },
+      { id: 'zhuge', name: '诸葛神数', icon: '📜', nature: 'realtime', checked: false },
+      { id: 'zhougong', name: '周公解梦', icon: '🌙', nature: 'realtime', timeNote: '按梦境当下', checked: false },
+      { id: 'daliuren', name: '大六壬', icon: '🌊', nature: 'realtime', checked: false },
+      { id: 'ziwei', name: '紫微斗数', icon: '⭐', nature: 'natal', checked: false },
+      { id: 'fengshui', name: '风水格局', icon: '🏔️', nature: 'space', checked: false },
     ];
 
     var methodHtml = '';
@@ -63,6 +70,9 @@ function renderCompositeComponent() {
         m.icon +
         ' ' +
         m.name +
+        '<span style="font-size:0.66rem;color:var(--text-muted);border:1px solid rgba(184,154,92,0.25);border-radius:4px;padding:0 4px;">' +
+        (TIME_NATURE[m.nature] ? TIME_NATURE[m.nature].short : '空间') +
+        '</span>' +
         '</label>';
     }
 
@@ -103,6 +113,17 @@ function renderCompositeComponent() {
       '<option value="戌时">戌时 (19-21)</option><option value="亥时">亥时 (21-23)</option>' +
       '</select></div>' +
       '<div class="form-group"><label class="form-label">性别</label><select class="form-select" id="comp-gender"><option value="male">男</option><option value="female">女</option></select></div>' +
+      '</div>' +
+      '<div class="form-row mb-8" style="margin-top:12px;">' +
+      '<div class="form-group"><label class="form-label">占测日期（实时盘）</label><input type="date" class="form-input" id="comp-div-date"></div>' +
+      '<div class="form-group"><label class="form-label">占时（实时盘）</label><select class="form-select" id="comp-div-hour">' +
+      '<option value="子时">子时 (23-01)</option><option value="丑时">丑时 (01-03)</option>' +
+      '<option value="寅时">寅时 (03-05)</option><option value="卯时">卯时 (05-07)</option>' +
+      '<option value="辰时">辰时 (07-09)</option><option value="巳时" selected>巳时 (09-11)</option>' +
+      '<option value="午时">午时 (11-13)</option><option value="未时">未时 (13-15)</option>' +
+      '<option value="申时">申时 (15-17)</option><option value="酉时">酉时 (17-19)</option>' +
+      '<option value="戌时">戌时 (19-21)</option><option value="亥时">亥时 (21-23)</option>' +
+      '</select></div>' +
       '</div>' +
       '<div class="form-group" style="margin-top:12px;">' +
       '<label class="form-label">🔮 所问之事（输入您的具体问题，系统将自动识别事域）</label>' +
@@ -167,6 +188,18 @@ function renderCompositeComponent() {
     }
     updateMethodCount();
 
+    // 实时盘默认取今天，便于直接起盘
+    var divDateInput = container.querySelector('#comp-div-date');
+    if (divDateInput) {
+      var now = new Date();
+      divDateInput.value =
+        now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0');
+    }
+    var divHourInput = container.querySelector('#comp-div-hour');
+    if (divHourInput && !divHourInput.value) divHourInput.value = '巳时';
+
     // 所问之事实时事域提示
     var questionInput = container.querySelector('#comp-question');
     var domainHint = container.querySelector('#comp-domain-hint');
@@ -219,6 +252,8 @@ function handleCompositeSubmit(container) {
     var birthTime = container.querySelector('#comp-birth-time').value;
     var gender = container.querySelector('#comp-gender').value;
     var question = container.querySelector('#comp-question').value.trim();
+    var divDate = container.querySelector('#comp-div-date').value.trim();
+    var divHour = container.querySelector('#comp-div-hour').value;
 
     var methodChecks = container.querySelectorAll('input[name="compMethod"]:checked');
     var methods = [];
@@ -256,13 +291,20 @@ function handleCompositeSubmit(container) {
       submitBtn.textContent = '⏳ 推演中...';
     }
 
+    var now = new Date();
+    var todayStr =
+      now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0');
+
     var engineParams = {
-      birthDate: birthDate || new Date().toISOString().slice(0, 10),
+      birthDate: birthDate || todayStr,
       birthTime: birthTime,
       gender: gender,
       question: question,
-      date: birthDate || new Date().toISOString().slice(0, 10),
-      hour: birthTime || '',
+      // 实时盘用独立占测时间，不能拿出生日期时间代替
+      date: divDate || todayStr,
+      hour: divHour || '巳时',
       zhugeNum1: Math.floor(Math.random() * 999) + 1,
       zhugeNum2: Math.floor(Math.random() * 999) + 1,
       zhugeNum3: Math.floor(Math.random() * 999) + 1,
@@ -315,13 +357,14 @@ function handleCompositeSubmit(container) {
             var masterComments = MastersEngine.batchAnalyze(masterIds, data, question);
             data.masterComments = masterComments;
           } catch (me) {
+            if (typeof console !== 'undefined' && console.warn) console.warn('[合参] 大师点评生成失败', me);
           }
         }
 
         updateProgress(95, '渲染综合报告...');
 
         setTimeout(function () {
-          renderCompositeResult(resultContainer, data, question, methods, masterIds);
+          renderCompositeResult(resultContainer, data, question, methods, masterIds, engineParams);
           if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = '🔮 重新推演';
@@ -383,7 +426,27 @@ function formatAnalysisText(text) {
     .join('<br>');
 }
 
-function renderCompositeResult(container, data, question, methods, masterIds) {
+// 主站合参的时效标注：实时盘不能用出生时间代替占测时间
+var COMPOSITE_METHOD_TIME = {
+  bazi: 'natal',
+  ziwei: 'natal',
+  liuyao: 'realtime',
+  meihua: 'realtime',
+  qimen: 'realtime',
+  daliuren: 'realtime',
+  zhuge: 'realtime',
+  zhougong: 'realtime',
+  taiyi: 'trend',
+  fengshui: 'space',
+};
+var COMPOSITE_TIME_META = {
+  natal: { label: '非实时盘', short: '非实时', hint: '以出生信息定盘，长期有效，同一出生信息重复推演结果稳定' },
+  realtime: { label: '实时盘', short: '实时', hint: '以本次占测时间为基准，只反映当下事机，重算会换盘' },
+  trend: { label: '时空盘', short: '时空', hint: '按起盘时刻推大势节奏，中长期参考' },
+  space: { label: '空间层', short: '空间', hint: '按坐向与朝向判环境格局，只作环境参考，不参与吉凶打分' },
+};
+
+function renderCompositeResult(container, data, question, methods, masterIds, engineParams) {
   if (!data) {
     container.innerHTML =
       '<div class="error-container"><div class="error-icon">⚠️</div><div class="error-text">无有效结果</div></div>';
@@ -423,6 +486,46 @@ function renderCompositeResult(container, data, question, methods, masterIds) {
     ' 门术数参与</div>' +
     '</div>';
 
+  // --- 时间语义 ---
+  if (results.length > 0) {
+    var grouped = { natal: [], realtime: [], trend: [], space: [] };
+    for (var gi = 0; gi < results.length; gi++) {
+      var gn = COMPOSITE_METHOD_TIME[results[gi].method] || 'realtime';
+      if (!grouped[gn]) grouped[gn] = [];
+      grouped[gn].push(results[gi].name || results[gi].method);
+    }
+    var basisMap = {
+      natal: engineParams
+        ? '出生 ' + safeHtml(engineParams.birthDate || '未填') + ' ' + safeHtml(engineParams.birthTime || '')
+        : '出生信息',
+      realtime: engineParams
+        ? '起盘 ' + safeHtml(engineParams.date || '未填') + ' ' + safeHtml(engineParams.hour || '')
+        : '本次起盘',
+      trend: engineParams
+        ? '起盘 ' + safeHtml(engineParams.date || '未填') + ' ' + safeHtml(engineParams.hour || '')
+        : '本次起盘',
+      space: '按坐向与朝向',
+    };
+    html +=
+      '<div class="glass-card mb-24"><h3 style="color:var(--gold-light);margin-bottom:12px;">⏱ 时间语义 · 本次推演基准</h3>';
+    ['natal', 'realtime', 'trend', 'space'].forEach(function (n) {
+      if (!grouped[n] || grouped[n].length === 0) return;
+      var T = COMPOSITE_TIME_META[n];
+      html +=
+        '<div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.8;margin-bottom:6px;">' +
+        '<strong style="color:var(--gold);">' +
+        T.label +
+        '</strong> ' +
+        safeHtml(grouped[n].join('、')) +
+        '：' +
+        T.hint +
+        '；' +
+        basisMap[n] +
+        '。</div>';
+    });
+    html += '</div>';
+  }
+
   // --- 各术数明细 ---
   if (results.length > 0) {
     html +=
@@ -442,6 +545,9 @@ function renderCompositeResult(container, data, question, methods, masterIds) {
         '</span>' +
         '<span style="font-family:var(--font-serif);font-weight:600;color:var(--gold);">' +
         safeHtml(r.name) +
+        '</span>' +
+        '<span style="font-size:0.66rem;color:var(--text-muted);border:1px solid rgba(184,154,92,0.25);border-radius:4px;padding:0 4px;">' +
+        (COMPOSITE_TIME_META[COMPOSITE_METHOD_TIME[r.method] || 'realtime'] || COMPOSITE_TIME_META.realtime).short +
         '</span>' +
         '</div>' +
         '<div style="text-align:right;">' +

@@ -163,6 +163,11 @@
         border: 1px solid var(--border-gold); color: var(--text3); letter-spacing: 0.08em;
       }
       .method-chip.active .mc-layer { color: var(--gold-light); border-color: var(--gold-dim); }
+      .method-chip .mc-nature {
+        font-size: 0.6rem; padding: 1px 5px; border-radius: 4px;
+        border: 1px dashed var(--border-gold); color: var(--text3); letter-spacing: 0.04em;
+      }
+      .method-chip.active .mc-nature { color: var(--gold); border-color: var(--gold-dim); }
 
       /* ===== 合参模式 ===== */
       .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
@@ -187,6 +192,10 @@
       .layer-card-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
       .layer-card-name { font-family: var(--font-serif); font-size: 0.95rem; color: var(--gold-light); }
       .layer-card-horizon { font-size: 0.66rem; color: var(--text3); letter-spacing: 0.08em; margin-left: auto; }
+      .layer-card-nature {
+        font-size: 0.62rem; padding: 1px 6px; border-radius: 4px;
+        border: 1px solid var(--border-gold); color: var(--text3); letter-spacing: 0.04em;
+      }
       .layer-card-score {
         font-family: var(--font-serif); font-size: 1.9rem; font-weight: 700; line-height: 1.1;
       }
@@ -194,6 +203,7 @@
       .layer-card-score.mid { color: var(--gold-light); }
       .layer-card-score.low { color: var(--red-light); }
       .layer-card-meta { font-size: 0.72rem; color: var(--text2); margin-top: 4px; }
+      .layer-card-moment { font-size: 0.68rem; color: var(--text3); margin-top: 4px; letter-spacing: 0.02em; }
       .layer-card-verdict { font-family: var(--font-serif); font-size: 0.82rem; color: var(--text); margin-top: 8px; line-height: 1.7; }
       .layer-section-title {
         font-family: var(--font-serif); font-size: 0.92rem; color: var(--gold-light);
@@ -206,6 +216,16 @@
         font-size: 0.74rem; color: var(--text3); line-height: 1.7;
         margin-bottom: 14px;
       }
+      .time-note {
+        margin-top: 4px; padding: 12px 16px; border-left: 2px solid var(--gold-dim);
+        background: rgba(184,154,92,0.05); border-radius: var(--radius-sm);
+        font-size: 0.76rem; color: var(--text2); line-height: 1.8;
+      }
+      .time-note .tn-title {
+        font-family: var(--font-serif); color: var(--gold-light);
+        letter-spacing: 0.08em; margin-bottom: 6px;
+      }
+      .tn-row b { color: var(--gold); font-weight: 600; margin-right: 4px; }
       .mutual-block {
         background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
         padding: 16px 18px; margin-bottom: 16px;
@@ -262,7 +282,12 @@
       .mrc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
       .mrc-icon { font-size: 1.2rem; }
       .mrc-name { font-family: var(--font-serif); font-size: 1rem; color: var(--gold-light); }
+      .mrc-nature {
+        font-size: 0.62rem; padding: 1px 6px; border-radius: 4px;
+        border: 1px solid var(--border-gold); color: var(--text3); letter-spacing: 0.04em;
+      }
       .mrc-score { margin-left: auto; font-family: var(--font-serif); font-size: 1.25rem; font-weight: 700; }
+      .mrc-moment { font-size: 0.68rem; color: var(--text3); margin-top: 3px; letter-spacing: 0.02em; }
       .mrc-score.high { color: var(--green-light); }
       .mrc-score.mid { color: var(--text); }
       .mrc-score.low { color: var(--red-light); }
@@ -572,31 +597,54 @@
     (function(){
       'use strict';
 
+      // 时效语义：非实时盘以出生信息定盘；实时盘以本次起盘时刻为基准；时空盘推大势节奏
+      var TIME_NATURE = {
+        natal: { key:'natal', label:'非实时盘', short:'非实时', hint:'以出生信息定盘，长期有效，同一出生信息重复推演结果稳定' },
+        realtime: { key:'realtime', label:'实时盘', short:'实时', hint:'以本次起盘时刻为基准，只反映当下事机，重算会换盘' },
+        trend: { key:'trend', label:'时空盘', short:'时空', hint:'按起盘时刻推大势节奏，中长期参考' }
+      };
+
       // 分层元数据：命局=长期基线；事占=当下事机；时空=大势节奏
       var LAYERS = {
-        natal: { key:'natal', name:'命局层', short:'命', horizon:'长期基线', desc:'看底色、格局与长期趋势' },
-        event: { key:'event', name:'事占层', short:'事', horizon:'当下事机', desc:'看此事成不成、何时动' },
-        trend: { key:'trend', name:'时空层', short:'势', horizon:'大势节奏', desc:'看外部时空大势与节奏' }
+        natal: { key:'natal', name:'命局层', short:'命', nature:'natal', horizon:'长期基线', desc:'看底色、格局与长期趋势' },
+        event: { key:'event', name:'事占层', short:'事', nature:'realtime', horizon:'当下事机', desc:'看此事成不成、何时动' },
+        trend: { key:'trend', name:'时空层', short:'势', nature:'trend', horizon:'大势节奏', desc:'看外部时空大势与节奏' }
       };
 
       var MAX_METHODS = 3;
 
       var METHODS = [
-        { id:'bazi', name:'八字', icon:'📅', layer:'natal', checked:true },
-        { id:'ziwei', name:'紫微', icon:'🔮', layer:'natal', checked:false },
-        { id:'liuyao', name:'六爻', icon:'🪙', layer:'event', checked:true },
-        { id:'meihua', name:'梅花', icon:'🌸', layer:'event', checked:true },
-        { id:'qimen', name:'奇门', icon:'☯️', layer:'event', checked:false },
-        { id:'daliuren', name:'大六壬', icon:'🌊', layer:'event', checked:false },
-        { id:'zhuge', name:'诸葛', icon:'📜', layer:'event', checked:false },
-        { id:'zhougong', name:'解梦', icon:'🌙', layer:'event', checked:false },
-        { id:'taiyi', name:'太乙', icon:'🌌', layer:'trend', checked:false }
+        { id:'bazi', name:'八字', icon:'📅', layer:'natal', nature:'natal', checked:true },
+        { id:'ziwei', name:'紫微', icon:'🔮', layer:'natal', nature:'natal', checked:false },
+        { id:'liuyao', name:'六爻', icon:'🪙', layer:'event', nature:'realtime', checked:true },
+        { id:'meihua', name:'梅花', icon:'🌸', layer:'event', nature:'realtime', checked:true },
+        // 奇门当前只实现时家盘，统一按实时盘处理，不做生年/年家盘
+        { id:'qimen', name:'奇门', icon:'☯️', layer:'event', nature:'realtime', timeNote:'时家', checked:false },
+        { id:'daliuren', name:'大六壬', icon:'🌊', layer:'event', nature:'realtime', checked:false },
+        { id:'zhuge', name:'诸葛', icon:'📜', layer:'event', nature:'realtime', checked:false },
+        { id:'zhougong', name:'解梦', icon:'🌙', layer:'event', nature:'realtime', timeNote:'按梦境当下', checked:false },
+        { id:'taiyi', name:'太乙', icon:'🌌', layer:'trend', nature:'trend', checked:false }
       ];
 
       var METHOD_NAMES = {};
       var METHOD_META = {};
       METHODS.forEach(function(m){ METHOD_NAMES[m.id] = m.name; METHOD_META[m.id] = m; });
       var currentQuestion = '';
+
+      // 起盘基准：非实时盘取出生信息，实时/时空盘取本次占测日期与占时
+      function momentText(nature, uiParams){
+        if(!uiParams) return '';
+        if(nature === 'natal'){
+          return '本命盘 · ' + (uiParams.birthDate || '未填') + ' ' + (uiParams.birthTime || '未填');
+        }
+        return '起盘 · ' + (uiParams.date || '未填') + ' ' + (uiParams.hour || '未填');
+      }
+
+      function methodMoment(m, uiParams){
+        var text = momentText(m.nature, uiParams);
+        if(m.timeNote) text += '（' + m.timeNote + '）';
+        return text;
+      }
 
       function escHtml(s){
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -615,6 +663,7 @@
           '<input type="checkbox" name="compMethod" value="' + m.id + '"' + (m.checked ? ' checked' : '') + ' />' +
           '<span class="mc-ico">' + m.icon + '</span><span>' + m.name + '</span>' +
           '<span class="mc-layer">' + LAYERS[m.layer].short + '</span>' +
+          '<span class="mc-nature">' + TIME_NATURE[m.nature].short + '</span>' +
           '<span class="mc-check">' + (m.checked ? '✓' : '') + '</span>' +
           '</label>';
       });
@@ -837,11 +886,11 @@
           return !results.some(function(r){ return r.method === k; });
         });
 
-        renderScore(data, results, missing, synthesis);
-        renderMethods(results, missing, uiParams.question || '');
+        renderScore(data, results, missing, synthesis, uiParams);
+        renderMethods(results, missing, uiParams.question || '', uiParams);
         renderDomain(synthesis, missing);
         renderHarmony(synthesis, results);
-        renderNarrative(synthesis, results);
+        renderNarrative(synthesis, results, uiParams);
 
         ['scoreCard','methodsCard','domainCard','harmonyCard','narrativeCard'].forEach(function(id){
           document.getElementById(id).classList.remove('hidden');
@@ -866,6 +915,19 @@
           sumW += (r.score || 60) * w;
         });
         return totalW ? Math.round(sumW / totalW) : 0;
+      }
+
+      // 按时效分组，供总览与研判说明「哪些盘实时、哪些盘长期」
+      function natureGroups(results){
+        var groups = { natal: [], realtime: [], trend: [] };
+        results.forEach(function(r){
+          var m = METHOD_META[r.method];
+          var n = m ? m.nature : 'realtime';
+          var label = m ? m.name : (r.name || r.method);
+          if(m && m.timeNote) label += '（' + m.timeNote + '）';
+          groups[n].push(label);
+        });
+        return groups;
       }
 
       function layerVerdict(score, layer){
@@ -925,7 +987,7 @@
         return null;
       }
 
-      function renderScore(data, results, missing, synthesis){
+      function renderScore(data, results, missing, synthesis, uiParams){
         var trend = data.trend || 'flat';
         var trendIcon = trend === 'up' ? '📈' : trend === 'down' ? '📉' : '➡️';
         var trendText = trend === 'up' ? '上升态势' : trend === 'down' ? '谨慎应对' : '趋于平稳';
@@ -943,10 +1005,12 @@
           var L = LAYERS[layer];
           html += '<div class="layer-card">';
           html += '<div class="layer-card-head"><span class="layer-card-name">' + L.name + '</span>' +
+            '<span class="layer-card-nature">' + TIME_NATURE[L.nature].short + '</span>' +
             '<span class="layer-card-horizon">' + L.horizon + '</span></div>';
           html += '<div class="layer-card-score ' + scoreClass(sc) + '">' + sc + '</div>';
           html += '<div class="layer-card-meta">' + rs.length + ' 门 · ' +
             rs.map(function(r){ return escHtml(r.name || r.method); }).join('、') + '</div>';
+          html += '<div class="layer-card-moment">' + escHtml(momentText(L.nature, uiParams)) + '</div>';
           html += '<div class="layer-card-verdict">' + layerVerdict(sc, layer) + '</div>';
           html += '</div>';
         });
@@ -955,10 +1019,22 @@
         html += '<div class="layer-note">分层分数由层内术数加权得出；引擎综合分 ' + (data.score || 60) +
           '（' + trendIcon + ' ' + trendText + '，分歧跨度 ' + (synthesis.spread || 0) +
           '）仅作参考，不跨层直接平均。</div>';
+
+        var groups = natureGroups(results);
+        html += '<div class="time-note"><div class="tn-title">时间语义 · 本次推演基准</div>';
+        ['natal', 'realtime', 'trend'].forEach(function(n){
+          if(!groups[n].length) return;
+          var T = TIME_NATURE[n];
+          html += '<div class="tn-row"><b>' + T.label + '</b>' +
+            escHtml(groups[n].join('、')) + '：' + T.hint + '。' +
+            escHtml(momentText(n, uiParams)) + '。</div>';
+        });
+        html += '</div>';
+
         document.getElementById('scoreContent').innerHTML = html;
       }
 
-      function renderMethods(results, missing, question){
+      function renderMethods(results, missing, question, uiParams){
         var el = document.getElementById('methodsContent');
         if(results.length === 0){
           el.innerHTML = '<div class="empty-hint">没有术数返回有效结果，请调整输入或更换术数。</div>';
@@ -978,14 +1054,16 @@
           rs.forEach(function(r){
             var sc = r.score || 60;
             var trendIcon = r.trend === 'up' ? '↑' : r.trend === 'down' ? '↓' : '→';
+            var mm = METHOD_META[r.method] || { nature: 'realtime' };
             html += '<div class="method-result-card">';
             html += '<div class="mrc-head">';
             html += '<span class="mrc-icon">' + escHtml(r.icon || '🔮') + '</span>';
             html += '<span class="mrc-name">' + escHtml(r.name || r.method) + '</span>';
-            html += '<span class="mc-layer" style="font-size:0.6rem;padding:1px 6px;border:1px solid var(--border-gold);border-radius:4px;color:var(--text3);">' + L.short + '</span>';
+            html += '<span class="mrc-nature">' + TIME_NATURE[mm.nature].short + '</span>';
             html += '<span class="mrc-score ' + scoreClass(sc) + '">' + sc + '</span>';
             html += '</div>';
             html += '<div class="mrc-trend">' + trendIcon + ' ' + escHtml(r.verdict || '待判') + '</div>';
+            html += '<div class="mrc-moment">' + escHtml(methodMoment(mm, uiParams)) + '</div>';
             html += '<div class="mrc-summary" style="margin-top:8px;">' + escHtml(r.summary || '') + '</div>';
             html += '<div class="mrc-verdict">断语：<strong>' + escHtml(r.verdict || '待判') + '</strong></div>';
             if(r.keyInsights && r.keyInsights.length){
@@ -1096,7 +1174,7 @@
         el.innerHTML = html;
       }
 
-      function renderNarrative(synthesis, results){
+      function renderNarrative(synthesis, results, uiParams){
         var el = document.getElementById('narrativeContent');
         var natal = layerResults(results, 'natal');
         var event = layerResults(results, 'event');
@@ -1106,20 +1184,33 @@
         var tScore = trend.length ? layerScore(trend) : null;
 
         var html = '';
+        var groups = natureGroups(results);
+        html += '<div class="mutual-block time-block"><div class="mb-title">时间语义 · 本次推演基准</div><div class="mb-body">';
+        ['natal', 'realtime', 'trend'].forEach(function(n){
+          if(!groups[n].length) return;
+          var T = TIME_NATURE[n];
+          html += '<div class="tn-row"><b>' + T.label + '</b>' + escHtml(groups[n].join('、')) + '：' +
+            T.hint + '。' + escHtml(momentText(n, uiParams)) + '。</div>';
+        });
+        html += '</div></div>';
+
         if(natal.length){
           html += '<div class="mutual-block"><div class="mb-title">命局层 · 长期基线</div><div class="mb-body">' +
             escHtml(natal.map(function(r){ return r.name || r.method; }).join('、')) + '综合 ' + nScore + ' 分。' +
-            layerVerdict(nScore, 'natal') + '。此层回答的是「长期底色与格局」，不直接判定某一件事的当下成败。</div></div>';
+            layerVerdict(nScore, 'natal') + '。此层回答的是「长期底色与格局」，不直接判定某一件事的当下成败。' +
+            '<br><span style="color:var(--text3);font-size:0.78rem;">' + escHtml(momentText('natal', uiParams)) + '</span></div></div>';
         }
         if(event.length){
           html += '<div class="mutual-block"><div class="mb-title">事占层 · 当下事机</div><div class="mb-body">' +
             escHtml(event.map(function(r){ return r.name || r.method; }).join('、')) + '综合 ' + eScore + ' 分。' +
-            layerVerdict(eScore, 'event') + '。此层回答的是「此事此刻成不成、何时动」。</div></div>';
+            layerVerdict(eScore, 'event') + '。此层回答的是「此事此刻成不成、何时动」。' +
+            '<br><span style="color:var(--text3);font-size:0.78rem;">' + escHtml(momentText('realtime', uiParams)) + '</span></div></div>';
         }
         if(trend.length){
           html += '<div class="mutual-block"><div class="mb-title">时空层 · 大势节奏</div><div class="mb-body">' +
             escHtml(trend.map(function(r){ return r.name || r.method; }).join('、')) + '综合 ' + tScore + ' 分。' +
-            layerVerdict(tScore, 'trend') + '。此层作为外部节奏参考，不替代命局与事占。</div></div>';
+            layerVerdict(tScore, 'trend') + '。此层作为外部节奏参考，不替代命局与事占。' +
+            '<br><span style="color:var(--text3);font-size:0.78rem;">' + escHtml(momentText('trend', uiParams)) + '</span></div></div>';
         }
 
         if(natal.length && event.length){
