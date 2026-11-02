@@ -35,10 +35,12 @@ function renderCompositeComponent() {
       ];
     }
 
+    var MAX_METHODS = 3;
+
     var METHOD_CHECKS = [
       { id: 'bazi', name: '八字排盘', icon: '📅', checked: true },
-      { id: 'liuyao', name: '六爻占卜', icon: '🪙', checked: false },
-      { id: 'meihua', name: '梅花易数', icon: '🌸', checked: false },
+      { id: 'liuyao', name: '六爻占卜', icon: '🪙', checked: true },
+      { id: 'meihua', name: '梅花易数', icon: '🌸', checked: true },
       { id: 'qimen', name: '奇门遁甲', icon: '☯️', checked: false },
       { id: 'taiyi', name: '太乙神数', icon: '🌌', checked: false },
       { id: 'zhuge', name: '诸葛神数', icon: '📜', checked: false },
@@ -108,12 +110,12 @@ function renderCompositeComponent() {
       '<div id="comp-domain-hint" style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;min-height:18px;"></div>' +
       '</div>' +
       '<div class="form-group" style="margin-top:12px;">' +
-      '<label class="form-label">选择术数（至少选1个）</label>' +
+      '<label class="form-label">选择术数（最多 3 门）</label>' +
       '<div id="comp-method-checks" style="display:flex;flex-wrap:wrap;gap:6px;">' +
       methodHtml +
       '</div>' +
       '<div style="margin-top:6px;font-size:0.78rem;color:var(--text-muted);">' +
-      '<button type="button" id="comp-select-all" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:0.78rem;">全选</button> · ' +
+      '<span id="comp-method-count">已选 3 / 3</span> · ' +
       '<button type="button" id="comp-deselect-all" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:0.78rem;">清空</button>' +
       '</div>' +
       '</div>' +
@@ -133,21 +135,37 @@ function renderCompositeComponent() {
       '</div>' +
       '<div id="comp-result-area" class="hidden"><div id="comp-result-container"></div></div>';
 
-    // 全选/清空
-    var selectAll = container.querySelector('#comp-select-all');
-    var deselectAll = container.querySelector('#comp-deselect-all');
-    if (selectAll) {
-      selectAll.addEventListener('click', function () {
-        var checks = container.querySelectorAll('input[name="compMethod"]');
-        for (var i = 0; i < checks.length; i++) checks[i].checked = true;
+    // 术数选择上限（最多 3 门）
+    var methodCountEl = container.querySelector('#comp-method-count');
+    function checkedMethodCount() {
+      return container.querySelectorAll('input[name="compMethod"]:checked').length;
+    }
+    function updateMethodCount() {
+      if (!methodCountEl) return;
+      var c = checkedMethodCount();
+      methodCountEl.textContent = '已选 ' + c + ' / ' + MAX_METHODS;
+      methodCountEl.style.color = c >= MAX_METHODS ? 'var(--gold)' : 'var(--text-muted)';
+    }
+    var methodChecks = container.querySelectorAll('input[name="compMethod"]');
+    for (var mi = 0; mi < methodChecks.length; mi++) {
+      methodChecks[mi].addEventListener('change', function () {
+        if (this.checked && checkedMethodCount() > MAX_METHODS) {
+          this.checked = false;
+          if (typeof showToast === 'function') showToast('最多选择 ' + MAX_METHODS + ' 门术数');
+        }
+        updateMethodCount();
       });
     }
+
+    var deselectAll = container.querySelector('#comp-deselect-all');
     if (deselectAll) {
       deselectAll.addEventListener('click', function () {
         var checks = container.querySelectorAll('input[name="compMethod"]');
         for (var i = 0; i < checks.length; i++) checks[i].checked = false;
+        updateMethodCount();
       });
     }
+    updateMethodCount();
 
     // 所问之事实时事域提示
     var questionInput = container.querySelector('#comp-question');
@@ -208,6 +226,10 @@ function handleCompositeSubmit(container) {
 
     if (methods.length === 0) {
       if (typeof showToast === 'function') showToast('请至少选择一种术数');
+      return;
+    }
+    if (methods.length > 3) {
+      if (typeof showToast === 'function') showToast('最多选择 3 门术数');
       return;
     }
 

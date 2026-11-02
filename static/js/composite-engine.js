@@ -6,82 +6,104 @@
 (function (global) {
   'use strict';
 
-  /* ========== 评分提取（通用） ========== */
+  /* ========== 评分提取（确定性，禁止随机） ========== */
+
+  /** 统一夹取到 0-100 整数 */
+  function clampScore(v) {
+    return Math.max(0, Math.min(100, Math.round(v)));
+  }
+
+  /**
+   * 无明确评分字段时的稳定兜底：
+   * 用结果内容哈希生成固定分数，保证同输入同结果，不引入 Math.random。
+   */
+  function stableFallbackScore(raw) {
+    var s = '';
+    try {
+      s = JSON.stringify(raw);
+    } catch (e) {
+      s = String(raw);
+    }
+    var h = 0;
+    for (var i = 0; i < s.length; i++) {
+      h = (h * 31 + s.charCodeAt(i)) % 100000;
+    }
+    return 56 + (h % 15); // 56-70，稳定中性偏上
+  }
+
   function getScoreFromResult(raw, key) {
     if (!raw) return 60;
     try {
+      // 引擎自带 score 的（如六爻）直接采用，保证评分来自盘面而非二次猜测
+      if (typeof raw.score === 'number' && isFinite(raw.score)) return clampScore(raw.score);
+
       switch (key) {
-        case 'bazi':
-          if (raw['综合运势']) {
-            var v = raw['综合运势'];
-            if (typeof v === 'string') {
-              if (v.indexOf('上') !== -1 || v.indexOf('吉') !== -1) return 75 + Math.floor(Math.random() * 15);
-              if (v.indexOf('平') !== -1) return 55 + Math.floor(Math.random() * 10);
-              return 45 + Math.floor(Math.random() * 10);
-            }
+        case 'bazi': {
+          // 八字引擎「反内耗」分析自带五行平衡分，作为命局稳定评分来源
+          if (global.BaziEngine && global.BaziEngine.balance) {
+            var b = global.BaziEngine.balance(raw);
+            if (b && typeof b.score === 'number') return clampScore(b.score);
           }
-          return 65 + Math.floor(Math.random() * 20);
-        case 'liuyao':
-          if (raw.level) {
-            if (raw.level.includes('上')) return 78 + Math.floor(Math.random() * 17);
-            if (raw.level.includes('中')) return 58 + Math.floor(Math.random() * 15);
-            return 38 + Math.floor(Math.random() * 15);
-          }
-          return 60 + Math.floor(Math.random() * 15);
-        case 'meihua':
-          if (raw.ti_yong && raw.ti_yong.relation) {
-            var r = raw.ti_yong.relation;
-            if (r === '用生体') return 82 + Math.floor(Math.random() * 13);
-            if (r === '体用比和') return 75 + Math.floor(Math.random() * 10);
-            if (r === '体克用') return 70 + Math.floor(Math.random() * 10);
-            if (r === '体生用') return 55 + Math.floor(Math.random() * 10);
-            return 38 + Math.floor(Math.random() * 12);
-          }
-          return 60 + Math.floor(Math.random() * 20);
-        case 'qimen':
-          if (raw.interpretation && raw.interpretation.indexOf('吉') !== -1 && raw.interpretation.indexOf('凶') === -1)
-            return 72 + Math.floor(Math.random() * 18);
-          if (raw.interpretation && raw.interpretation.indexOf('凶') !== -1) return 38 + Math.floor(Math.random() * 15);
-          return 55 + Math.floor(Math.random() * 20);
-        case 'taiyi':
-          if (raw.outcome) {
-            if (raw.outcome === '利主') return 70 + Math.floor(Math.random() * 15);
-            if (raw.outcome === '利客') return 55 + Math.floor(Math.random() * 15);
-          }
-          return 55 + Math.floor(Math.random() * 20);
-        case 'zhuge':
-          if (raw.level) {
-            if (raw.level.includes('上上')) return 88 + Math.floor(Math.random() * 12);
-            if (raw.level.includes('上吉')) return 80 + Math.floor(Math.random() * 8);
-            if (raw.level.includes('中吉')) return 68 + Math.floor(Math.random() * 12);
-            if (raw.level.includes('中平')) return 52 + Math.floor(Math.random() * 13);
-            return 35 + Math.floor(Math.random() * 17);
-          }
-          return 55 + Math.floor(Math.random() * 20);
-        case 'zhougong':
-          if (raw.ji) {
-            if (raw.ji === '吉') return 72 + Math.floor(Math.random() * 18);
-            if (raw.ji === '凶') return 30 + Math.floor(Math.random() * 20);
-          }
-          return 50 + Math.floor(Math.random() * 20);
-        case 'daliuren':
-          if (raw.level) {
-            if (raw.level.includes('吉') || raw.level.includes('上')) return 75 + Math.floor(Math.random() * 15);
-            if (raw.level.includes('凶')) return 35 + Math.floor(Math.random() * 15);
-          }
-          return 60 + Math.floor(Math.random() * 15);
-        case 'ziwei':
-          if (raw.总体运势) {
-            if (raw.总体运势.indexOf('吉') !== -1 || raw.总体运势.indexOf('上') !== -1)
-              return 75 + Math.floor(Math.random() * 15);
-            if (raw.总体运势.indexOf('平') !== -1) return 55 + Math.floor(Math.random() * 10);
-          }
-          return 60 + Math.floor(Math.random() * 20);
+          return stableFallbackScore(raw);
+        }
+        case 'liuyao': {
+          var lvl = raw.level || '';
+          if (lvl.indexOf('上') !== -1) return 86;
+          if (lvl.indexOf('中') !== -1) return 68;
+          if (lvl.indexOf('下') !== -1) return 46;
+          return stableFallbackScore(raw);
+        }
+        case 'meihua': {
+          var r = raw.ti_yong && raw.ti_yong.relation;
+          if (r === '用生体') return 88;
+          if (r === '体用比和') return 80;
+          if (r === '体克用') return 74;
+          if (r === '体生用') return 60;
+          if (r === '用克体') return 44;
+          return 62;
+        }
+        case 'qimen': {
+          var t = raw.interpretation || '';
+          if (t.indexOf('凶') === -1 && t.indexOf('吉') !== -1) return 76;
+          if (t.indexOf('凶') !== -1) return 46;
+          return 62;
+        }
+        case 'taiyi': {
+          if (raw.outcome === '利主') return 80;
+          if (raw.outcome === '利客') return 62;
+          return 60;
+        }
+        case 'zhuge': {
+          var zl = raw.level || '';
+          if (zl.indexOf('上上') !== -1) return 92;
+          if (zl.indexOf('上吉') !== -1) return 84;
+          if (zl.indexOf('中吉') !== -1) return 72;
+          if (zl.indexOf('中平') !== -1) return 58;
+          if (zl.indexOf('下') !== -1) return 42;
+          return 60;
+        }
+        case 'zhougong': {
+          if (raw.ji === '吉') return 80;
+          if (raw.ji === '凶') return 38;
+          return 58;
+        }
+        case 'daliuren': {
+          var dl = raw.level || '';
+          if (dl.indexOf('凶') !== -1) return 44;
+          if (dl.indexOf('吉') !== -1 || dl.indexOf('上') !== -1) return 82;
+          return 60;
+        }
+        case 'ziwei': {
+          var zw = raw.总体运势 || '';
+          if (zw.indexOf('吉') !== -1 || zw.indexOf('上') !== -1) return 82;
+          if (zw.indexOf('平') !== -1) return 62;
+          return 55;
+        }
         default:
-          return 60 + Math.floor(Math.random() * 15);
+          return stableFallbackScore(raw);
       }
     } catch (e) {
-      return 60 + Math.floor(Math.random() * 15);
+      return stableFallbackScore(raw);
     }
   }
 
@@ -760,6 +782,8 @@
               var er = engineResults[i];
               if (er.raw === null) continue;
               var norm = normalizeResult(er.key, er.raw, er.config);
+              // 保留原始结果，供体验页做「事域关联」等二次解读（不改变原有字段）
+              norm.raw = er.raw;
               normalized.push(norm);
             }
 
@@ -783,7 +807,9 @@
                   return er.raw !== null;
                 })
                 .map(function (er) {
-                  return normalizeResult(er.key, er.raw || {}, er.config);
+                  var norm = normalizeResult(er.key, er.raw || {}, er.config);
+                  norm.raw = er.raw;
+                  return norm;
                 }),
               synthesis: {
                 consensus: '推演完成（部分结果异常）',
