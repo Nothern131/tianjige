@@ -2828,6 +2828,35 @@
           '，' +
           (result.facingShun ? '阳顺' : '阴逆') +
           '）。此为玄空飞星排盘之关键，顺逆有别，吉凶各异。</p>';
+        // 三元龙速查：把二十四山的卦、阴阳、龙位一次列清，便于对照古籍核对
+        function sanyuanLong(mountain) {
+          if ('子午卯酉乾坤艮巽'.indexOf(mountain) >= 0) return '天元龙';
+          if ('辰戌丑未甲庚丙壬'.indexOf(mountain) >= 0) return '地元龙';
+          return '人元龙'; // 寅申巳亥乙辛丁癸
+        }
+        html +=
+          '<p style="margin-top:10px"><span class="highlight">三元龙口诀：</span>天元龙（子午卯酉、乾坤艮巽）、地元龙（辰戌丑未、甲庚丙壬）、人元龙（寅申巳亥、乙辛丁癸）。</p>';
+        html +=
+          '<div class="table-wrap"><table class="detail-table"><thead><tr><th>项目</th><th>二十四山</th><th>所属八卦</th><th>阴阳</th><th>三元龙</th><th>飞星</th></tr></thead><tbody>';
+        var sitRow = { label: '坐山', mountain: result.sitting, shun: result.mountainShun };
+        var faceRow = { label: '朝向', mountain: result.facing, shun: result.facingShun };
+        [sitRow, faceRow].forEach(function (row) {
+          html +=
+            '<tr><td>' +
+            row.label +
+            '</td><td>' +
+            (FengshuiEngine.MOUNTAIN_NAMES[row.mountain] || row.mountain) +
+            '</td><td>' +
+            (FengshuiEngine.MOUNTAIN_GUA[row.mountain] || '—') +
+            '卦</td><td>' +
+            (FengshuiEngine.MOUNTAIN_YINYANG[row.mountain] || '—') +
+            '</td><td>' +
+            sanyuanLong(row.mountain) +
+            '</td><td>' +
+            (row.shun ? '顺飞' : '逆飞') +
+            '</td></tr>';
+        });
+        html += '</tbody></table></div>';
         if (sitGong) {
           html +=
             '<p>中宫飞星组合：运' +
@@ -2913,6 +2942,92 @@
             gongAdvice +
             '</p>';
         }
+        html += '</div>';
+
+        // 4.4 关键方位速查（全部由已算星曜提取，不另起一套判断）
+        html += '<div class="analysis-block">';
+        html += '<h4><span class="icon">🧭</span>关键方位速查</h4>';
+        function pickPalaces(testFn, limit) {
+          var arr = [];
+          for (var pi = 0; pi < result.palaces.length; pi++) {
+            if (testFn(result.palaces[pi])) arr.push(result.palaces[pi]);
+          }
+          arr.sort(function (a, b) {
+            return b.score - a.score;
+          });
+          return arr.slice(0, limit || 2);
+        }
+        function starNameOf(n) {
+          return (FengshuiEngine.STARS[n] || {}).name || String(n) + '星';
+        }
+        function starText(p, nums) {
+          var parts = [];
+          if (nums.indexOf(p.periodStar) >= 0) parts.push('运' + p.periodStar);
+          if (nums.indexOf(p.mountainStar) >= 0) parts.push('山' + p.mountainStar);
+          if (nums.indexOf(p.facingStar) >= 0) parts.push('向' + p.facingStar);
+          if (nums.indexOf(p.annualStar) >= 0) parts.push('年' + p.annualStar);
+          return parts.join('/') || '运' + p.periodStar + '山' + p.mountainStar + '向' + p.facingStar;
+        }
+        function renderQuick(label, list, nums, useText, emptyText) {
+          html += '<p><span class="good">' + label + '：</span>';
+          if (list.length === 0) {
+            html += emptyText + '。</p>';
+            return;
+          }
+          var segs = [];
+          for (var li = 0; li < list.length; li++) {
+            segs.push(list[li].name + '（' + starText(list[li], nums) + '）' + useText);
+          }
+          html += segs.join('；') + '。</p>';
+        }
+        var caiList = pickPalaces(function (p) {
+          return p.facingStar === 8;
+        }, 2);
+        if (caiList.length === 0)
+          caiList = pickPalaces(function (p) {
+            return p.annualStar === 8;
+          }, 2);
+        var dingList = pickPalaces(function (p) {
+          return p.mountainStar === 8;
+        }, 2);
+        var wenList = pickPalaces(function (p) {
+          return (
+            p.periodStar === 4 ||
+            p.mountainStar === 4 ||
+            p.facingStar === 4 ||
+            p.periodStar === 1 ||
+            p.mountainStar === 1 ||
+            p.facingStar === 1
+          );
+        }, 2);
+        var xiList = pickPalaces(function (p) {
+          return p.periodStar === 9 || p.mountainStar === 9 || p.facingStar === 9;
+        }, 2);
+        renderQuick('财位', caiList, [8], '，宜放貔貅、聚宝盆、黄水晶，忌堆杂物', '本年无明显八白财位，以向首开阔聚气为要');
+        renderQuick('丁位', dingList, [8], '，宜放紫水晶、葫芦，保持安静', '本年无明显八白丁位，以坐山安稳为要');
+        renderQuick('文昌位', wenList, [4, 1], '，宜放文昌塔、绿植、书桌', '本年无明显四绿/一白文昌位，可在书桌东南方置绿植');
+        renderQuick('喜庆位', xiList, [9], '，宜放红色、紫色饰品，利喜庆桃花', '本年无明显九紫喜庆位');
+        // 年星煞位单独标注，避免与宅星吉位混淆
+        html += '<p><span class="warn">煞位：</span>';
+        var shaList = [];
+        for (var pi2 = 0; pi2 < result.palaces.length; pi2++) {
+          var pal = result.palaces[pi2];
+          if (pal.annualStar === 5) shaList.push(pal.name + '（年五黄，忌动土，宜铜器泄土）');
+          else if (pal.annualStar === 2) shaList.push(pal.name + '（年二黑，防病，宜铜葫芦）');
+        }
+        html += shaList.length > 0 ? shaList.join('；') + '。' : '本年无五黄、二黑临宫，保持整洁通风即可。';
+        html += '</p>';
+        html +=
+          '<p style="font-size:0.78rem;color:var(--text3)">星曜对照：' +
+          [
+            starNameOf(8) + '（旺财旺丁）',
+            starNameOf(9) + '（喜庆桃花）',
+            starNameOf(1) + '（文昌官贵）',
+            starNameOf(4) + '（文昌学业）',
+            starNameOf(5) + '（五黄大煞）',
+            starNameOf(2) + '（二黑病符）',
+          ].join(' · ') +
+          '</p>';
         html += '</div>';
 
         // 4.5 三般卦 / 七星打劫（特殊格局）
