@@ -216,6 +216,35 @@
         font-size: 0.74rem; color: var(--text3); line-height: 1.7;
         margin-bottom: 14px;
       }
+      /* 卦例盒 · 复盘 */
+      .case-save-btn {
+        margin-left: auto; background: var(--gold-subtle); border: 1px solid var(--border-gold);
+        color: var(--text2); font-family: var(--font-sans); font-size: 0.68rem;
+        padding: 3px 10px; border-radius: 999px; cursor: pointer; letter-spacing: 0.04em;
+        transition: color 0.25s, border-color 0.25s, background 0.25s;
+      }
+      .case-save-btn:hover { color: var(--gold-light); border-color: var(--gold-dim); background: var(--gold-glow); }
+      .case-save-btn + .num { margin-left: 8px; }
+      .replay-note {
+        font-size: 0.76rem; color: var(--gold-light); background: var(--gold-subtle);
+        border: 1px dashed var(--border-gold); border-radius: var(--radius-sm);
+        padding: 8px 12px; margin-bottom: 14px; line-height: 1.6;
+      }
+      .case-list { display: flex; flex-direction: column; gap: 10px; }
+      .case-item {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold);
+        border-radius: var(--radius-sm); padding: 12px 14px;
+        display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      }
+      .case-meta { font-size: 0.72rem; color: var(--text3); }
+      .case-q { font-size: 0.82rem; color: var(--text); flex: 1; min-width: 160px; }
+      .case-actions { display: flex; gap: 6px; }
+      .case-btn {
+        background: none; border: 1px solid var(--border-gold); color: var(--text2);
+        font-size: 0.7rem; padding: 3px 10px; border-radius: 999px; cursor: pointer;
+      }
+      .case-btn:hover { color: var(--gold-light); border-color: var(--gold-dim); }
+      .case-btn.danger:hover { color: var(--red-light); border-color: var(--red); }
       .time-note {
         margin-top: 4px; padding: 12px 16px; border-left: 2px solid var(--gold-dim);
         background: rgba(184,154,92,0.05); border-radius: var(--radius-sm);
@@ -564,7 +593,11 @@
 
       <!-- 02 综合评分 -->
       <div class="glass-card fade-up hidden" id="scoreCard">
-        <div class="section-title">分层总览<span class="num">02</span></div>
+        <div class="section-title">分层总览
+          <button type="button" class="case-save-btn" id="comp-save-case">💾 保存卦例</button>
+          <span class="num">02</span>
+        </div>
+        <div class="replay-note hidden" id="replayNote"></div>
         <div id="scoreContent"></div>
       </div>
 
@@ -590,6 +623,13 @@
       <div class="glass-card fade-up hidden" id="narrativeCard">
         <div class="section-title">融合研判 · 命事互证<span class="num">06</span></div>
         <div id="narrativeContent"></div>
+      </div>
+
+      <!-- 07 卦例盒 -->
+      <div class="card fade-up" id="caseCard">
+        <div class="section-title">卦例盒 · 复盘<span class="num">07</span></div>
+        <div class="layer-note" style="margin-bottom:12px;">保存本次起盘时刻与原始结果；复盘直接载入存档，不重新起盘，因此不会换盘。</div>
+        <div id="caseContent"></div>
       </div>
 
       <!-- 免责声明 -->
@@ -656,6 +696,11 @@
       var METHOD_META = {};
       METHODS.forEach(function(m){ METHOD_NAMES[m.id] = m.name; METHOD_META[m.id] = m; });
       var currentQuestion = '';
+
+      // A3 复盘：保存本次起盘参数与原始结果，载入时不重跑引擎，避免换盘
+      var CASE_KEY = 'tj_ep11_cases_v1';
+      var MAX_CASES = 5;
+      var lastRun = null;
 
       // 起盘基准：非实时盘取出生信息，实时/时空盘取本次占测日期与占时
       function momentText(nature, uiParams){
@@ -887,6 +932,9 @@
           setTimeout(function(){
             try {
               renderAll(data, selected, uiParams);
+              lastRun = { data: data, methods: selected.slice(), params: uiParams, savedAt: new Date().toISOString() };
+              var replayNote = document.getElementById('replayNote');
+              if(replayNote) replayNote.classList.add('hidden');
               fill.style.width = '100%';
               ptext.textContent = '推演完成';
               progress.classList.add('hidden');
@@ -1323,6 +1371,164 @@
           return '<span style="display:block;">' + escHtml(t) + '</span>';
         }).join('');
       }
+
+      // ===== A3 卦例盒：读档复盘 =====
+      function loadCases(){
+        try {
+          var raw = localStorage.getItem(CASE_KEY);
+          var list = raw ? JSON.parse(raw) : [];
+          return Array.isArray(list) ? list : [];
+        } catch(e){
+          console.warn('[EP11] 卦例读取失败', e);
+          return [];
+        }
+      }
+
+      function persistCases(list){
+        try {
+          localStorage.setItem(CASE_KEY, JSON.stringify(list));
+          return true;
+        } catch(e){
+          console.warn('[EP11] 卦例写入失败', e);
+          showToast('保存失败：浏览器本地存储不可用或已满');
+          return false;
+        }
+      }
+
+      function formatSavedAt(iso){
+        if(!iso) return '未知时间';
+        var d = new Date(iso);
+        if(isNaN(d.getTime())) return String(iso);
+        function p(n){ return n < 10 ? '0' + n : String(n); }
+        return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+          ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+      }
+
+      function setFieldValue(id, val){
+        var el = document.getElementById(id);
+        if(!el || val === undefined || val === null) return;
+        el.value = String(val);
+      }
+
+      // 复盘时把表单恢复到当时填写的样子，便于对照重排
+      function applyCaseForm(params){
+        params = params || {};
+        setFieldValue('comp-birth-date', params.birthDate);
+        setFieldValue('comp-birth-time', params.birthTime);
+        setFieldValue('comp-gender', params.gender);
+        setFieldValue('comp-date', params.date);
+        setFieldValue('comp-hour', params.hour);
+        setFieldValue('comp-question', params.question);
+        setFieldValue('comp-dream-text', params.dreamText);
+        setFieldValue('comp-fs-sitting', params.fengshuiSitting);
+        setFieldValue('comp-fs-facing', params.fengshuiFacing);
+        var fy = document.getElementById('comp-fs-year');
+        if(fy) fy.value = params.fengshuiBuildYear ? String(params.fengshuiBuildYear) : '';
+      }
+
+      function applyCaseMethods(methods){
+        var list = methods || [];
+        chips.forEach(function(chip){
+          var input = chip.querySelector('input');
+          input.checked = list.indexOf(input.value) !== -1;
+          syncChip(chip, input);
+        });
+        toggleDream();
+        updateCount();
+      }
+
+      function renderCaseBox(){
+        var el = document.getElementById('caseContent');
+        if(!el) return;
+        var list = loadCases();
+        if(!list.length){
+          el.innerHTML = '<div class="layer-note">暂无卦例。推演完成后点「保存卦例」，即可固定本次起盘时刻与原始结果；下次复盘直接载入存档，不会换盘。</div>';
+          return;
+        }
+        var html = '<div class="case-list">';
+        list.forEach(function(c, idx){
+          var p = c.params || {};
+          var names = (c.methods || []).map(function(k){ return METHOD_NAMES[k] || k; }).join('、');
+          html += '<div class="case-item">' +
+            '<div class="case-meta"><span>' + escHtml(formatSavedAt(c.savedAt)) + '</span><span>' +
+              escHtml(names || '未记录术数') + '</span></div>' +
+            '<div class="case-q">' + (c.question ? escHtml(c.question) : '未填所问之事') + '</div>' +
+            '<div class="case-meta"><span>起盘 ' + escHtml((p.date || '未记') + ' ' + (p.hour || '')) + '</span></div>' +
+            '<div class="case-actions">' +
+              '<button type="button" class="case-btn" data-action="replay" data-idx="' + idx + '">复盘</button>' +
+              '<button type="button" class="case-btn danger" data-action="delete" data-idx="' + idx + '">删除</button>' +
+            '</div>' +
+          '</div>';
+        });
+        html += '</div>';
+        el.innerHTML = html;
+      }
+
+      function replayCase(idx){
+        var list = loadCases();
+        var c = list[idx];
+        if(!c){ showToast('卦例不存在，可能已被删除'); renderCaseBox(); return; }
+
+        applyCaseForm(c.params);
+        setMode('custom', false);
+        applyCaseMethods(c.methods);
+        currentQuestion = (c.params && c.params.question) || '';
+
+        // 直接渲染存档结果，不重跑引擎：六爻不重摇、梅花不重取数，所以不会换盘
+        renderAll(c.data || {}, c.methods || [], c.params || {});
+        lastRun = null;
+
+        var note = document.getElementById('replayNote');
+        if(note){
+          note.textContent = '复盘 · 已载入 ' + formatSavedAt(c.savedAt) +
+            ' 的卦例，结果原样显示，未重新起盘，因此不会换盘。';
+          note.classList.remove('hidden');
+        }
+        var progress = document.getElementById('comp-progress');
+        if(progress) progress.classList.add('hidden');
+        var btn = document.getElementById('comp-submit');
+        if(btn){ btn.disabled = false; btn.textContent = '🧩 重新合参'; }
+
+        document.getElementById('scoreCard').scrollIntoView({behavior:'smooth',block:'start'});
+        showToast('已载入卦例，未重新起盘');
+      }
+
+      function deleteCase(idx){
+        var list = loadCases();
+        if(!list[idx]) return;
+        var removed = list.splice(idx, 1)[0];
+        if(!persistCases(list)) return;
+        renderCaseBox();
+        showToast('已删除 ' + formatSavedAt(removed.savedAt) + ' 的卦例');
+      }
+
+      document.getElementById('comp-save-case').addEventListener('click', function(){
+        if(!lastRun){ showToast('请先推演一次再保存'); return; }
+        var list = loadCases();
+        list.unshift({
+          savedAt: lastRun.savedAt,
+          methods: lastRun.methods,
+          params: lastRun.params,
+          question: lastRun.params.question || '',
+          data: lastRun.data
+        });
+        if(list.length > MAX_CASES) list.length = MAX_CASES;
+        if(!persistCases(list)) return;
+        lastRun = null;
+        renderCaseBox();
+        showToast('已保存本次卦例（最多保留 ' + MAX_CASES + ' 条）');
+      });
+
+      document.getElementById('caseContent').addEventListener('click', function(e){
+        var btn = e.target.closest('[data-action]');
+        if(!btn) return;
+        var idx = parseInt(btn.dataset.idx, 10);
+        if(isNaN(idx)) return;
+        if(btn.dataset.action === 'replay') replayCase(idx);
+        else if(btn.dataset.action === 'delete') deleteCase(idx);
+      });
+
+      renderCaseBox();
 
       // ===== Toast =====
       var toastEl = null;
