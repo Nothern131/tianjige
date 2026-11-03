@@ -94,17 +94,24 @@
   function execute(key, uiParams) {
     var config = REGISTRY[key];
     if (!config) {
+      if (typeof console !== 'undefined' && console.warn) console.warn('[引擎注册中心] 未注册的引擎: ' + key);
       return Promise.resolve(null);
     }
 
     try {
       var engineObj = global[config.engineName];
       if (!engineObj) {
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('[引擎注册中心] 引擎未加载: ' + config.engineName + '（' + key + '）');
+        }
         return Promise.resolve(null);
       }
 
       var fn = engineObj[config.methodName];
       if (typeof fn !== 'function') {
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('[引擎注册中心] 引擎缺少方法: ' + config.engineName + '.' + config.methodName);
+        }
         return Promise.resolve(null);
       }
 
@@ -123,6 +130,9 @@
       var result = fn.apply(engineObj, args);
       return Promise.resolve(result);
     } catch (err) {
+      if (typeof console !== 'undefined' && console.error) {
+        console.error('[引擎注册中心] ' + key + ' 执行异常', err);
+      }
       return Promise.resolve(null);
     }
   }
@@ -140,6 +150,9 @@
           return { key: key, raw: raw, config: REGISTRY[key] };
         })
         .catch(function (err) {
+          if (typeof console !== 'undefined' && console.error) {
+            console.error('[引擎注册中心] ' + key + ' 批量执行异常', err);
+          }
           return { key: key, raw: null, config: REGISTRY[key] };
         });
     });

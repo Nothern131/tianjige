@@ -14,101 +14,125 @@
   }
 
   /**
-   * 无明确评分字段时的稳定兜底：
-   * 用结果内容哈希生成固定分数，保证同输入同结果，不引入 Math.random。
+   * 解析单引擎评分
+   * 返回 { score, estimated }：estimated=true 表示该引擎没有可解析的评分字段，
+   * 采用中性 60 分参与，并在结果中显式标记，不再用哈希伪造分数。
    */
-  function stableFallbackScore(raw) {
-    var s = '';
-    try {
-      s = JSON.stringify(raw);
-    } catch (e) {
-      s = String(raw);
-    }
-    var h = 0;
-    for (var i = 0; i < s.length; i++) {
-      h = (h * 31 + s.charCodeAt(i)) % 100000;
-    }
-    return 56 + (h % 15); // 56-70，稳定中性偏上
-  }
-
-  function getScoreFromResult(raw, key) {
-    if (!raw) return 60;
+  function resolveScore(raw, key) {
+    if (!raw) return { score: 60, estimated: true };
     try {
       // 引擎自带 score 的（如六爻）直接采用，保证评分来自盘面而非二次猜测
-      if (typeof raw.score === 'number' && isFinite(raw.score)) return clampScore(raw.score);
+      if (typeof raw.score === 'number' && isFinite(raw.score)) {
+        return { score: clampScore(raw.score), estimated: false };
+      }
 
       switch (key) {
         case 'bazi': {
           // 八字引擎「反内耗」分析自带五行平衡分，作为命局稳定评分来源
           if (global.BaziEngine && global.BaziEngine.balance) {
             var b = global.BaziEngine.balance(raw);
-            if (b && typeof b.score === 'number') return clampScore(b.score);
+            if (b && typeof b.score === 'number') return { score: clampScore(b.score), estimated: false };
           }
-          return stableFallbackScore(raw);
+          return { score: 60, estimated: true };
         }
         case 'liuyao': {
           var lvl = raw.level || '';
-          if (lvl.indexOf('上') !== -1) return 86;
-          if (lvl.indexOf('中') !== -1) return 68;
-          if (lvl.indexOf('下') !== -1) return 46;
-          return stableFallbackScore(raw);
+          if (lvl.indexOf('上') !== -1) return { score: 86, estimated: false };
+          if (lvl.indexOf('中') !== -1) return { score: 68, estimated: false };
+          if (lvl.indexOf('下') !== -1) return { score: 46, estimated: false };
+          return { score: 60, estimated: true };
         }
         case 'meihua': {
-          var r = raw.ti_yong && raw.ti_yong.relation;
-          if (r === '用生体') return 88;
-          if (r === '体用比和') return 80;
-          if (r === '体克用') return 74;
-          if (r === '体生用') return 60;
-          if (r === '用克体') return 44;
-          return 62;
+          // 梅花引擎实际字段是 sheng_ke.等级 / sheng_ke.关系，不是 ti_yong
+          var sk = raw.sheng_ke || {};
+          var skLevel = sk['等级'];
+          if (typeof skLevel === 'number') {
+            if (skLevel >= 4) return { score: 88, estimated: false }; // 用生体，大吉
+            if (skLevel === 3) return { score: 80, estimated: false }; // 体用比和，中吉
+            if (skLevel === 2) return { score: 62, estimated: false }; // 体生用，小吉
+            if (skLevel === 1) return { score: 48, estimated: false }; // 体克用，凶
+            return { score: 38, estimated: false }; // 用克体，大凶
+          }
+          var relation = sk['关系'] || '';
+          if (relation.indexOf('用生体') !== -1) return { score: 88, estimated: false };
+          if (relation.indexOf('比和') !== -1) return { score: 80, estimated: false };
+          if (relation.indexOf('体生用') !== -1) return { score: 62, estimated: false };
+          if (relation.indexOf('体克用') !== -1) return { score: 48, estimated: false };
+          if (relation.indexOf('用克体') !== -1) return { score: 38, estimated: false };
+          return { score: 60, estimated: true };
         }
         case 'qimen': {
-          var t = raw.interpretation || '';
-          if (t.indexOf('凶') === -1 && t.indexOf('吉') !== -1) return 76;
-          if (t.indexOf('凶') !== -1) return 46;
-          return 62;
+          // 以八门吉凶计数为准：5 宫以上得三吉门为偏吉，4 宫吉凶参半，3 宫以下偏凶
+          var cells = raw.cells || {};
+          var goodDoors = 0;
+          var doorCount = 0;
+          for (var p in cells) {
+            if (!cells.hasOwnProperty(p) || !cells[p] || !cells[p].door) continue;
+            doorCount++;
+            if (['休门', '生门', '开门'].indexOf(cells[p].door) !== -1) goodDoors++;
+          }
+          if (doorCount === 0) return { score: 60, estimated: true };
+          if (goodDoors >= 5) return { score: 76, estimated: false };
+          if (goodDoors === 4) return { score: 62, estimated: false };
+          return { score: 46, estimated: false };
         }
         case 'taiyi': {
-          if (raw.outcome === '利主') return 80;
-          if (raw.outcome === '利客') return 62;
-          return 60;
+          // 重写后的太乙引擎以 taiyi_god.auspicious 定吉凶，不再有 outcome 字段
+          var god = raw.taiyi_god || {};
+          if (god.auspicious === '吉') return { score: 78, estimated: false };
+          if (god.auspicious === '凶') return { score: 44, estimated: false };
+          return { score: 60, estimated: true };
         }
         case 'zhuge': {
           var zl = raw.level || '';
-          if (zl.indexOf('上上') !== -1) return 92;
-          if (zl.indexOf('上吉') !== -1) return 84;
-          if (zl.indexOf('中吉') !== -1) return 72;
-          if (zl.indexOf('中平') !== -1) return 58;
-          if (zl.indexOf('下') !== -1) return 42;
-          return 60;
+          if (zl.indexOf('上上') !== -1) return { score: 92, estimated: false };
+          if (zl.indexOf('中上') !== -1) return { score: 78, estimated: false };
+          if (zl.indexOf('上') !== -1) return { score: 84, estimated: false };
+          if (zl.indexOf('中下') !== -1) return { score: 48, estimated: false };
+          if (zl.indexOf('中') !== -1) return { score: 62, estimated: false };
+          if (zl.indexOf('下') !== -1) return { score: 38, estimated: false };
+          return { score: 60, estimated: true };
         }
         case 'zhougong': {
-          if (raw.ji === '吉') return 80;
-          if (raw.ji === '凶') return 38;
-          return 58;
+          if (raw.ji === '吉') return { score: 80, estimated: false };
+          if (raw.ji === '凶') return { score: 38, estimated: false };
+          if (raw.ji === '中') return { score: 58, estimated: false };
+          return { score: 60, estimated: true };
         }
         case 'daliuren': {
           var dl = raw.level || '';
-          if (dl.indexOf('凶') !== -1) return 44;
-          if (dl.indexOf('吉') !== -1 || dl.indexOf('上') !== -1) return 82;
-          return 60;
+          if (dl.indexOf('凶') !== -1) return { score: 44, estimated: false };
+          if (dl.indexOf('吉') !== -1 || dl.indexOf('上') !== -1) return { score: 82, estimated: false };
+          if (dl.indexOf('平') !== -1) return { score: 60, estimated: false };
+          return { score: 60, estimated: true };
         }
         case 'ziwei': {
           var zw = raw.总体运势 || '';
-          if (zw.indexOf('吉') !== -1 || zw.indexOf('上') !== -1) return 82;
-          if (zw.indexOf('平') !== -1) return 62;
-          return 55;
+          if (zw.indexOf('吉星') !== -1 || zw.indexOf('中上') !== -1) return { score: 82, estimated: false };
+          if (zw.indexOf('中平') !== -1 || zw.indexOf('平') !== -1) return { score: 62, estimated: false };
+          if (zw.indexOf('煞') !== -1 || zw.indexOf('波折') !== -1 || zw.indexOf('凶') !== -1) {
+            return { score: 45, estimated: false };
+          }
+          return { score: 60, estimated: true };
+        }
+        case 'fengshui': {
+          // 风水权重为 0，不参与合参打分，但其自身均分可用于环境参考卡
+          if (typeof raw.overallScore === 'number') return { score: clampScore(raw.overallScore), estimated: false };
+          return { score: 60, estimated: true };
         }
         default:
-          return stableFallbackScore(raw);
+          return { score: 60, estimated: true };
       }
     } catch (e) {
-      return stableFallbackScore(raw);
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('[合参] ' + key + ' 评分解析异常，按中性60分处理', e);
+      }
+      return { score: 60, estimated: true };
     }
   }
 
   function getTrendFromResult(raw, key) {
-    var score = getScoreFromResult(raw, key);
+    var score = resolveScore(raw, key).score;
     if (score >= 72) return 'up';
     if (score <= 45) return 'down';
     return 'flat';
@@ -120,7 +144,9 @@
       raw = {};
     }
     var cfg = config || { name: key, icon: '❓', weight: 1.0 };
-    var score = getScoreFromResult(raw, key);
+    var resolved = resolveScore(raw, key);
+    var score = resolved.score;
+    var scoreEstimated = resolved.estimated;
     var trend = getTrendFromResult(raw, key);
     var summary = '',
       detail = '',
@@ -130,52 +156,112 @@
     try {
       switch (key) {
         case 'bazi': {
-          var riZhu = raw['日柱'] || '?';
-          var dayMaster = typeof riZhu === 'string' && riZhu.length > 0 ? riZhu[0] : '?';
+          var dayMaster =
+            raw['日主'] ||
+            (typeof raw['日柱'] === 'string' && raw['日柱'].length > 0 ? raw['日柱'][0] : '?');
           var dayWx =
+            raw['日主五行'] ||
             { 甲: '木', 乙: '木', 丙: '火', 丁: '火', 戊: '土', 己: '土', 庚: '金', 辛: '金', 壬: '水', 癸: '水' }[
               dayMaster
-            ] || '?';
-          summary = '日主' + dayMaster + '（五行属' + dayWx + '），本命格局稳固，五行流通有情。';
-          detail = raw['分析'] || '八字整体五行较为均衡，喜用神得力。';
-          keyInsights = ['五行流通有情', '日主得令得地', '大运流年可借势'];
-          verdict = raw['综合运势'] || '中上';
+            ] ||
+            '?';
+          var balanceInfo = null;
+          if (global.BaziEngine && global.BaziEngine.balance) {
+            balanceInfo = global.BaziEngine.balance(raw);
+          }
+          var balanceText =
+            balanceInfo && typeof balanceInfo.score === 'number' ? '五行平衡分' + balanceInfo.score + '分' : '五行平衡分未判';
+          summary = '日主' + dayMaster + '（五行属' + dayWx + '），' + balanceText + '。';
+          detail = (balanceInfo && balanceInfo.analysis) || raw['分析'] || '';
+          keyInsights =
+            balanceInfo && balanceInfo.highlights && balanceInfo.highlights.length
+              ? balanceInfo.highlights.slice(0, 3)
+              : ['日主' + dayMaster, '五行属' + dayWx];
+          if (score >= 75) verdict = '五行均衡';
+          else if (score >= 60) verdict = '较为均衡';
+          else if (score >= 45) verdict = '略偏';
+          else verdict = '偏枯';
           break;
         }
         case 'liuyao': {
           var guaName = raw.gua_name || '未知卦';
           var changedName = raw.changed_gua ? raw.changed_gua.name : '';
-          summary = '得「' + guaName + (changedName ? '→' + changedName : '') + '」，爻象动而趋吉。';
+          summary =
+            '得「' +
+            guaName +
+            (changedName ? '→' + changedName : '') +
+            '」，卦象评分' +
+            score +
+            '分。';
           detail = raw.interpretation || '';
           keyInsights = ['世应关系明确', '动爻提示关键节点', '变卦显最终走向'];
-          verdict = raw.level || '小吉';
+          if (score >= 70) verdict = '偏吉';
+          else if (score <= 45) verdict = '偏凶';
+          else verdict = '中平';
           break;
         }
         case 'meihua': {
           var origName = raw.original_gua && raw.original_gua.name ? raw.original_gua.name : '';
-          var tiYong = raw.ti_yong || {};
-          summary = '本卦为「' + origName + '」，体用关系为「' + (tiYong.relation || '?') + '」。';
+          var shengKe = raw.sheng_ke || {};
+          var relation = shengKe['关系'] || '难以判断';
+          var skLevel = shengKe['等级'];
+          summary = '本卦为「' + origName + '」，体用关系为「' + relation + '」。';
           detail = raw.interpretation || '';
-          keyInsights = ['体用生克有法度', '本互变三卦有序', '动静变化有象可寻'];
-          verdict = tiYong.relation || '中性';
+          keyInsights = ['体用关系：' + relation, '生克等级：' + (typeof skLevel === 'number' ? skLevel : '未判'), '本互变三卦有序'];
+          verdict = relation;
           break;
         }
         case 'qimen': {
           var juShu = raw.ju_num || raw.ju || '?';
           var isYang = raw.period && raw.period.indexOf('阳') !== -1 ? '阳遁' : '阴遁';
-          summary = '当前为' + juShu + '局（' + isYang + '），时空格局已显。';
+          var qimenCells = raw.cells || {};
+          var qimenGood = 0;
+          var qimenTotal = 0;
+          for (var qp in qimenCells) {
+            if (!qimenCells.hasOwnProperty(qp) || !qimenCells[qp] || !qimenCells[qp].door) continue;
+            qimenTotal++;
+            if (['休门', '生门', '开门'].indexOf(qimenCells[qp].door) !== -1) qimenGood++;
+          }
+          var qimenVerdict = qimenGood >= 5 ? '偏吉' : qimenGood === 4 ? '吉凶参半' : '偏凶';
+          summary = '当前为' + juShu + '局（' + isYang + '），' + qimenGood + '/' + qimenTotal + '宫得三吉门。';
           detail = raw.interpretation || '';
-          keyInsights = ['吉门临宫得位', '方位得时顺势', '格局无战克之象'];
-          verdict = raw.interpretation && raw.interpretation.indexOf('凶') !== -1 ? '偏凶' : '吉凶参半';
+          keyInsights = [
+            '吉门 ' + qimenGood + '/' + qimenTotal,
+            '值使' + (raw.zhi_shi_door || '?'),
+            '值符' + (raw.zhi_fu_star || '?'),
+          ];
+          verdict = qimenVerdict;
           break;
         }
         case 'taiyi': {
           var jiNian = raw.ji_nian || '?';
           var epoch = raw.epoch || '?';
-          summary = '太乙积年' + jiNian + '，当前为' + epoch + '元，十六神各有归位。';
+          var gong = raw.taiyi_gong || '?';
+          var dir = raw.taiyi_dir || '';
+          var yearIn = raw.taiyi_year_in;
+          var taiyiGod = raw.taiyi_god || {};
+          summary =
+            '太乙积年' +
+            jiNian +
+            '，' +
+            epoch +
+            '，太乙落' +
+            gong +
+            '宫' +
+            (dir ? '（' + dir + '）' : '') +
+            (typeof yearIn === 'number' ? '，入宫第' + yearIn + '年' : '') +
+            '，值' +
+            (taiyiGod.name || '—') +
+            '神。';
           detail = raw.interpretation || '';
-          keyInsights = ['神数归位有序', '大势持平无偏', '无凶星直冲之象'];
-          verdict = raw.outcome || '主客相安';
+          keyInsights = [
+            '太乙落' + gong + '宫',
+            '值' + (taiyiGod.name || '—') + '神（' + (taiyiGod.auspicious || '—') + '）',
+            raw.wufu || '五福未判',
+          ];
+          verdict = taiyiGod.name
+            ? '太乙值' + taiyiGod.name + '神（' + (taiyiGod.auspicious || '—') + '）'
+            : '太乙值神未定';
           break;
         }
         case 'zhuge': {
@@ -186,9 +272,10 @@
           summary = '第' + num + '签「' + lvl + '」—— "' + shortPoem + '"';
           detail = raw.interpretation || '';
           keyInsights = ['签文寓意明确', '指引方向清晰', '暗合古贤智慧'];
-          if (lvl.includes('上')) verdict = '上签';
-          else if (lvl.includes('中')) verdict = '中签';
-          else verdict = '下签';
+          if (lvl.indexOf('上') !== -1) verdict = '上签';
+          else if (lvl.indexOf('中下') !== -1 || lvl.indexOf('下') !== -1) verdict = '下签';
+          else if (lvl.indexOf('中') !== -1) verdict = '中签';
+          else verdict = '待判';
           break;
         }
         case 'zhougong': {
@@ -241,6 +328,9 @@
           verdict = '待判';
       }
     } catch (e) {
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn('[合参] ' + key + ' 结果解析异常', e);
+      }
       summary = key + '推演完成';
       detail = '数据解析异常：' + e.message;
       keyInsights = ['推演完成'];
@@ -252,6 +342,7 @@
       name: cfg.name,
       icon: cfg.icon,
       score: score,
+      scoreEstimated: scoreEstimated,
       trend: trend,
       verdict: verdict,
       summary: summary,
@@ -382,11 +473,22 @@
     var trendAgree = a.trend === b.trend;
     var scoreGap = Math.abs(a.score - b.score);
 
-    // 融洽度：分数越接近、趋势一致 → 融洽度高
-    var harmony = 100 - scoreGap;
-    if (trendAgree) harmony += 15;
-    if (scoreGap <= 10) harmony += 10;
-    if (scoreGap >= 30) harmony -= 15;
+    // 融洽度：按分数差距分档，再按趋势是否同向微调
+    // 旧算法「100 - 分差 + 趋势一致加分」过于宽松，会把 50 分与 67 分判成 98% 高度融洽，
+    // 与「最高最低跨度」的总体研判自相矛盾。
+    var harmony;
+    if (scoreGap <= 5) harmony = 92;
+    else if (scoreGap <= 10) harmony = 84;
+    else if (scoreGap <= 15) harmony = 76;
+    else if (scoreGap <= 20) harmony = 68;
+    else if (scoreGap <= 25) harmony = 58;
+    else if (scoreGap <= 30) harmony = 48;
+    else if (scoreGap <= 40) harmony = 36;
+    else harmony = 20;
+    if (trendAgree) harmony += 8;
+    else harmony -= 8;
+    // 一方明确偏吉/偏凶、另一方中性或相反时，降低融洽度
+    if ((a.score >= 50 && b.score <= 45) || (b.score >= 50 && a.score <= 45)) harmony -= 10;
     harmony = Math.round(Math.min(100, Math.max(0, harmony)));
 
     // 磨合度：分数差距越大 → 需要更多磨合
@@ -488,11 +590,11 @@
     lines.push('【融洽度总评】');
     lines.push('参与合参的术数之间，总体融洽度为' + avgHarmony + '分，磨合度为' + avgFriction + '分。');
 
-    if (avgHarmony >= 75) {
+    if (avgHarmony >= 85) {
       lines.push('各术数之间高度融洽，结论一致性强，说明此事在玄学层面有明确指向。');
-    } else if (avgHarmony >= 60) {
+    } else if (avgHarmony >= 68) {
       lines.push('各术数之间较为融洽，虽有细微差异，但大方向可辨。');
-    } else if (avgHarmony >= 45) {
+    } else if (avgHarmony >= 50) {
       lines.push('各术数之间存在一定分歧，需仔细甄别各术数的侧重维度。');
     } else {
       lines.push('各术数之间分歧较大，建议增加术数参与量或重新聚焦问题。');
@@ -585,8 +687,8 @@
     for (var i = 0; i < scoring.length; i++) {
       var w = typeof scoring[i].weight === 'number' ? scoring[i].weight : 1.0;
       totalWeight += w;
-      weightedSum += (scoring[i].score || 60) * w;
-      scores.push(scoring[i].score || 60);
+      weightedSum += (typeof scoring[i].score === 'number' ? scoring[i].score : 60) * w;
+      scores.push(typeof scoring[i].score === 'number' ? scoring[i].score : 60);
     }
     var avgScore = Math.round(weightedSum / totalWeight);
     var maxScore = Math.max.apply(null, scores);
@@ -594,19 +696,20 @@
     var range = maxScore - minScore;
     var isConsistent = range <= 25;
 
-    var domainKey = null;
-    if (global.DomainAnalysis && global.DomainAnalysis.analyze && question && question.trim()) {
+    var domainKey = 'general';
+    if (
+      question &&
+      question.trim() &&
+      global.DomainAnalysis &&
+      typeof global.DomainAnalysis.detectDomain === 'function'
+    ) {
       try {
-        var firstMethod = scoring[0] && scoring[0].method ? scoring[0].method : 'bazi';
-        var daResult = global.DomainAnalysis.analyze(firstMethod, {}, question);
-        if (daResult && daResult.domain) {
-          domainKey = daResult.domain.key;
-        }
+        domainKey = global.DomainAnalysis.detectDomain(question) || 'general';
       } catch (daErr) {
         if (typeof console !== 'undefined' && console.warn) console.warn('[合参] 事域识别失败，回退综合运势', daErr);
+        domainKey = 'general';
       }
     }
-    if (!domainKey) domainKey = 'career';
 
     var domainAnalysis = crossDomainAnalysis(scoring, question, domainKey);
 
@@ -772,6 +875,17 @@
         '方面的格局将趋于稳定，前期的谨慎观望将换来更准确的判断。\n\n';
     }
 
+    var estimatedNames = [];
+    for (var ei = 0; ei < scoring.length; ei++) {
+      if (scoring[ei].scoreEstimated) estimatedNames.push(scoring[ei].name || scoring[ei].method);
+    }
+    if (estimatedNames.length) {
+      narrative +=
+        '【评分说明】\n' +
+        estimatedNames.join('、') +
+        '缺少可解析的评分字段，按中性 60 分参与综合评分，未伪造盘面分数。\n\n';
+    }
+
     return {
       consensus: consensusLabel,
       confidence: isConsistent ? 'high' : 'medium',
@@ -781,6 +895,7 @@
       hasConflict: !isConsistent,
       domainAnalysis: domainAnalysis,
       harmonyAnalysis: harmonyAnalysis(scoring),
+      estimatedMethods: estimatedNames,
     };
   }
 
@@ -813,9 +928,16 @@
           try {
             // 归一化各引擎结果
             var normalized = [];
+            var failedMethods = [];
             for (var i = 0; i < engineResults.length; i++) {
               var er = engineResults[i];
-              if (er.raw === null) continue;
+              if (er.raw === null) {
+                failedMethods.push({
+                  method: er.key,
+                  name: er.config && er.config.name ? er.config.name : er.key,
+                });
+                continue;
+              }
               var norm = normalizeResult(er.key, er.raw, er.config);
               // 保留原始结果，供体验页做「事域关联」等二次解读（不改变原有字段）
               norm.raw = er.raw;
@@ -825,15 +947,29 @@
             var overallScore = calculateOverallScore(normalized);
             var overallTrend = calculateOverallTrend(normalized);
             var synthesis = synthesizeResults(normalized, uiParams.question);
+            if (failedMethods.length) {
+              synthesis.narrative +=
+                '【参与说明】\n以下术数未参与本次合参：' +
+                failedMethods
+                  .map(function (f) {
+                    return f.name;
+                  })
+                  .join('、') +
+                '（引擎未加载或推演失败）。\n\n';
+            }
 
             return {
               score: overallScore,
               trend: overallTrend,
               individualResults: normalized,
               synthesis: synthesis,
+              failedMethods: failedMethods,
               timestamp: new Date().toISOString(),
             };
           } catch (e) {
+            if (typeof console !== 'undefined' && console.error) {
+              console.error('[合参] 结果归一化异常', e);
+            }
             return {
               score: 60,
               trend: 'flat',
@@ -856,6 +992,9 @@
           }
         })
         .catch(function (err) {
+          if (typeof console !== 'undefined' && console.error) {
+            console.error('[合参] 引擎调度异常', err);
+          }
           return {
             score: 50,
             trend: 'flat',
@@ -884,7 +1023,7 @@
       var w = typeof results[i].weight === 'number' ? results[i].weight : 1.0;
       if (w <= 0) continue; // 空间层不计分
       totalW += w;
-      sumW += (results[i].score || 60) * w;
+      sumW += (typeof results[i].score === 'number' ? results[i].score : 60) * w;
     }
     return totalW ? Math.round(sumW / totalW) : 60;
   }
