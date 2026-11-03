@@ -9,6 +9,7 @@
     "lint": "eslint static/js",
     "format": "prettier --write 'static/js/**/*.js' 'static/css/**/*.css' '*.html'",
     "test": "node tests/run_tests.js",
+    "test:calendar": "node tests/test_calendar.js",
     "test:watch": "node tests/run_tests.js --watch"
   },
   "devDependencies": {
