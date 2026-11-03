@@ -1,0 +1,1589 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>天机阁 EP11 · 合参</title>
+    <meta name="description" content="天机阁EP11——多术数合参。最多三门术数并行，按命局/事占/时空分层，层内融合与命事互证，纯前端实现。" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+      :root {
+        --ink: #0a0806;
+        --surface: rgba(20,16,12,0.94);
+        --card: rgba(24,20,14,0.82);
+        --gold: #b89a5c;
+        --gold-light: #d4bb7c;
+        --gold-dim: #8a7040;
+        --gold-glow: rgba(184,154,92,0.15);
+        --gold-subtle: rgba(184,154,92,0.04);
+        --red: #c04040;
+        --red-light: #e06060;
+        --green: #5a8a5a;
+        --green-light: #7aaa7a;
+        --blue: #4a6a8a;
+        --blue-light: #6a8aaa;
+        --purple: #7a6aa0;
+        --purple-light: #9a8ac0;
+        --text: #e0dcd0;
+        --text2: #8a8576;
+        --text3: #4a4640;
+        --border: rgba(255,255,255,0.05);
+        --border-gold: rgba(184,154,92,0.18);
+        --font-serif: 'Noto Serif SC','SimSun','KaiTi',serif;
+        --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+        --radius: 14px;
+        --radius-sm: 8px;
+      }
+      html {
+        background: var(--ink);
+        color: var(--text);
+        font-family: var(--font-sans);
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+      }
+      body { min-height: 100vh; user-select: none; -webkit-user-select: none; }
+
+      /* ===== Ink Canvas ===== */
+      #inkCanvas { position: fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+      .watermark {
+        position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+        font-family:'Ma Shan Zheng',cursive; font-size:18vw;
+        color:rgba(184,154,92,0.035); z-index:0; pointer-events:none; line-height:1;
+      }
+
+      /* ===== Layout ===== */
+      .wrap { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 40px 20px 60px; }
+      .hidden { display: none !important; }
+
+      /* ===== Hero ===== */
+      .hero { text-align: center; padding: 50px 0 36px; }
+      .ep-tag {
+        display: inline-block; font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase;
+        color: var(--gold-dim); border: 1px solid var(--border-gold); border-radius: 999px;
+        padding: 5px 16px; margin-bottom: 18px;
+      }
+      .hero h1 {
+        font-family: var(--font-serif); font-weight: 900;
+        font-size: clamp(2.4rem, 7vw, 3.6rem);
+        color: var(--gold-light); letter-spacing: 0.08em;
+        text-shadow: 0 0 30px rgba(184,154,92,0.25);
+      }
+      .subtitle { margin-top: 14px; font-size: 0.86rem; color: var(--text2); letter-spacing: 0.06em; line-height: 1.7; }
+      .hero-divider { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 26px; }
+      .hero-divider span { display: block; width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-dim)); }
+      .hero-divider span:last-child { background: linear-gradient(270deg, transparent, var(--gold-dim)); }
+      .hero-divider .diamond { width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 12px rgba(184,154,92,0.5); }
+
+      /* ===== Section Title ===== */
+      .section-title {
+        font-family: var(--font-serif); font-weight: 700; font-size: 1.15rem; color: var(--gold-light);
+        display: flex; align-items: baseline; gap: 10px;
+        border-left: 3px solid var(--gold); padding-left: 12px; margin-bottom: 18px; letter-spacing: 0.04em;
+      }
+      .section-title .num { font-size: 0.6rem; color: var(--text3); letter-spacing: 0.2em; margin-left: auto; }
+
+      /* ===== Card ===== */
+      .card, .glass-card {
+        position: relative; background: var(--card); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 26px; margin-bottom: 22px;
+        backdrop-filter: blur(8px); overflow: hidden;
+      }
+      .card::before, .glass-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--gold-dim), transparent); opacity: 0.5;
+      }
+      .card:hover, .glass-card:hover { border-color: var(--border-gold); transition: border-color 0.3s; }
+
+      /* ===== Form ===== */
+      .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
+      .form-group { display: flex; flex-direction: column; gap: 6px; }
+      .form-group label, .form-label { font-size: 0.68rem; color: var(--text2); letter-spacing: 0.1em; text-transform: uppercase; }
+      .form-group input, .form-group select, .form-group textarea {
+        background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: var(--radius-sm);
+        color: var(--text); font-family: var(--font-serif); font-size: 0.95rem;
+        padding: 11px 14px; outline: none; transition: border-color 0.25s, box-shadow 0.25s; width: 100%;
+      }
+      .form-group textarea { resize: vertical; min-height: 90px; line-height: 1.8; }
+      .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        border-color: var(--gold-dim); box-shadow: 0 0 0 3px var(--gold-glow);
+      }
+      .form-group input { color-scheme: dark; }
+
+      .btn {
+        position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+        color: var(--ink); font-weight: 700; font-family: var(--font-serif); font-size: 1rem;
+        padding: 13px 30px; border: none; border-radius: var(--radius-sm);
+        cursor: pointer; letter-spacing: 0.1em; transition: transform 0.2s, box-shadow 0.25s; overflow: hidden;
+      }
+      .btn::after {
+        content: ''; position: absolute; inset: 0;
+        background: radial-gradient(circle at 50% 120%, rgba(255,255,255,0.35), transparent 60%);
+        opacity: 0; transition: opacity 0.3s;
+      }
+      .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(184,154,92,0.35); }
+      .btn:hover::after { opacity: 1; }
+      .btn:active { transform: translateY(0); }
+      .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+      /* ===== Tags ===== */
+      .domain-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+      .domain-tag {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: 999px;
+        color: var(--text2); font-size: 0.78rem; padding: 6px 14px; cursor: pointer;
+        font-family: var(--font-serif); transition: all 0.25s;
+      }
+      .domain-tag:hover { color: var(--gold-light); border-color: var(--gold-dim); background: var(--gold-glow); }
+      .domain-tag.active {
+        color: var(--gold-light); border-color: var(--gold); background: var(--gold-glow);
+        box-shadow: 0 0 12px rgba(184,154,92,0.25);
+      }
+
+      /* ===== Method chips ===== */
+      .method-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+      .method-chip {
+        position: relative; display: inline-flex; align-items: center; gap: 6px;
+        background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: 999px;
+        color: var(--text2); font-size: 0.8rem; padding: 7px 14px; cursor: pointer;
+        font-family: var(--font-serif); transition: all 0.25s; user-select: none;
+      }
+      .method-chip:hover { color: var(--gold-light); border-color: var(--gold-dim); background: var(--gold-glow); }
+      .method-chip.active {
+        color: var(--gold-light); border-color: var(--gold); background: var(--gold-glow);
+        box-shadow: 0 0 12px rgba(184,154,92,0.22);
+      }
+      .method-chip input { position: absolute; opacity: 0; pointer-events: none; }
+      .method-chip .mc-check { font-size: 0.7rem; color: var(--gold-dim); }
+      .method-chip.active .mc-check { color: var(--gold-light); }
+      .method-chip .mc-layer {
+        font-size: 0.6rem; padding: 1px 5px; border-radius: 4px;
+        border: 1px solid var(--border-gold); color: var(--text3); letter-spacing: 0.08em;
+      }
+      .method-chip.active .mc-layer { color: var(--gold-light); border-color: var(--gold-dim); }
+      .method-chip .mc-nature {
+        font-size: 0.6rem; padding: 1px 5px; border-radius: 4px;
+        border: 1px dashed var(--border-gold); color: var(--text3); letter-spacing: 0.04em;
+      }
+      .method-chip.active .mc-nature { color: var(--gold); border-color: var(--gold-dim); }
+
+      /* ===== 合参模式 ===== */
+      .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+      .mode-chip {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
+        color: var(--text2); font-size: 0.82rem; padding: 9px 12px; cursor: pointer;
+        font-family: var(--font-serif); transition: all 0.25s; text-align: center; letter-spacing: 0.04em;
+      }
+      .mode-chip:hover { color: var(--gold-light); border-color: var(--gold-dim); background: var(--gold-glow); }
+      .mode-chip.active {
+        color: var(--gold-light); border-color: var(--gold); background: var(--gold-glow);
+        box-shadow: 0 0 12px rgba(184,154,92,0.22);
+      }
+      .mode-hint { font-size: 0.74rem; color: var(--text3); line-height: 1.7; margin-top: 8px; }
+
+      /* ===== 分层总览 ===== */
+      .layer-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+      .layer-card {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
+        padding: 14px 16px;
+      }
+      .layer-card-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+      .layer-card-name { font-family: var(--font-serif); font-size: 0.95rem; color: var(--gold-light); }
+      .layer-card-horizon { font-size: 0.66rem; color: var(--text3); letter-spacing: 0.08em; margin-left: auto; }
+      .layer-card-nature {
+        font-size: 0.62rem; padding: 1px 6px; border-radius: 4px;
+        border: 1px solid var(--border-gold); color: var(--text3); letter-spacing: 0.04em;
+      }
+      .layer-card-score {
+        font-family: var(--font-serif); font-size: 1.9rem; font-weight: 700; line-height: 1.1;
+      }
+      .layer-card-score.high { color: var(--green-light); }
+      .layer-card-score.mid { color: var(--gold-light); }
+      .layer-card-score.low { color: var(--red-light); }
+      .layer-card-meta { font-size: 0.72rem; color: var(--text2); margin-top: 4px; }
+      .layer-card-moment { font-size: 0.68rem; color: var(--text3); margin-top: 4px; letter-spacing: 0.02em; }
+      .layer-card-verdict { font-family: var(--font-serif); font-size: 0.82rem; color: var(--text); margin-top: 8px; line-height: 1.7; }
+      .layer-section-title {
+        font-family: var(--font-serif); font-size: 0.92rem; color: var(--gold-light);
+        display: flex; align-items: baseline; gap: 8px; margin: 20px 0 12px;
+        padding-left: 10px; border-left: 2px solid var(--gold-dim);
+      }
+      .layer-section-title .lst-horizon { font-size: 0.64rem; color: var(--text3); letter-spacing: 0.1em; }
+      .layer-section-title:first-child { margin-top: 0; }
+      .layer-note {
+        font-size: 0.74rem; color: var(--text3); line-height: 1.7;
+        margin-bottom: 14px;
+      }
+      /* 卦例盒 · 复盘 */
+      .case-save-btn {
+        margin-left: auto; background: var(--gold-subtle); border: 1px solid var(--border-gold);
+        color: var(--text2); font-family: var(--font-sans); font-size: 0.68rem;
+        padding: 3px 10px; border-radius: 999px; cursor: pointer; letter-spacing: 0.04em;
+        transition: color 0.25s, border-color 0.25s, background 0.25s;
+      }
+      .case-save-btn:hover { color: var(--gold-light); border-color: var(--gold-dim); background: var(--gold-glow); }
+      .case-save-btn + .num { margin-left: 8px; }
+      .replay-note {
+        font-size: 0.76rem; color: var(--gold-light); background: var(--gold-subtle);
+        border: 1px dashed var(--border-gold); border-radius: var(--radius-sm);
+        padding: 8px 12px; margin-bottom: 14px; line-height: 1.6;
+      }
+      .case-list { display: flex; flex-direction: column; gap: 10px; }
+      .case-item {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold);
+        border-radius: var(--radius-sm); padding: 12px 14px;
+        display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      }
+      .case-meta { font-size: 0.72rem; color: var(--text3); }
+      .case-q { font-size: 0.82rem; color: var(--text); flex: 1; min-width: 160px; }
+      .case-actions { display: flex; gap: 6px; }
+      .case-btn {
+        background: none; border: 1px solid var(--border-gold); color: var(--text2);
+        font-size: 0.7rem; padding: 3px 10px; border-radius: 999px; cursor: pointer;
+      }
+      .case-btn:hover { color: var(--gold-light); border-color: var(--gold-dim); }
+      .case-btn.danger:hover { color: var(--red-light); border-color: var(--red); }
+      .time-note {
+        margin-top: 4px; padding: 12px 16px; border-left: 2px solid var(--gold-dim);
+        background: rgba(184,154,92,0.05); border-radius: var(--radius-sm);
+        font-size: 0.76rem; color: var(--text2); line-height: 1.8;
+      }
+      .time-note .tn-title {
+        font-family: var(--font-serif); color: var(--gold-light);
+        letter-spacing: 0.08em; margin-bottom: 6px;
+      }
+      .tn-row b { color: var(--gold); font-weight: 600; margin-right: 4px; }
+      .mutual-block {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
+        padding: 16px 18px; margin-bottom: 16px;
+      }
+      .mutual-block .mb-title {
+        font-family: var(--font-serif); font-size: 0.86rem; color: var(--gold-light);
+        letter-spacing: 0.08em; margin-bottom: 8px;
+      }
+      .mutual-block .mb-body { font-family: var(--font-serif); font-size: 0.9rem; line-height: 1.9; color: var(--text); }
+      .engine-narrative {
+        margin-top: 16px; border-top: 1px solid var(--border);
+        padding-top: 12px;
+      }
+      .engine-narrative summary {
+        cursor: pointer; font-size: 0.76rem; color: var(--text2);
+        letter-spacing: 0.08em; outline: none;
+      }
+      .engine-narrative summary:hover { color: var(--gold-light); }
+      .engine-narrative .narrative-block { margin-top: 12px; }
+
+      /* ===== Progress ===== */
+      .progress-wrap { margin-top: 14px; }
+      .progress-track {
+        height: 4px; background: rgba(184,154,92,0.15); border-radius: 2px; overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%; width: 0%; background: var(--gold-light);
+        transition: width 0.35s ease;
+      }
+      .progress-text { font-size: 0.74rem; color: var(--text2); text-align: center; margin-top: 6px; }
+
+      /* ===== Score Panel ===== */
+      .score-panel { text-align: center; padding: 10px 0 4px; }
+      .score-consensus { font-family: var(--font-serif); font-size: 1rem; color: var(--gold); letter-spacing: 0.1em; margin-bottom: 10px; }
+      .score-value {
+        font-family: var(--font-serif); font-weight: 900; font-size: 4.2rem; line-height: 1;
+        color: var(--gold-light); text-shadow: 0 0 34px rgba(184,154,92,0.35);
+      }
+      .score-stars { font-size: 1.1rem; color: var(--gold); letter-spacing: 0.25em; margin: 10px 0 6px; }
+      .score-meta { font-size: 0.82rem; color: var(--text2); }
+      .score-meta .up { color: var(--green-light); }
+      .score-meta .down { color: var(--red-light); }
+      .score-meta .flat { color: var(--text2); }
+
+      /* ===== Result Cards ===== */
+      .method-result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+      .method-result-card {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
+        padding: 14px 16px; opacity: 0; transform: translateY(12px);
+        transition: opacity 0.45s ease, transform 0.45s ease, border-color 0.25s, box-shadow 0.25s;
+      }
+      .method-result-card.in { opacity: 1; transform: translateY(0); }
+      .method-result-card:hover { border-color: var(--gold-dim); box-shadow: 0 4px 18px rgba(184,154,92,0.16); }
+      .mrc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+      .mrc-icon { font-size: 1.2rem; }
+      .mrc-name { font-family: var(--font-serif); font-size: 1rem; color: var(--gold-light); }
+      .mrc-nature {
+        font-size: 0.62rem; padding: 1px 6px; border-radius: 4px;
+        border: 1px solid var(--border-gold); color: var(--text3); letter-spacing: 0.04em;
+      }
+      .mrc-score { margin-left: auto; font-family: var(--font-serif); font-size: 1.25rem; font-weight: 700; }
+      .mrc-moment { font-size: 0.68rem; color: var(--text3); margin-top: 3px; letter-spacing: 0.02em; }
+      .mrc-score.high { color: var(--green-light); }
+      .mrc-score.mid { color: var(--text); }
+      .mrc-score.low { color: var(--red-light); }
+      .mrc-trend { font-size: 0.74rem; color: var(--text2); letter-spacing: 0.1em; }
+      .mrc-summary { font-family: var(--font-serif); font-size: 0.88rem; line-height: 1.75; color: var(--text2); }
+      .mrc-verdict { margin-top: 8px; font-size: 0.76rem; color: var(--text2); }
+      .mrc-verdict strong { color: var(--gold); font-weight: 600; }
+      .mrc-insights { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+      .mrc-insight {
+        font-size: 0.7rem; color: var(--text2); border: 1px solid var(--border);
+        border-radius: 999px; padding: 2px 9px;
+      }
+      .mrc-domain { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-gold); }
+      .mrc-domain-label { font-size: 0.66rem; color: var(--gold-dim); letter-spacing: 0.12em; margin-bottom: 4px; }
+      .mrc-domain-body { font-family: var(--font-serif); font-size: 0.8rem; line-height: 1.75; color: var(--text2); }
+      .bar {
+        height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px;
+        margin-top: 10px; overflow: hidden;
+      }
+      .bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--gold-dim), var(--gold-light)); }
+
+      /* ===== Domain Analysis ===== */
+      .domain-counts { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.8rem; margin-bottom: 12px; }
+      .dc-up { color: var(--green-light); }
+      .dc-flat { color: var(--text2); }
+      .dc-down { color: var(--red-light); }
+      .domain-consensus {
+        font-family: var(--font-serif); font-size: 0.95rem; line-height: 1.85; color: var(--text);
+        background: var(--gold-subtle); border-left: 3px solid var(--gold);
+        border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 14px;
+      }
+      .domain-insights { display: flex; flex-direction: column; gap: 10px; }
+      .di-item { font-size: 0.85rem; line-height: 1.8; color: var(--text2); }
+      .di-item strong { color: var(--gold-light); font-weight: 600; margin-right: 4px; }
+
+      /* ===== Harmony ===== */
+      .harmony-summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 18px; }
+      .harmony-metric {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
+        padding: 14px; text-align: center;
+      }
+      .hm-label { font-size: 0.7rem; color: var(--text2); letter-spacing: 0.1em; margin-bottom: 6px; }
+      .hm-value { font-family: var(--font-serif); font-size: 1.8rem; font-weight: 700; }
+      .hm-value.good { color: var(--green-light); }
+      .hm-value.warn { color: var(--gold-light); }
+      .hm-value.bad { color: var(--red-light); }
+      .pair-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 0.8rem; }
+      .pair-name { min-width: 92px; font-family: var(--font-serif); color: var(--text2); }
+      .pair-name.right { text-align: right; }
+      .pair-arrow { color: var(--text3); }
+      .pair-bar { flex: 1; height: 8px; background: rgba(255,255,255,0.04); border-radius: 4px; overflow: hidden; }
+      .pair-bar-fill { height: 100%; border-radius: 4px; background: var(--gold); transition: width 0.6s ease; }
+      .pair-val { min-width: 88px; text-align: right; font-size: 0.74rem; color: var(--text2); }
+      .harmony-narrative {
+        margin-top: 16px; font-family: var(--font-serif); font-size: 0.88rem;
+        line-height: 1.9; color: var(--text2);
+      }
+
+      /* ===== Narrative ===== */
+      .narrative-block {
+        font-family: var(--font-serif); font-size: 0.94rem; line-height: 1.95;
+        color: var(--text); background: var(--gold-subtle);
+        border-left: 3px solid var(--gold); border-radius: var(--radius-sm); padding: 18px 20px;
+        white-space: pre-wrap;
+      }
+      .narrative-block .n-section {
+        display: block; color: var(--gold-light); font-weight: 700;
+        margin-top: 12px; margin-bottom: 4px; letter-spacing: 0.06em;
+      }
+      .narrative-block .n-section:first-child { margin-top: 0; }
+      .narrative-meta { margin-top: 14px; font-size: 0.78rem; color: var(--text2); }
+      .narrative-meta strong { color: var(--gold-light); font-weight: 600; }
+
+      /* ===== Warning ===== */
+      .warn-block {
+        background: rgba(192,64,64,0.08); border: 1px solid rgba(192,64,64,0.3);
+        border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 14px;
+        font-size: 0.82rem; color: var(--red-light); line-height: 1.7;
+      }
+
+      /* ===== Misc ===== */
+      .empty-hint {
+        text-align: center; padding: 22px 16px; color: var(--text2);
+        font-family: var(--font-serif); line-height: 1.9; font-size: 0.9rem;
+        background: var(--gold-subtle); border: 1px dashed var(--border-gold); border-radius: var(--radius-sm);
+      }
+      .error-container { text-align: center; padding: 40px 20px; color: var(--text2); }
+      .error-container .error-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6; }
+      .error-container .error-text { font-size: 0.88rem; line-height: 1.7; }
+      .disclaimer { text-align: center; font-size: 0.72rem; color: var(--text3); line-height: 1.8; padding: 30px 10px 0; }
+      .disclaimer strong { color: var(--text2); }
+      .footer { text-align: center; font-size: 0.7rem; color: var(--text3); padding: 26px 0 0; letter-spacing: 0.1em; }
+      .spinner {
+        width: 30px; height: 30px; border: 2px solid var(--border-gold); border-top-color: var(--gold);
+        border-radius: 50%; animation: spin 0.8s linear infinite; margin: 24px auto;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .toast {
+        position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%);
+        background: var(--surface); border: 1px solid var(--gold-dim); color: var(--gold-light);
+        font-family: var(--font-serif); padding: 12px 24px; border-radius: 999px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 999;
+        opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; font-size: 0.9rem;
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+      .fade-up { opacity: 0; transform: translateY(18px); animation: fadeUp 0.7s ease forwards; }
+      @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+      /* ===== Accessibility ===== */
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        .fade-up, .method-result-card { animation: none !important; opacity: 1 !important; transform: none !important; }
+        .card, .glass-card { transition: none; }
+        .btn:hover, .method-result-card:hover { transform: none; }
+        .spinner { animation-duration: 2s; }
+        #inkCanvas { display: none; }
+      }
+
+      /* ===== Responsive ===== */
+      @media (max-width: 640px) {
+        .wrap { padding: 24px 14px 40px; }
+        .card, .glass-card { padding: 18px; }
+        .score-value { font-size: 3.2rem; }
+        .method-result-grid { grid-template-columns: 1fr; }
+        .harmony-summary { grid-template-columns: 1fr; }
+        .pair-name { min-width: 64px; font-size: 0.74rem; }
+        .pair-val { min-width: 70px; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="inkCanvas"></canvas>
+    <div class="watermark">参</div>
+    <div class="wrap">
+
+      <!-- Hero -->
+      <div class="hero fade-up">
+        <div class="ep-tag">EPISODE 11</div>
+        <h1>合参</h1>
+        <p class="subtitle">多术数并行推演 · 事域交叉 · 融洽磨合 · 融合研判</p>
+        <div class="hero-divider">
+          <span></span><div class="diamond"></div><span></span>
+        </div>
+      </div>
+
+      <!-- 01 合参参数 -->
+      <div class="card fade-up" id="inputCard">
+        <div class="section-title">合参参数<span class="num">01</span></div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>出生日期（八字 / 紫微）</label>
+            <input type="date" id="comp-birth-date" min="1900-01-01" max="2100-12-31" />
+          </div>
+          <div class="form-group">
+            <label>出生时辰</label>
+            <select id="comp-birth-time">
+              <option value="子时">子时 (23:00-01:00)</option>
+              <option value="丑时">丑时 (01:00-03:00)</option>
+              <option value="寅时">寅时 (03:00-05:00)</option>
+              <option value="卯时">卯时 (05:00-07:00)</option>
+              <option value="辰时">辰时 (07:00-09:00)</option>
+              <option value="巳时">巳时 (09:00-11:00)</option>
+              <option value="午时" selected>午时 (11:00-13:00)</option>
+              <option value="未时">未时 (13:00-15:00)</option>
+              <option value="申时">申时 (15:00-17:00)</option>
+              <option value="酉时">酉时 (17:00-19:00)</option>
+              <option value="戌时">戌时 (19:00-21:00)</option>
+              <option value="亥时">亥时 (21:00-23:00)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>性别</label>
+            <select id="comp-gender">
+              <option value="男">男</option>
+              <option value="女">女</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px;">
+          <div class="form-group">
+            <label>占测日期（奇门 / 太乙 / 六壬）</label>
+            <input type="date" id="comp-date" min="1900-01-01" max="2100-12-31" />
+          </div>
+          <div class="form-group">
+            <label>占时</label>
+            <select id="comp-hour">
+              <option value="子时">子时 (23:00-01:00)</option>
+              <option value="丑时">丑时 (01:00-03:00)</option>
+              <option value="寅时">寅时 (03:00-05:00)</option>
+              <option value="卯时">卯时 (05:00-07:00)</option>
+              <option value="辰时">辰时 (07:00-09:00)</option>
+              <option value="巳时" selected>巳时 (09:00-11:00)</option>
+              <option value="午时">午时 (11:00-13:00)</option>
+              <option value="未时">未时 (13:00-15:00)</option>
+              <option value="申时">申时 (15:00-17:00)</option>
+              <option value="酉时">酉时 (17:00-19:00)</option>
+              <option value="戌时">戌时 (19:00-21:00)</option>
+              <option value="亥时">亥时 (21:00-23:00)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top:16px;">
+          <div class="form-group">
+            <label>风水坐山（仅空间层参考）</label>
+            <select id="comp-fs-sitting">
+              <option value="子" selected>子</option><option value="午">午</option><option value="卯">卯</option><option value="酉">酉</option>
+              <option value="乾">乾</option><option value="坤">坤</option><option value="艮">艮</option><option value="巽">巽</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>风水朝向</label>
+            <select id="comp-fs-facing">
+              <option value="子">子</option><option value="午" selected>午</option><option value="卯">卯</option><option value="酉">酉</option>
+              <option value="乾">乾</option><option value="坤">坤</option><option value="艮">艮</option><option value="巽">巽</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>建房年份（元运）</label>
+            <input type="number" id="comp-fs-year" min="1900" max="2100" placeholder="默认今年" />
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:16px;">
+          <label>所问之事（可选，决定事域交叉方向）</label>
+          <div class="domain-tags" id="comp-domain-tags">
+            <button class="domain-tag" data-domain="事业">💼 事业</button>
+            <button class="domain-tag" data-domain="感情">💕 感情</button>
+            <button class="domain-tag" data-domain="财运">💰 财运</button>
+            <button class="domain-tag" data-domain="健康">🏥 健康</button>
+            <button class="domain-tag" data-domain="学业">📚 学业</button>
+            <button class="domain-tag" data-domain="家庭">🏠 家庭</button>
+            <button class="domain-tag" data-domain="人际">👯 人际</button>
+            <button class="domain-tag" data-domain="出行">✈️ 出行</button>
+          </div>
+          <input type="text" id="comp-question" placeholder="例如：最近事业晋升机会如何？" style="margin-top:10px;" />
+        </div>
+
+        <div class="form-group" style="margin-top:16px;">
+          <label>合参模式（先分层，再融合）</label>
+          <div class="mode-grid" id="comp-modes">
+            <button type="button" class="mode-chip active" data-mode="mixed">命事合参</button>
+            <button type="button" class="mode-chip" data-mode="natal">命局合参</button>
+            <button type="button" class="mode-chip" data-mode="event">事占合参</button>
+            <button type="button" class="mode-chip" data-mode="custom">自定义</button>
+          </div>
+          <div class="mode-hint" id="comp-mode-hint">命局层看长期底色与格局，事占层看当下成否与应期；两层分判后再做命事互证，不混为一谈。</div>
+        </div>
+
+        <div class="form-group" style="margin-top:16px;">
+          <label>选择术数（1-3 门，最多 3 门）</label>
+          <div class="method-grid" id="comp-methods"></div>
+          <div style="margin-top:8px;font-size:0.76rem;color:var(--text3);">
+            <span id="comp-count">已选 3 / 3</span>
+            <span style="margin:0 6px;">·</span>
+            <button type="button" id="comp-clear-all" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:0.76rem;">清空</button>
+          </div>
+        </div>
+
+        <div class="form-group hidden" id="comp-dream-group" style="margin-top:16px;">
+          <label>梦境描述（已选周公解梦，必填）</label>
+          <textarea id="comp-dream-text" placeholder="例如：梦见龙在云中飞腾……"></textarea>
+        </div>
+
+        <button class="btn" id="comp-submit" style="width:100%;margin-top:18px;">🧩 开始合参推演</button>
+
+        <div class="progress-wrap hidden" id="comp-progress">
+          <div class="progress-track"><div class="progress-fill" id="comp-progress-fill"></div></div>
+          <div class="progress-text" id="comp-progress-text">初始化...</div>
+        </div>
+      </div>
+
+      <!-- 02 综合评分 -->
+      <div class="glass-card fade-up hidden" id="scoreCard">
+        <div class="section-title">分层总览
+          <button type="button" class="case-save-btn" id="comp-save-case">💾 保存卦例</button>
+          <span class="num">02</span>
+        </div>
+        <div class="replay-note hidden" id="replayNote"></div>
+        <div id="scoreContent"></div>
+      </div>
+
+      <!-- 03 各术独立推演 -->
+      <div class="card fade-up hidden" id="methodsCard">
+        <div class="section-title">分层各术推演<span class="num">03</span></div>
+        <div id="methodsContent"></div>
+      </div>
+
+      <!-- 04 事域交叉 -->
+      <div class="card fade-up hidden" id="domainCard">
+        <div class="section-title">事域交叉分析<span class="num">04</span></div>
+        <div id="domainContent"></div>
+      </div>
+
+      <!-- 05 融洽磨合 -->
+      <div class="card fade-up hidden" id="harmonyCard">
+        <div class="section-title">层内融洽磨合<span class="num">05</span></div>
+        <div id="harmonyContent"></div>
+      </div>
+
+      <!-- 06 融合研判 -->
+      <div class="glass-card fade-up hidden" id="narrativeCard">
+        <div class="section-title">融合研判 · 命事互证<span class="num">06</span></div>
+        <div id="narrativeContent"></div>
+      </div>
+
+      <!-- 07 卦例盒 -->
+      <div class="card fade-up" id="caseCard">
+        <div class="section-title">卦例盒 · 复盘<span class="num">07</span></div>
+        <div class="layer-note" style="margin-bottom:12px;">保存本次起盘时刻与原始结果；复盘直接载入存档，不重新起盘，因此不会换盘。</div>
+        <div id="caseContent"></div>
+      </div>
+
+      <!-- 免责声明 -->
+      <div class="disclaimer">
+        <strong>声明：</strong>多术数合参属于中国传统文化与术数文化遗产范畴。<br>
+        本系统仅供文化研究和娱乐参考，不构成任何人生决策建议。请相信科学，理性看待命运。
+      </div>
+      <div class="footer">天机阁 · TIAN JI GE</div>
+    </div>
+
+    <script src="static/js/constants.js"></script>
+    <script src="static/js/logger.js"></script>
+    <script src="static/js/bazi-engine.js"></script>
+    <script src="static/js/liuyao-engine.js"></script>
+    <script src="static/js/meihua-engine.js"></script>
+    <script src="static/js/qimen-engine.js"></script>
+    <script src="static/js/taiyi-engine.js"></script>
+    <script src="static/js/zhuge-engine.js"></script>
+    <script src="static/js/zhougong-engine.js?v=20261103b"></script>
+    <script src="static/js/daliuren-engine.js"></script>
+    <script src="static/js/ziwei-engine.js"></script>
+    <script src="static/js/fengshui-engine.js?v=20260729"></script>
+    <script src="static/js/domain-analysis.js?v=20261102"></script>
+    <script src="static/js/engine-registry.js?v=20261103"></script>
+    <script src="static/js/composite-engine.js?v=20261103"></script>
+    <script>
+    (function(){
+      'use strict';
+
+      // 时效语义：非实时盘以出生信息定盘；实时盘以本次起盘时刻为基准；时空盘推大势节奏
+      var TIME_NATURE = {
+        natal: { key:'natal', label:'非实时盘', short:'非实时', hint:'以出生信息定盘，长期有效，同一出生信息重复推演结果稳定' },
+        realtime: { key:'realtime', label:'实时盘', short:'实时', hint:'以本次起盘时刻为基准，只反映当下事机，重算会换盘' },
+        trend: { key:'trend', label:'时空盘', short:'时空', hint:'按起盘时刻推大势节奏，中长期参考' },
+        space: { key:'space', label:'空间层', short:'空间', hint:'按坐向与朝向判环境格局，只作环境参考，不参与吉凶打分' }
+      };
+
+      // 分层元数据：命局=长期基线；事占=当下事机；时空=大势节奏
+      var LAYERS = {
+        natal: { key:'natal', name:'命局层', short:'命', nature:'natal', horizon:'长期基线', desc:'看底色、格局与长期趋势' },
+        event: { key:'event', name:'事占层', short:'事', nature:'realtime', horizon:'当下事机', desc:'看此事成不成、何时动' },
+        trend: { key:'trend', name:'时空层', short:'势', nature:'trend', horizon:'大势节奏', desc:'看外部时空大势与节奏' },
+        space: { key:'space', name:'空间层', short:'空', nature:'space', horizon:'环境参考', desc:'看坐向与朝向的环境格局，不参与吉凶打分' }
+      };
+
+      var MAX_METHODS = 3;
+
+      var METHODS = [
+        { id:'bazi', name:'八字', icon:'📅', layer:'natal', nature:'natal', checked:true },
+        { id:'ziwei', name:'紫微', icon:'🔮', layer:'natal', nature:'natal', checked:false },
+        { id:'liuyao', name:'六爻', icon:'🪙', layer:'event', nature:'realtime', checked:true },
+        { id:'meihua', name:'梅花', icon:'🌸', layer:'event', nature:'realtime', checked:true },
+        // 奇门当前只实现时家盘，统一按实时盘处理，不做生年/年家盘
+        { id:'qimen', name:'奇门', icon:'☯️', layer:'event', nature:'realtime', timeNote:'时家', checked:false },
+        { id:'daliuren', name:'大六壬', icon:'🌊', layer:'event', nature:'realtime', checked:false },
+        { id:'zhuge', name:'诸葛', icon:'📜', layer:'event', nature:'realtime', checked:false },
+        { id:'zhougong', name:'解梦', icon:'🌙', layer:'event', nature:'realtime', timeNote:'按梦境当下', checked:false },
+        { id:'taiyi', name:'太乙', icon:'🌌', layer:'trend', nature:'trend', checked:false },
+        // 风水只提供环境参考，不占吉凶评分；合参层单独列为空间层
+        { id:'fengshui', name:'风水', icon:'🏔️', layer:'space', nature:'space', checked:false }
+      ];
+
+      var METHOD_NAMES = {};
+      var METHOD_META = {};
+      METHODS.forEach(function(m){ METHOD_NAMES[m.id] = m.name; METHOD_META[m.id] = m; });
+      var currentQuestion = '';
+
+      // A3 复盘：保存本次起盘参数与原始结果，载入时不重跑引擎，避免换盘
+      var CASE_KEY = 'tj_ep11_cases_v1';
+      var MAX_CASES = 5;
+      var lastRun = null;
+
+      // 起盘基准：非实时盘取出生信息，实时/时空盘取本次占测日期与占时
+      function momentText(nature, uiParams){
+        if(!uiParams) return '';
+        if(nature === 'natal'){
+          return '本命盘 · ' + (uiParams.birthDate || '未填') + ' ' + (uiParams.birthTime || '未填');
+        }
+        if(nature === 'space'){
+          return '空间 · 坐' + (uiParams.fengshuiSitting || '未填') + '向' + (uiParams.fengshuiFacing || '未填') +
+            (uiParams.fengshuiBuildYear ? ' · ' + uiParams.fengshuiBuildYear + '年建' : '');
+        }
+        return '起盘 · ' + (uiParams.date || '未填') + ' ' + (uiParams.hour || '未填');
+      }
+
+      function methodMoment(m, uiParams){
+        var text = momentText(m.nature, uiParams);
+        if(m.timeNote) text += '（' + m.timeNote + '）';
+        return text;
+      }
+
+      function escHtml(s){
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      // ===== 默认日期 =====
+      var today = new Date().toISOString().slice(0, 10);
+      document.getElementById('comp-birth-date').value = '2000-01-01';
+      document.getElementById('comp-date').value = today;
+
+      // ===== 术数选择 =====
+      var methodsEl = document.getElementById('comp-methods');
+      var html = '';
+      METHODS.forEach(function(m){
+        html += '<label class="method-chip' + (m.checked ? ' active' : '') + '" data-method="' + m.id + '">' +
+          '<input type="checkbox" name="compMethod" value="' + m.id + '"' + (m.checked ? ' checked' : '') + ' />' +
+          '<span class="mc-ico">' + m.icon + '</span><span>' + m.name + '</span>' +
+          '<span class="mc-layer">' + LAYERS[m.layer].short + '</span>' +
+          '<span class="mc-nature">' + TIME_NATURE[m.nature].short + '</span>' +
+          '<span class="mc-check">' + (m.checked ? '✓' : '') + '</span>' +
+          '</label>';
+      });
+      methodsEl.innerHTML = html;
+
+      // ===== 合参模式 =====
+      var currentMode = 'mixed';
+      var applyingMode = false;
+      var modeBtns = document.querySelectorAll('#comp-modes .mode-chip');
+      var MODE_METHODS = {
+        natal: ['bazi', 'ziwei'],
+        event: ['liuyao', 'meihua', 'qimen'],
+        mixed: ['bazi', 'liuyao', 'meihua']
+      };
+      var MODE_HINTS = {
+        mixed: '命局层看长期底色与格局，事占层看当下成否与应期；两层分判后再做命事互证，不混为一谈。',
+        natal: '只取命盘类术数（八字、紫微），回答长期底色、格局与趋势，不判断具体某件事的当下成败。',
+        event: '只取事占层（六爻、梅花、奇门时家等，最多 3 门），回答此事当下成否与应期。',
+        custom: '自定义组合：结果仍按层分组；命局与事占只做互证，不跨层平均分数。'
+      };
+
+      function setMode(mode, applySelections){
+        currentMode = mode;
+        modeBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.mode === mode); });
+        var hint = document.getElementById('comp-mode-hint');
+        if(hint) hint.textContent = MODE_HINTS[mode] || MODE_HINTS.mixed;
+
+        if(applySelections && MODE_METHODS[mode]){
+          applyingMode = true;
+          var allowed = MODE_METHODS[mode];
+          chips.forEach(function(chip){
+            var input = chip.querySelector('input');
+            input.checked = allowed.indexOf(input.value) !== -1;
+            syncChip(chip, input);
+          });
+          toggleDream();
+          updateCount();
+          applyingMode = false;
+        }
+      }
+
+      function checkedCount(){
+        return methodsEl.querySelectorAll('input[name="compMethod"]:checked').length;
+      }
+
+      function updateCount(){
+        var el = document.getElementById('comp-count');
+        if(!el) return;
+        var c = checkedCount();
+        el.textContent = '已选 ' + c + ' / ' + MAX_METHODS;
+        el.style.color = c >= MAX_METHODS ? 'var(--gold-light)' : 'var(--text3)';
+      }
+
+      modeBtns.forEach(function(btn){
+        btn.addEventListener('click', function(){ setMode(btn.dataset.mode, true); });
+      });
+
+      var chips = methodsEl.querySelectorAll('.method-chip');
+      chips.forEach(function(chip){
+        var input = chip.querySelector('input');
+        chip.addEventListener('click', function(e){
+          // 阻止 label 默认转发点击到 input，避免与手动切换叠加导致双次翻转
+          e.preventDefault();
+          if(!input.checked && checkedCount() >= MAX_METHODS){
+            showToast('最多选择 ' + MAX_METHODS + ' 门术数');
+            return;
+          }
+          input.checked = !input.checked;
+          syncChip(chip, input);
+          toggleDream();
+          updateCount();
+          if(!applyingMode && currentMode !== 'custom') setMode('custom', false);
+        });
+        input.addEventListener('change', function(){
+          if(input.checked && checkedCount() > MAX_METHODS){
+            input.checked = false;
+            showToast('最多选择 ' + MAX_METHODS + ' 门术数');
+          }
+          syncChip(chip, input);
+          toggleDream();
+          updateCount();
+        });
+      });
+
+      function syncChip(chip, input){
+        if(input.checked){
+          chip.classList.add('active');
+          chip.querySelector('.mc-check').textContent = '✓';
+        } else {
+          chip.classList.remove('active');
+          chip.querySelector('.mc-check').textContent = '';
+        }
+      }
+
+      function toggleDream(){
+        var checked = !!methodsEl.querySelector('input[value="zhougong"]:checked');
+        document.getElementById('comp-dream-group').classList.toggle('hidden', !checked);
+      }
+
+      document.getElementById('comp-clear-all').addEventListener('click', function(){
+        chips.forEach(function(chip){
+          var input = chip.querySelector('input');
+          input.checked = false;
+          syncChip(chip, input);
+        });
+        toggleDream();
+        updateCount();
+        setMode('custom', false);
+      });
+
+      // 初始化强制回落到默认命事合参，避免浏览器恢复上次勾选导致默认不一致
+      setMode('mixed', true);
+
+      // ===== 事域标签 =====
+      var domainBtns = document.querySelectorAll('#comp-domain-tags .domain-tag');
+      domainBtns.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var active = btn.classList.contains('active');
+          domainBtns.forEach(function(b){ b.classList.remove('active'); });
+          if(!active){
+            btn.classList.add('active');
+            document.getElementById('comp-question').value = '最近' + btn.dataset.domain + '运如何？';
+          }
+        });
+      });
+
+      // ===== 提交 =====
+      document.getElementById('comp-submit').addEventListener('click', function(){
+        var birthDate = document.getElementById('comp-birth-date').value;
+        var birthTime = document.getElementById('comp-birth-time').value;
+        var gender = document.getElementById('comp-gender').value;
+        var date = document.getElementById('comp-date').value || today;
+        var hour = document.getElementById('comp-hour').value;
+        var question = document.getElementById('comp-question').value.trim();
+        var dreamText = document.getElementById('comp-dream-text').value.trim();
+        var fsSitting = document.getElementById('comp-fs-sitting').value;
+        var fsFacing = document.getElementById('comp-fs-facing').value;
+        var fsYear = document.getElementById('comp-fs-year').value.trim();
+        currentQuestion = question;
+
+        var selected = [];
+        METHODS.forEach(function(m){
+          var input = methodsEl.querySelector('input[value="' + m.id + '"]');
+          if(input && input.checked) selected.push(m.id);
+        });
+        if(selected.length === 0){ showToast('请至少选择一门术数'); return; }
+        if(selected.length > MAX_METHODS){ showToast('最多选择 ' + MAX_METHODS + ' 门术数'); return; }
+        if(!birthDate){ showToast('请选择出生日期'); return; }
+
+        if(selected.indexOf('zhougong') !== -1 && !dreamText){
+          dreamText = '梦见龙飞翔';
+          showToast('未填写梦境，已使用示例「梦见龙飞翔」');
+        }
+
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '⏳ 推演中...';
+
+        var progress = document.getElementById('comp-progress');
+        var fill = document.getElementById('comp-progress-fill');
+        var ptext = document.getElementById('comp-progress-text');
+        progress.classList.remove('hidden');
+        fill.style.width = '12%';
+        ptext.textContent = '启动 ' + selected.length + ' 门术数：' + selected.map(function(k){ return METHOD_NAMES[k] || k; }).join('、');
+
+        ['scoreCard','methodsCard','domainCard','harmonyCard','narrativeCard'].forEach(function(id){
+          document.getElementById(id).classList.add('hidden');
+        });
+
+        setTimeout(function(){
+          fill.style.width = '35%';
+          ptext.textContent = '正在并行推演...';
+        }, 120);
+
+        var uiParams = {
+          birthDate: birthDate,
+          birthTime: birthTime,
+          gender: gender,
+          date: date,
+          hour: hour,
+          question: question,
+          dreamText: dreamText,
+          fengshuiSitting: fsSitting,
+          fengshuiFacing: fsFacing,
+          fengshuiBuildYear: fsYear ? parseInt(fsYear, 10) : 0
+        };
+
+        CompositeEngine.run(selected, uiParams).then(function(data){
+          fill.style.width = '85%';
+          ptext.textContent = '汇总结果，生成融合研判...';
+          setTimeout(function(){
+            try {
+              renderAll(data, selected, uiParams);
+              lastRun = { data: data, methods: selected.slice(), params: uiParams, savedAt: new Date().toISOString() };
+              var replayNote = document.getElementById('replayNote');
+              if(replayNote) replayNote.classList.add('hidden');
+              fill.style.width = '100%';
+              ptext.textContent = '推演完成';
+              progress.classList.add('hidden');
+              btn.disabled = false;
+              btn.textContent = '🧩 重新合参';
+              document.getElementById('scoreCard').scrollIntoView({behavior:'smooth',block:'start'});
+            } catch(e){
+              document.getElementById('scoreContent').innerHTML =
+                '<div class="error-container"><div class="error-icon">⚠️</div><div class="error-text">渲染失败：' +
+                escHtml(e.message || '未知错误') + '</div></div>';
+              document.getElementById('scoreCard').classList.remove('hidden');
+              progress.classList.add('hidden');
+              btn.disabled = false;
+              btn.textContent = '🧩 重新合参';
+            }
+          }, 260);
+        }).catch(function(err){
+          document.getElementById('scoreContent').innerHTML =
+            '<div class="error-container"><div class="error-icon">⚠️</div><div class="error-text">合参失败：' +
+            escHtml(err.message || '未知错误') + '</div></div>';
+          document.getElementById('scoreCard').classList.remove('hidden');
+          progress.classList.add('hidden');
+          btn.disabled = false;
+          btn.textContent = '🧩 重新合参';
+        });
+      });
+
+      // ===== 统一渲染 =====
+      function renderAll(data, selected, uiParams){
+        var results = data.individualResults || [];
+        var synthesis = data.synthesis || {};
+        var missing = selected.filter(function(k){
+          return !results.some(function(r){ return r.method === k; });
+        });
+
+        renderScore(data, results, missing, synthesis, uiParams);
+        renderMethods(results, missing, uiParams.question || '', uiParams);
+        renderDomain(synthesis, missing);
+        renderHarmony(synthesis, results);
+        renderNarrative(synthesis, results, uiParams);
+
+        ['scoreCard','methodsCard','domainCard','harmonyCard','narrativeCard'].forEach(function(id){
+          document.getElementById(id).classList.remove('hidden');
+        });
+
+        var cards = document.querySelectorAll('.method-result-card');
+        cards.forEach(function(c, idx){ setTimeout(function(){ c.classList.add('in'); }, 60 * idx); });
+      }
+
+      // ===== 分层工具 =====
+      function layerResults(results, layer){
+        return results.filter(function(r){
+          return METHOD_META[r.method] && METHOD_META[r.method].layer === layer;
+        });
+      }
+
+      function layerScore(rs){
+        var totalW = 0, sumW = 0;
+        rs.forEach(function(r){
+          var w = r.weight || 1;
+          totalW += w;
+          sumW += (r.score || 60) * w;
+        });
+        return totalW ? Math.round(sumW / totalW) : 0;
+      }
+
+      // 按时效分组，供总览与研判说明「哪些盘实时、哪些盘长期」
+      function natureGroups(results){
+        var groups = { natal: [], realtime: [], trend: [], space: [] };
+        results.forEach(function(r){
+          var m = METHOD_META[r.method];
+          var n = m ? m.nature : 'realtime';
+          var label = m ? m.name : (r.name || r.method);
+          if(m && m.timeNote) label += '（' + m.timeNote + '）';
+          groups[n].push(label);
+        });
+        return groups;
+      }
+
+      function layerVerdict(score, layer){
+        if(layer === 'space') return '只作环境参考，不参与吉凶打分与命事互证';
+        if(layer === 'natal'){
+          if(score >= 72) return '长期底色偏吉，格局可支撑较大目标';
+          if(score >= 60) return '长期底色平稳，宜稳中求进';
+          if(score >= 50) return '长期底色中性，需借运与选择补足';
+          return '长期底色偏弱，宜先固本再图进取';
+        }
+        if(layer === 'event'){
+          if(score >= 72) return '当下事机偏顺，可积极推进';
+          if(score >= 60) return '当下事机平稳，宜小步推进';
+          if(score >= 50) return '当下事机中性，宜观察等待';
+          return '当下事机不利，宜暂缓或调整策略';
+        }
+        if(score >= 72) return '外部时空大势偏顺，节奏可加快';
+        if(score >= 60) return '外部时空大势平稳，按部就班';
+        if(score >= 50) return '外部时空大势中性，不宜逆势强推';
+        return '外部时空大势偏紧，宜收缩蓄势';
+      }
+
+      function scoreClass(score){ return score >= 72 ? 'high' : score >= 55 ? 'mid' : 'low'; }
+
+      // 取前 n 行非空文本，去掉分隔线，限制长度，避免卡片被长文撑爆
+      function firstLines(text, n, maxLen){
+        var lines = String(text || '').split('\n').map(function(s){ return s.trim(); })
+          .filter(function(s){ return s && s.indexOf('━━') === -1; });
+        return lines.slice(0, n).join(' ').substring(0, maxLen || 260);
+      }
+
+      // 将每门术数的原始结果再交给 DomainAnalysis，得到针对「所问之事」的解读
+      function buildDomainInsight(r, question){
+        if(!question || !r || !r.raw) return null;
+        try {
+          if(r.method === 'zhougong'){
+            var raw = r.raw;
+            if(raw && raw.questionAnalysis){
+              return {
+                label: raw.domain ? raw.domain.name : '所问之事',
+                text: firstLines(raw.questionAnalysis, 4, 260)
+              };
+            }
+            return null;
+          }
+          if(window.DomainAnalysis && DomainAnalysis.analyze){
+            var da = DomainAnalysis.analyze(r.method, r.raw, question);
+            if(da && da.analysis){
+              return {
+                label: da.domain ? da.domain.name : '所问之事',
+                text: firstLines(da.analysis, 4, 260)
+              };
+            }
+          }
+        } catch(e){
+          return null;
+        }
+        return null;
+      }
+
+      function renderScore(data, results, missing, synthesis, uiParams){
+        var trend = data.trend || 'flat';
+        var trendIcon = trend === 'up' ? '📈' : trend === 'down' ? '📉' : '➡️';
+        var trendText = trend === 'up' ? '上升态势' : trend === 'down' ? '谨慎应对' : '趋于平稳';
+
+        var html = '';
+        if(missing.length > 0){
+          html += '<div class="warn-block">⚠️ ' + missing.map(function(k){ return escHtml(METHOD_NAMES[k] || k); }).join('、') +
+            ' 未返回有效结果（已排除出评分），请检查输入参数。</div>';
+        }
+
+        // 只选空间层时不做吉凶评分，避免凭空给一个合参总分
+        var scoringResults = results.filter(function(r){ return !(typeof r.weight === 'number' && r.weight <= 0); });
+        if(scoringResults.length === 0){
+          html += '<div class="layer-note">本次所选均为空间层（风水），只输出环境参考，不参与吉凶评分。请再选择命局、事占或时空层术数。</div>';
+          var onlyGroups = natureGroups(results);
+          html += '<div class="time-note"><div class="tn-title">时间语义 · 本次推演基准</div>';
+          ['space'].forEach(function(n){
+            if(!onlyGroups[n].length) return;
+            var T = TIME_NATURE[n];
+            html += '<div class="tn-row"><b>' + T.label + '</b>' + escHtml(onlyGroups[n].join('、')) + '：' +
+              T.hint + '。' + escHtml(momentText(n, uiParams)) + '。</div>';
+          });
+          html += '</div>';
+          document.getElementById('scoreContent').innerHTML = html;
+          return;
+        }
+        html += '<div class="layer-overview">';
+        ['natal', 'event', 'trend'].forEach(function(layer){
+          var rs = layerResults(results, layer);
+          if(rs.length === 0) return;
+          var sc = layerScore(rs);
+          var L = LAYERS[layer];
+          html += '<div class="layer-card">';
+          html += '<div class="layer-card-head"><span class="layer-card-name">' + L.name + '</span>' +
+            '<span class="layer-card-nature">' + TIME_NATURE[L.nature].short + '</span>' +
+            '<span class="layer-card-horizon">' + L.horizon + '</span></div>';
+          html += '<div class="layer-card-score ' + scoreClass(sc) + '">' + sc + '</div>';
+          html += '<div class="layer-card-meta">' + rs.length + ' 门 · ' +
+            rs.map(function(r){ return escHtml(r.name || r.method); }).join('、') + '</div>';
+          html += '<div class="layer-card-moment">' + escHtml(momentText(L.nature, uiParams)) + '</div>';
+          html += '<div class="layer-card-verdict">' + layerVerdict(sc, layer) + '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+
+        html += '<div class="layer-note">分层分数由层内术数加权得出；引擎综合分 ' + (data.score || 60) +
+          '（' + trendIcon + ' ' + trendText + '，分歧跨度 ' + (synthesis.spread || 0) +
+          '）仅作参考，不跨层直接平均。</div>';
+
+        var groups = natureGroups(results);
+        html += '<div class="time-note"><div class="tn-title">时间语义 · 本次推演基准</div>';
+        ['natal', 'realtime', 'trend', 'space'].forEach(function(n){
+          if(!groups[n].length) return;
+          var T = TIME_NATURE[n];
+          html += '<div class="tn-row"><b>' + T.label + '</b>' +
+            escHtml(groups[n].join('、')) + '：' + T.hint + '。' +
+            escHtml(momentText(n, uiParams)) + '。</div>';
+        });
+        html += '</div>';
+
+        document.getElementById('scoreContent').innerHTML = html;
+      }
+
+      function renderMethods(results, missing, question, uiParams){
+        var el = document.getElementById('methodsContent');
+        if(results.length === 0){
+          el.innerHTML = '<div class="empty-hint">没有术数返回有效结果，请调整输入或更换术数。</div>';
+          return;
+        }
+        var html = '';
+        if(missing.length > 0){
+          html += '<div class="warn-block">⚠️ 本次未产出：' + missing.map(function(k){ return escHtml(METHOD_NAMES[k] || k); }).join('、') + '</div>';
+        }
+        ['natal', 'event', 'trend', 'space'].forEach(function(layer){
+          var rs = layerResults(results, layer);
+          if(rs.length === 0) return;
+          var L = LAYERS[layer];
+          html += '<div class="layer-section-title">' + L.name +
+            '<span class="lst-horizon">' + L.horizon + ' · ' + L.desc + '</span></div>';
+          html += '<div class="method-result-grid">';
+          rs.forEach(function(r){
+            var sc = r.score || 60;
+            var trendIcon = r.trend === 'up' ? '↑' : r.trend === 'down' ? '↓' : '→';
+            var mm = METHOD_META[r.method] || { nature: 'realtime' };
+            html += '<div class="method-result-card">';
+            html += '<div class="mrc-head">';
+            html += '<span class="mrc-icon">' + escHtml(r.icon || '🔮') + '</span>';
+            html += '<span class="mrc-name">' + escHtml(r.name || r.method) + '</span>';
+            html += '<span class="mrc-nature">' + TIME_NATURE[mm.nature].short + '</span>';
+            html += '<span class="mrc-score ' + scoreClass(sc) + '">' + sc + '</span>';
+            html += '</div>';
+            html += '<div class="mrc-trend">' + trendIcon + ' ' + escHtml(r.verdict || '待判') + '</div>';
+            html += '<div class="mrc-moment">' + escHtml(methodMoment(mm, uiParams)) + '</div>';
+            html += '<div class="mrc-summary" style="margin-top:8px;">' + escHtml(r.summary || '') + '</div>';
+            html += '<div class="mrc-verdict">断语：<strong>' + escHtml(r.verdict || '待判') + '</strong></div>';
+            if(r.keyInsights && r.keyInsights.length){
+              html += '<div class="mrc-insights">';
+              r.keyInsights.forEach(function(k){ html += '<span class="mrc-insight">✦ ' + escHtml(k) + '</span>'; });
+              html += '</div>';
+            }
+            var di = buildDomainInsight(r, question);
+            if(di){
+              html += '<div class="mrc-domain"><div class="mrc-domain-label">事域关联 · ' + escHtml(di.label) +
+                '</div><div class="mrc-domain-body">' + escHtml(di.text) + '</div></div>';
+            }
+            html += '<div class="bar"><div class="bar-fill" style="width:' + sc + '%"></div></div>';
+            html += '</div>';
+          });
+          html += '</div>';
+        });
+        el.innerHTML = html;
+      }
+
+      function renderDomain(synthesis, missing){
+        var el = document.getElementById('domainContent');
+        var da = synthesis.domainAnalysis;
+        if(!da){
+          el.innerHTML = '<div class="empty-hint">未生成事域交叉分析，请在「所问之事」中填写具体问题。</div>';
+          return;
+        }
+        var html = '';
+        html += '<div class="layer-note">本节按各术分数归类为「看好 / 平稳 / 谨慎」，是态度汇总；每门术数针对所问之事的原文解读见上一节各卡的「事域关联」。</div>';
+        html += '<div class="domain-counts">';
+        html += '<span class="dc-up">↑ 看好 × ' + (da.upCount || 0) + '</span>';
+        html += '<span class="dc-flat">→ 平稳 × ' + (da.flatCount || 0) + '</span>';
+        html += '<span class="dc-down">↓ 谨慎 × ' + (da.downCount || 0) + '</span>';
+        html += '</div>';
+        html += '<div class="domain-consensus">' + escHtml(da.consensusText || '') + '</div>';
+        html += '<div class="domain-insights">';
+        (da.insights || []).forEach(function(it){
+          html += '<div class="di-item">' + escHtml(it.icon || '') + ' <strong>' + escHtml(it.method || '') +
+            '（' + (it.score || 0) + '分）</strong>' + escHtml(it.insight || '') + '</div>';
+        });
+        html += '</div>';
+        el.innerHTML = html;
+      }
+
+      // 同层两两比较；跨层不做融洽度
+      function pairMetrics(a, b){
+        var gap = Math.abs(a.score - b.score);
+        var trendAgree = a.trend === b.trend;
+        var harmony = 100 - gap;
+        if(trendAgree) harmony += 15;
+        if(gap <= 10) harmony += 10;
+        if(gap >= 30) harmony -= 15;
+        harmony = Math.round(Math.min(100, Math.max(0, harmony)));
+        var friction = gap;
+        if(!trendAgree) friction += 15;
+        if((a.score >= 70 && b.score <= 45) || (b.score >= 70 && a.score <= 45)) friction += 10;
+        friction = Math.round(Math.min(100, Math.max(0, friction)));
+        return {
+          a: a, b: b, harmony: harmony, friction: friction,
+          harmonyLevel: harmony >= 80 ? '高度融洽' : harmony >= 65 ? '较为融洽' : harmony >= 50 ? '基本融洽' : harmony >= 35 ? '需要磨合' : '分歧较大',
+          frictionLevel: friction <= 15 ? '几乎无摩擦' : friction <= 30 ? '轻微摩擦' : friction <= 50 ? '中等摩擦' : friction <= 70 ? '较大摩擦' : '严重摩擦'
+        };
+      }
+
+      function renderHarmony(synthesis, results){
+        var el = document.getElementById('harmonyContent');
+        var html = '';
+        var anyLayer = false;
+
+        ['natal', 'event', 'trend'].forEach(function(layer){
+          var rs = layerResults(results, layer);
+          if(rs.length < 2) return;
+          anyLayer = true;
+          var pairs = [];
+          for(var i = 0; i < rs.length; i++){
+            for(var j = i + 1; j < rs.length; j++) pairs.push(pairMetrics(rs[i], rs[j]));
+          }
+          var avgHarmony = Math.round(pairs.reduce(function(s, p){ return s + p.harmony; }, 0) / pairs.length);
+          var avgFriction = Math.round(pairs.reduce(function(s, p){ return s + p.friction; }, 0) / pairs.length);
+          var harmonyClass = avgHarmony >= 70 ? 'good' : avgHarmony >= 50 ? 'warn' : 'bad';
+          var frictionClass = avgFriction <= 35 ? 'good' : avgFriction <= 55 ? 'warn' : 'bad';
+          var L = LAYERS[layer];
+
+          html += '<div class="layer-section-title">' + L.name + ' · 层内融洽<span class="lst-horizon">' +
+            rs.length + ' 门 · ' + L.horizon + '</span></div>';
+          html += '<div class="harmony-summary">';
+          html += '<div class="harmony-metric"><div class="hm-label">' + L.name + '融洽度</div><div class="hm-value ' + harmonyClass + '">' + avgHarmony + '%</div></div>';
+          html += '<div class="harmony-metric"><div class="hm-label">' + L.name + '磨合度</div><div class="hm-value ' + frictionClass + '">' + avgFriction + '%</div></div>';
+          html += '</div>';
+
+          pairs.forEach(function(p){
+            var color = p.harmony >= 80 ? 'var(--green-light)' : p.harmony >= 60 ? 'var(--gold-light)' : p.harmony >= 40 ? 'var(--gold-dim)' : 'var(--red-light)';
+            html += '<div class="pair-row">';
+            html += '<span class="pair-name right">' + escHtml(p.a.icon || '') + ' ' + escHtml(p.a.name || p.a.method) + '</span>';
+            html += '<span class="pair-arrow">↔</span>';
+            html += '<span class="pair-name">' + escHtml(p.b.icon || '') + ' ' + escHtml(p.b.name || p.b.method) + '</span>';
+            html += '<div class="pair-bar"><div class="pair-bar-fill" style="width:' + p.harmony + '%;background:' + color + ';"></div></div>';
+            html += '<span class="pair-val" style="color:' + color + ';">' + p.harmony + '% ' + p.harmonyLevel + '</span>';
+            html += '</div>';
+          });
+        });
+
+        if(!anyLayer){
+          html = '<div class="empty-hint">同层至少需要 2 门术数才能计算融洽磨合。可在命局层或事占层各选 2 门以上。</div>';
+        } else {
+          html += '<div class="layer-note">只做同层比较：命局层内部比长期判断，事占层内部比当下事机；跨层差异不叫分歧，改由下一节「命事互证」处理。</div>';
+        }
+        el.innerHTML = html;
+      }
+
+      function renderNarrative(synthesis, results, uiParams){
+        var el = document.getElementById('narrativeContent');
+        var natal = layerResults(results, 'natal');
+        var event = layerResults(results, 'event');
+        var trend = layerResults(results, 'trend');
+        var space = layerResults(results, 'space');
+        var nScore = natal.length ? layerScore(natal) : null;
+        var eScore = event.length ? layerScore(event) : null;
+        var tScore = trend.length ? layerScore(trend) : null;
+
+        var html = '';
+        var groups = natureGroups(results);
+        html += '<div class="mutual-block time-block"><div class="mb-title">时间语义 · 本次推演基准</div><div class="mb-body">';
+        ['natal', 'realtime', 'trend', 'space'].forEach(function(n){
+          if(!groups[n].length) return;
+          var T = TIME_NATURE[n];
+          html += '<div class="tn-row"><b>' + T.label + '</b>' + escHtml(groups[n].join('、')) + '：' +
+            T.hint + '。' + escHtml(momentText(n, uiParams)) + '。</div>';
+        });
+        html += '</div></div>';
+
+        if(natal.length){
+          html += '<div class="mutual-block"><div class="mb-title">命局层 · 长期基线</div><div class="mb-body">' +
+            escHtml(natal.map(function(r){ return r.name || r.method; }).join('、')) + '综合 ' + nScore + ' 分。' +
+            layerVerdict(nScore, 'natal') + '。此层回答的是「长期底色与格局」，不直接判定某一件事的当下成败。' +
+            '<br><span style="color:var(--text3);font-size:0.78rem;">' + escHtml(momentText('natal', uiParams)) + '</span></div></div>';
+        }
+        if(event.length){
+          html += '<div class="mutual-block"><div class="mb-title">事占层 · 当下事机</div><div class="mb-body">' +
+            escHtml(event.map(function(r){ return r.name || r.method; }).join('、')) + '综合 ' + eScore + ' 分。' +
+            layerVerdict(eScore, 'event') + '。此层回答的是「此事此刻成不成、何时动」。' +
+            '<br><span style="color:var(--text3);font-size:0.78rem;">' + escHtml(momentText('realtime', uiParams)) + '</span></div></div>';
+        }
+        if(trend.length){
+          html += '<div class="mutual-block"><div class="mb-title">时空层 · 大势节奏</div><div class="mb-body">' +
+            escHtml(trend.map(function(r){ return r.name || r.method; }).join('、')) + '综合 ' + tScore + ' 分。' +
+            layerVerdict(tScore, 'trend') + '。此层作为外部节奏参考，不替代命局与事占。' +
+            '<br><span style="color:var(--text3);font-size:0.78rem;">' + escHtml(momentText('trend', uiParams)) + '</span></div></div>';
+        }
+        if(space.length){
+          html += '<div class="mutual-block"><div class="mb-title">空间层 · 环境参考</div><div class="mb-body">' +
+            escHtml(space.map(function(r){ return r.name || r.method; }).join('、')) + '：' +
+            '按坐向与朝向判环境格局，只作环境参考，不参与吉凶打分与命事互证。' +
+            '<br><span style="color:var(--text3);font-size:0.78rem;">' + escHtml(momentText('space', uiParams)) + '</span></div></div>';
+        }
+
+        if(natal.length && event.length){
+          var mutual = '';
+          var action = '';
+          if(nScore >= 65 && eScore >= 65){
+            mutual = '命局底色与当下事机同向，命事互证为吉：长期方向可支撑，当下也有推进窗口。';
+            action = '可按既定计划推进；具体行动窗口仍以事占层的应期为准。';
+          } else if(nScore >= 65 && eScore < 55){
+            mutual = '命局支持，但当下事机不利，属「底色够、时机未到」。';
+            action = '宜蓄势、练内功、修复条件，等待事占层转好再动，不宜强行推进。';
+          } else if(nScore < 55 && eScore >= 65){
+            mutual = '命局底色承压，但当下有短期机会，属「借势可为、不宜长押」。';
+            action = '可抓住短期窗口速决，但不宜把短期机会当作长期方向。';
+          } else if(nScore < 55 && eScore < 55){
+            mutual = '命事皆弱，长期底色与当下事机都不支持强推。';
+            action = '宜收缩防守、先修复基本面，暂缓重大决策。';
+          } else {
+            mutual = '命事参半：长期底色与当下事机各有一半支持，不能用一个总分概括。';
+            action = '长期依命局定方向，短期依事占定节奏；先确认方向，再等窗口。';
+          }
+          html += '<div class="mutual-block"><div class="mb-title">命事互证 · 跨层结论</div><div class="mb-body">' +
+            mutual + '<br><span style="color:var(--gold);">行动建议：</span>' + action + '</div></div>';
+        } else if(natal.length && !event.length){
+          html += '<div class="mutual-block"><div class="mb-title">结论范围</div><div class="mb-body">本次只取命局层，结论只适用于长期底色与方向判断，不能回答具体某件事的当下成败。</div></div>';
+        } else if(event.length && !natal.length){
+          html += '<div class="mutual-block"><div class="mb-title">结论范围</div><div class="mb-body">本次只取事占层，结论只适用于当下此事的成败与应期，不能代表长期命运底色。</div></div>';
+        }
+
+        if(synthesis.narrative){
+          html += '<details class="engine-narrative"><summary>展开引擎综合文本（原始不分层，仅供参考）</summary>' +
+            '<div class="narrative-block">' + formatNarrative(synthesis.narrative) + '</div></details>';
+        }
+
+        var conf = synthesis.confidence;
+        var confText = conf === 'high' ? '高' : conf === 'medium' ? '中' : '低';
+        html += '<div class="narrative-meta">引擎置信度（不分层）：<strong>' + confText +
+          '</strong> · 分歧跨度 ' + (synthesis.spread || 0) + ' 分 · 参与术数 ' + results.length + ' 门</div>';
+        el.innerHTML = html;
+      }
+
+      // 将 \n 文本转为段落，【】标题高亮
+      function formatNarrative(text){
+        if(!text) return '';
+        return String(text).split('\n').map(function(line){
+          var t = line.trim();
+          if(!t) return '<span style="display:block;height:6px;"></span>';
+          if(t.charAt(0) === '【') return '<span class="n-section">' + escHtml(t) + '</span>';
+          return '<span style="display:block;">' + escHtml(t) + '</span>';
+        }).join('');
+      }
+
+      // ===== A3 卦例盒：读档复盘 =====
+      function loadCases(){
+        try {
+          var raw = localStorage.getItem(CASE_KEY);
+          var list = raw ? JSON.parse(raw) : [];
+          return Array.isArray(list) ? list : [];
+        } catch(e){
+          console.warn('[EP11] 卦例读取失败', e);
+          return [];
+        }
+      }
+
+      function persistCases(list){
+        try {
+          localStorage.setItem(CASE_KEY, JSON.stringify(list));
+          return true;
+        } catch(e){
+          console.warn('[EP11] 卦例写入失败', e);
+          showToast('保存失败：浏览器本地存储不可用或已满');
+          return false;
+        }
+      }
+
+      function formatSavedAt(iso){
+        if(!iso) return '未知时间';
+        var d = new Date(iso);
+        if(isNaN(d.getTime())) return String(iso);
+        function p(n){ return n < 10 ? '0' + n : String(n); }
+        return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+          ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+      }
+
+      function setFieldValue(id, val){
+        var el = document.getElementById(id);
+        if(!el || val === undefined || val === null) return;
+        el.value = String(val);
+      }
+
+      // 复盘时把表单恢复到当时填写的样子，便于对照重排
+      function applyCaseForm(params){
+        params = params || {};
+        setFieldValue('comp-birth-date', params.birthDate);
+        setFieldValue('comp-birth-time', params.birthTime);
+        setFieldValue('comp-gender', params.gender);
+        setFieldValue('comp-date', params.date);
+        setFieldValue('comp-hour', params.hour);
+        setFieldValue('comp-question', params.question);
+        setFieldValue('comp-dream-text', params.dreamText);
+        setFieldValue('comp-fs-sitting', params.fengshuiSitting);
+        setFieldValue('comp-fs-facing', params.fengshuiFacing);
+        var fy = document.getElementById('comp-fs-year');
+        if(fy) fy.value = params.fengshuiBuildYear ? String(params.fengshuiBuildYear) : '';
+      }
+
+      function applyCaseMethods(methods){
+        var list = methods || [];
+        chips.forEach(function(chip){
+          var input = chip.querySelector('input');
+          input.checked = list.indexOf(input.value) !== -1;
+          syncChip(chip, input);
+        });
+        toggleDream();
+        updateCount();
+      }
+
+      function renderCaseBox(){
+        var el = document.getElementById('caseContent');
+        if(!el) return;
+        var list = loadCases();
+        if(!list.length){
+          el.innerHTML = '<div class="layer-note">暂无卦例。推演完成后点「保存卦例」，即可固定本次起盘时刻与原始结果；下次复盘直接载入存档，不会换盘。</div>';
+          return;
+        }
+        var html = '<div class="case-list">';
+        list.forEach(function(c, idx){
+          var p = c.params || {};
+          var names = (c.methods || []).map(function(k){ return METHOD_NAMES[k] || k; }).join('、');
+          html += '<div class="case-item">' +
+            '<div class="case-meta"><span>' + escHtml(formatSavedAt(c.savedAt)) + '</span><span>' +
+              escHtml(names || '未记录术数') + '</span></div>' +
+            '<div class="case-q">' + (c.question ? escHtml(c.question) : '未填所问之事') + '</div>' +
+            '<div class="case-meta"><span>起盘 ' + escHtml((p.date || '未记') + ' ' + (p.hour || '')) + '</span></div>' +
+            '<div class="case-actions">' +
+              '<button type="button" class="case-btn" data-action="replay" data-idx="' + idx + '">复盘</button>' +
+              '<button type="button" class="case-btn danger" data-action="delete" data-idx="' + idx + '">删除</button>' +
+            '</div>' +
+          '</div>';
+        });
+        html += '</div>';
+        el.innerHTML = html;
+      }
+
+      function replayCase(idx){
+        var list = loadCases();
+        var c = list[idx];
+        if(!c){ showToast('卦例不存在，可能已被删除'); renderCaseBox(); return; }
+
+        applyCaseForm(c.params);
+        setMode('custom', false);
+        applyCaseMethods(c.methods);
+        currentQuestion = (c.params && c.params.question) || '';
+
+        // 直接渲染存档结果，不重跑引擎：六爻不重摇、梅花不重取数，所以不会换盘
+        renderAll(c.data || {}, c.methods || [], c.params || {});
+        lastRun = null;
+
+        var note = document.getElementById('replayNote');
+        if(note){
+          note.textContent = '复盘 · 已载入 ' + formatSavedAt(c.savedAt) +
+            ' 的卦例，结果原样显示，未重新起盘，因此不会换盘。';
+          note.classList.remove('hidden');
+        }
+        var progress = document.getElementById('comp-progress');
+        if(progress) progress.classList.add('hidden');
+        var btn = document.getElementById('comp-submit');
+        if(btn){ btn.disabled = false; btn.textContent = '🧩 重新合参'; }
+
+        document.getElementById('scoreCard').scrollIntoView({behavior:'smooth',block:'start'});
+        showToast('已载入卦例，未重新起盘');
+      }
+
+      function deleteCase(idx){
+        var list = loadCases();
+        if(!list[idx]) return;
+        var removed = list.splice(idx, 1)[0];
+        if(!persistCases(list)) return;
+        renderCaseBox();
+        showToast('已删除 ' + formatSavedAt(removed.savedAt) + ' 的卦例');
+      }
+
+      document.getElementById('comp-save-case').addEventListener('click', function(){
+        if(!lastRun){ showToast('请先推演一次再保存'); return; }
+        var list = loadCases();
+        list.unshift({
+          savedAt: lastRun.savedAt,
+          methods: lastRun.methods,
+          params: lastRun.params,
+          question: lastRun.params.question || '',
+          data: lastRun.data
+        });
+        if(list.length > MAX_CASES) list.length = MAX_CASES;
+        if(!persistCases(list)) return;
+        lastRun = null;
+        renderCaseBox();
+        showToast('已保存本次卦例（最多保留 ' + MAX_CASES + ' 条）');
+      });
+
+      document.getElementById('caseContent').addEventListener('click', function(e){
+        var btn = e.target.closest('[data-action]');
+        if(!btn) return;
+        var idx = parseInt(btn.dataset.idx, 10);
+        if(isNaN(idx)) return;
+        if(btn.dataset.action === 'replay') replayCase(idx);
+        else if(btn.dataset.action === 'delete') deleteCase(idx);
+      });
+
+      renderCaseBox();
+
+      // ===== Toast =====
+      var toastEl = null;
+      function showToast(msg){
+        if(!toastEl){
+          toastEl = document.createElement('div');
+          toastEl.className = 'toast';
+          document.body.appendChild(toastEl);
+        }
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        setTimeout(function(){ toastEl.classList.remove('show'); }, 2600);
+      }
+
+      // ===== 水墨粒子 =====
+      (function initInk(){
+        var canvas = document.getElementById('inkCanvas');
+        if(!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var W, H, particles = [];
+        function resize(){
+          W = canvas.width = window.innerWidth;
+          H = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+        for(var i = 0; i < 50; i++){
+          particles.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            r: Math.random() * 1.6 + 0.3,
+            vx: (Math.random() - 0.5) * 0.25,
+            vy: -Math.random() * 0.25 - 0.05,
+            a: Math.random() * 0.5 + 0.1
+          });
+        }
+        function tick(){
+          ctx.clearRect(0, 0, W, H);
+          for(var i = 0; i < particles.length; i++){
+            var p = particles[i];
+            p.x += p.vx; p.y += p.vy;
+            if(p.y < -10){ p.y = H + 10; p.x = Math.random() * W; }
+            if(p.x < -10) p.x = W + 10;
+            if(p.x > W + 10) p.x = -10;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(184,154,92,' + p.a + ')';
+            ctx.fill();
+          }
+          requestAnimationFrame(tick);
+        }
+        tick();
+      })();
+
+    })();
+    </script>
+  </body>
+</html>

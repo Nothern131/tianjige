@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>天机阁 EP10 · 周公解梦</title>
+    <meta name="description" content="天机阁EP10——周公解梦。梦境元素逐条破解，五行归经，事域交叉研判。周公梦学经典文库，纯前端实现。" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Ma+Shan+Zheng&display=swap" rel="stylesheet" />
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+      :root {
+        --ink: #0a0806;
+        --parchment: #1a1612;
+        --surface: rgba(20,16,12,0.94);
+        --card: rgba(24,20,14,0.82);
+        --gold: #b89a5c;
+        --gold-light: #d4bb7c;
+        --gold-dim: #8a7040;
+        --gold-glow: rgba(184,154,92,0.15);
+        --gold-subtle: rgba(184,154,92,0.04);
+        --gold-wash: rgba(184,154,92,0.04);
+        --red: #c04040;
+        --red-light: #e06060;
+        --green: #5a8a5a;
+        --green-light: #7aaa7a;
+        --blue: #4a6a8a;
+        --blue-light: #6a8aaa;
+        --purple: #7a6aa0;
+        --purple-light: #9a8ac0;
+        --text: #e0dcd0;
+        --text2: #8a8576;
+        --text3: #4a4640;
+        --border: rgba(255,255,255,0.05);
+        --border-gold: rgba(184,154,92,0.18);
+        --font-serif: 'Noto Serif SC','SimSun','KaiTi',serif;
+        --font-sans: 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+        --radius: 14px;
+        --radius-sm: 8px;
+      }
+      html {
+        background: var(--ink);
+        color: var(--text);
+        font-family: var(--font-sans);
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+      }
+      body { min-height: 100vh; user-select: none; -webkit-user-select: none; }
+
+      /* ===== Ink Canvas ===== */
+      #inkCanvas { position: fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+      .watermark {
+        position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+        font-family:'Ma Shan Zheng',cursive; font-size:18vw;
+        color:rgba(184,154,92,0.035); z-index:0; pointer-events:none; line-height:1;
+      }
+
+      /* ===== Layout ===== */
+      .wrap { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 40px 20px 60px; }
+      .hidden { display: none !important; }
+
+      /* ===== Hero ===== */
+      .hero { text-align: center; padding: 50px 0 36px; }
+      .ep-tag {
+        display: inline-block; font-size: 0.68rem; letter-spacing: 0.3em; text-transform: uppercase;
+        color: var(--gold-dim); border: 1px solid var(--border-gold); border-radius: 999px;
+        padding: 5px 16px; margin-bottom: 18px;
+      }
+      .hero h1 {
+        font-family: var(--font-serif); font-weight: 900;
+        font-size: clamp(2.4rem, 7vw, 3.6rem);
+        color: var(--gold-light); letter-spacing: 0.08em;
+        text-shadow: 0 0 30px rgba(184,154,92,0.25);
+      }
+      .subtitle { margin-top: 14px; font-size: 0.86rem; color: var(--text2); letter-spacing: 0.06em; line-height: 1.7; }
+      .hero-divider { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 26px; }
+      .hero-divider span { display: block; width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-dim)); }
+      .hero-divider span:last-child { background: linear-gradient(270deg, transparent, var(--gold-dim)); }
+      .hero-divider .diamond { width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 12px rgba(184,154,92,0.5); }
+
+      /* ===== Section Title ===== */
+      .section-title {
+        font-family: var(--font-serif); font-weight: 700; font-size: 1.15rem; color: var(--gold-light);
+        display: flex; align-items: baseline; gap: 10px;
+        border-left: 3px solid var(--gold); padding-left: 12px; margin-bottom: 18px; letter-spacing: 0.04em;
+      }
+      .section-title .num { font-size: 0.6rem; color: var(--text3); letter-spacing: 0.2em; margin-left: auto; }
+
+      /* ===== Card ===== */
+      .card, .glass-card {
+        position: relative; background: var(--card); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 26px; margin-bottom: 22px;
+        backdrop-filter: blur(8px); overflow: hidden;
+      }
+      .card::before, .glass-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+        background: linear-gradient(90deg, transparent, var(--gold-dim), transparent); opacity: 0.5;
+      }
+      .card:hover, .glass-card:hover { border-color: var(--border-gold); transition: border-color 0.3s; }
+
+      /* ===== Form ===== */
+      .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; }
+      .form-group { display: flex; flex-direction: column; gap: 6px; }
+      .form-group label, .form-label {
+        font-size: 0.68rem; color: var(--text2); letter-spacing: 0.1em; text-transform: uppercase;
+      }
+      .form-group input, .form-group select, .form-group textarea {
+        background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: var(--radius-sm);
+        color: var(--text); font-family: var(--font-serif); font-size: 0.95rem;
+        padding: 11px 14px; outline: none; transition: border-color 0.25s, box-shadow 0.25s; width: 100%;
+      }
+      .form-group textarea { resize: vertical; min-height: 100px; line-height: 1.8; }
+      .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        border-color: var(--gold-dim); box-shadow: 0 0 0 3px var(--gold-glow);
+      }
+      .form-group input { color-scheme: dark; }
+
+      .btn {
+        position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+        color: var(--ink); font-weight: 700; font-family: var(--font-serif); font-size: 1rem;
+        padding: 13px 30px; border: none; border-radius: var(--radius-sm);
+        cursor: pointer; letter-spacing: 0.1em; transition: transform 0.2s, box-shadow 0.25s; overflow: hidden;
+      }
+      .btn::after {
+        content: ''; position: absolute; inset: 0;
+        background: radial-gradient(circle at 50% 120%, rgba(255,255,255,0.35), transparent 60%);
+        opacity: 0; transition: opacity 0.3s;
+      }
+      .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(184,154,92,0.35); }
+      .btn:hover::after { opacity: 1; }
+      .btn:active { transform: translateY(0); }
+
+      .btn-ghost {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        background: transparent; color: var(--text2); font-family: var(--font-serif);
+        font-size: 0.82rem; padding: 12px 20px; border: 1px solid var(--border-gold);
+        border-radius: var(--radius-sm); cursor: pointer; letter-spacing: 0.06em;
+        transition: all 0.25s;
+      }
+      .btn-ghost:hover { color: var(--gold-light); border-color: var(--gold-dim); background: var(--gold-subtle); }
+
+      /* ===== Tags ===== */
+      .domain-tags, .quick-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+      .domain-tag, .quick-tag {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: 999px;
+        color: var(--text2); font-size: 0.78rem; padding: 6px 14px; cursor: pointer;
+        font-family: var(--font-serif); transition: all 0.25s;
+      }
+      .domain-tag:hover, .quick-tag:hover {
+        color: var(--gold-light); border-color: var(--gold-dim); background: var(--gold-glow);
+      }
+      .domain-tag.active, .quick-tag.active {
+        color: var(--gold-light); border-color: var(--gold); background: var(--gold-glow);
+        box-shadow: 0 0 12px rgba(184,154,92,0.25);
+      }
+
+      /* ===== Info Panel ===== */
+      .info-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+      .info-item { background: var(--gold-subtle); border-left: 3px solid var(--gold-dim); border-radius: var(--radius-sm); padding: 12px 14px; }
+      .info-item .label { font-size: 0.62rem; color: var(--text2); letter-spacing: 0.12em; margin-bottom: 6px; text-transform: uppercase; }
+      .info-item .value { font-family: var(--font-serif); font-size: 1.05rem; color: var(--text); }
+      .info-item .value .highlight { color: var(--gold-light); }
+      .info-item.info-gold { border-left-color: var(--gold); }
+      .info-item.info-green { border-left-color: var(--green-light); }
+      .info-item.info-blue { border-left-color: var(--blue-light); }
+      .info-item.info-red { border-left-color: var(--red-light); }
+      .info-item.info-purple { border-left-color: var(--purple-light); }
+
+      /* ===== Level Badge ===== */
+      .level-badge {
+        font-family: var(--font-serif); font-size: 1rem; font-weight: 700;
+        padding: 3px 14px; border-radius: 999px; letter-spacing: 0.12em; flex-shrink: 0;
+      }
+      .level-good { color: var(--gold-light); background: var(--gold-glow); border: 1px solid var(--gold-dim); }
+      .level-neutral { color: var(--text2); background: var(--gold-subtle); border: 1px solid var(--border-gold); }
+      .level-bad { color: var(--red-light); background: rgba(192,64,64,0.12); border: 1px solid rgba(192,64,64,0.35); }
+
+      /* ===== Dream Element Cards ===== */
+      .dream-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+      .dream-card {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold); border-radius: var(--radius-sm);
+        padding: 14px 16px; opacity: 0; transform: translateY(12px);
+        transition: opacity 0.45s ease, transform 0.45s ease, border-color 0.25s, box-shadow 0.25s;
+      }
+      .dream-card.in { opacity: 1; transform: translateY(0); }
+      .dream-card:hover { border-color: var(--gold-dim); box-shadow: 0 4px 18px rgba(184,154,92,0.18); }
+      .dream-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+      .dream-card-head .dc-ico { font-size: 1.1rem; }
+      .dream-card-head .dc-key { font-family: var(--font-serif); font-size: 1rem; color: var(--gold-light); letter-spacing: 0.04em; }
+      .dream-card-head .dc-wx {
+        font-size: 0.6rem; line-height: 1.4; padding: 0 6px;
+        border: 1px solid currentColor; border-radius: 3px; letter-spacing: 0.08em;
+      }
+      .dc-wx.wx-jin { color: var(--gold-light); }
+      .dc-wx.wx-mu { color: var(--green-light); }
+      .dc-wx.wx-shui { color: var(--blue-light); }
+      .dc-wx.wx-huo { color: var(--red-light); }
+      .dc-wx.wx-tu { color: var(--text2); }
+      .dream-card-head .dc-cat { font-size: 0.66rem; color: var(--text3); letter-spacing: 0.08em; margin-left: auto; }
+      .dream-card-body { font-family: var(--font-serif); font-size: 0.86rem; line-height: 1.8; color: var(--text2); }
+
+      /* ===== Interpretation ===== */
+      .interp-block {
+        background: var(--gold-subtle); border-left: 3px solid var(--gold);
+        border-radius: var(--radius-sm); padding: 18px 20px;
+      }
+      .interp-block .block-label { font-size: 0.7rem; color: var(--text2); letter-spacing: 0.15em; margin-bottom: 10px; }
+      .interp-block .block-content {
+        font-family: var(--font-serif); font-size: 0.95rem; line-height: 1.9; color: var(--text); white-space: pre-wrap;
+      }
+      .interp-block.block-blue { border-left-color: var(--blue-light); }
+      .wx-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+      .wx-chip {
+        font-size: 0.72rem; color: var(--text2); border: 1px solid var(--border-gold);
+        border-radius: 999px; padding: 4px 12px; font-family: var(--font-serif);
+      }
+      .wx-chip strong { color: var(--gold-light); font-weight: 600; margin-left: 4px; }
+
+      /* ===== 吉凶统计 / 五行归经 ===== */
+      .jx-bar { display: flex; height: 8px; gap: 3px; margin-top: 14px; }
+      .jx-seg { border-radius: 999px; min-width: 0; }
+      .jx-seg.jx-ji { background: var(--gold); }
+      .jx-seg.jx-mid { background: var(--text3); }
+      .jx-seg.jx-xiong { background: var(--red); }
+      .jx-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 7px; font-size: 0.68rem; color: var(--text2); }
+      .jx-legend i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+      .jx-legend .lg-ji i { background: var(--gold); }
+      .jx-legend .lg-mid i { background: var(--text3); }
+      .jx-legend .lg-xiong i { background: var(--red); }
+      .wx-bars { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
+      .wx-row { display: flex; align-items: center; gap: 9px; }
+      .wx-row .wx-name { width: 22px; font-family: var(--font-serif); font-size: 0.78rem; color: var(--text2); }
+      .wx-track { flex: 1; height: 6px; background: rgba(255,255,255,0.04); border-radius: 999px; overflow: hidden; }
+      .wx-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); }
+      .wx-row .wx-num { width: 26px; text-align: right; font-size: 0.68rem; color: var(--text3); }
+
+      /* ===== Masters Panel（对齐 components/masters.js 类名） ===== */
+      .section-header { margin-bottom: 24px; }
+      .page-title { font-family: var(--font-serif); font-size: 1.55rem; font-weight: 700; color: var(--gold); margin-bottom: 8px; letter-spacing: 0.08em; }
+      .page-subtitle { font-size: 0.85rem; color: var(--text2); line-height: 1.7; }
+      .mb-24 { margin-bottom: 24px; }
+      .mt-8 { margin-top: 8px; }
+      .btn-gold {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 10px 28px;
+        background: linear-gradient(135deg, rgba(138,109,52,0.82), rgba(184,154,92,0.9));
+        color: #0a080f; font-weight: 600; font-size: 0.84rem;
+        border-radius: var(--radius-sm); border: 1px solid rgba(184,154,92,0.28);
+        transition: all 0.25s; cursor: pointer; letter-spacing: 0.05em; font-family: var(--font-sans);
+      }
+      .btn-gold:hover { background: linear-gradient(135deg, var(--gold), var(--gold-light)); box-shadow: 0 0 20px var(--gold-glow); transform: translateY(-1px) scale(1.02); }
+      .btn-gold:active { transform: translateY(0) scale(0.97); }
+      .btn-gold.lg { padding: 14px 40px; font-size: 0.96rem; }
+      .btn-gold:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+      .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; flex-wrap: wrap; }
+      .tab-btn {
+        padding: 10px 20px; background: transparent; border: none; color: var(--text2);
+        font-size: 0.8rem; font-family: var(--font-serif); cursor: pointer;
+        transition: all 0.2s; letter-spacing: 0.06em; border-bottom: 2px solid transparent; white-space: nowrap;
+      }
+      .tab-btn:hover { color: var(--text); background: var(--gold-subtle); }
+      .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 600; }
+      .master-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px,1fr)); gap: 10px; }
+      .master-card {
+        position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        padding: 14px 10px; background: rgba(10,8,6,0.6);
+        border: 1px solid var(--border); border-radius: var(--radius);
+        cursor: pointer; transition: all 0.25s;
+      }
+      .master-card:hover {
+        background: rgba(20,16,12,0.9); border-color: var(--border-gold);
+        box-shadow: 0 0 16px var(--gold-glow); transform: translateY(-2px);
+      }
+      .master-card.selected {
+        background: rgba(184,154,92,0.08); border-color: rgba(184,154,92,0.4);
+        box-shadow: 0 0 20px var(--gold-glow), inset 0 0 20px rgba(184,154,92,0.04);
+      }
+      .master-card.selected::after {
+        content: '✓'; position: absolute; top: 6px; right: 8px;
+        font-size: 0.7rem; color: var(--gold); font-weight: 700;
+      }
+      .master-avatar { font-size: 1.8rem; transition: transform 0.3s; }
+      .master-card:hover .master-avatar { transform: scale(1.1); }
+      .master-name { font-family: var(--font-serif); font-size: 0.84rem; font-weight: 600; color: var(--text); transition: color 0.25s; }
+      .master-card:hover .master-name { color: var(--gold-light); }
+      .master-title { font-size: 0.68rem; color: var(--text3); text-align: center; line-height: 1.4; max-width: 130px; }
+      .master-era {
+        font-size: 0.62rem; color: var(--text3); padding: 1px 8px;
+        border-radius: 8px; background: var(--gold-wash); border: 1px solid var(--border);
+      }
+      .master-result-header { display: flex; align-items: center; gap: 20px; padding: 8px 0 20px; }
+      .master-result-avatar-wrap {
+        flex-shrink: 0; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
+        background: rgba(184,154,92,0.06); border: 1px solid var(--border-gold); border-radius: 50%;
+      }
+      .master-result-avatar { font-size: 2rem; }
+      .master-result-info { flex: 1; min-width: 0; }
+      .master-result-name {
+        font-family: var(--font-serif); font-size: 1.2rem; color: var(--gold-light);
+        font-weight: 700; margin: 0 0 4px; display: flex; align-items: baseline; gap: 10px;
+      }
+      .master-result-era { font-size: 0.7rem; color: var(--text3); font-weight: 400; font-family: var(--font-sans); }
+      .master-result-title { font-size: 0.8rem; color: var(--text2); margin: 0 0 8px; }
+      .master-result-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+      .master-result-tag { font-size: 0.65rem; padding: 2px 10px; border: 1px solid var(--border); border-radius: 10px; color: var(--text3); white-space: nowrap; }
+      .master-result-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border-gold), transparent); margin-bottom: 24px; }
+      .master-result-body { display: flex; flex-direction: column; gap: 0; }
+      .master-result-section {
+        padding: 20px 0; border-bottom: 1px solid var(--border);
+        animation: sectionFadeIn 0.5s ease both; animation-delay: var(--delay, 0s);
+      }
+      .master-result-section:last-child { border-bottom: none; }
+      @keyframes sectionFadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+      .master-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+      .master-section-icon {
+        font-size: 1.1rem; flex-shrink: 0; width: 32px; height: 32px;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(184,154,92,0.04); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      }
+      .master-section-title-wrap { flex: 1; min-width: 0; }
+      .master-section-title { font-family: var(--font-serif); font-size: 0.95rem; color: var(--gold); font-weight: 600; letter-spacing: 0.04em; display: block; }
+      .master-section-desc { font-size: 0.7rem; color: var(--text3); display: block; margin-top: 2px; }
+      .master-section-num { font-family: var(--font-serif); font-size: 0.75rem; color: var(--text3); opacity: 0.4; flex-shrink: 0; }
+      .master-section-content { padding-left: 44px; line-height: 1.95; font-size: 0.86rem; color: var(--text2); }
+      .master-section-content p { margin-bottom: 10px; text-indent: 2em; }
+      .master-section-content p:last-child { margin-bottom: 0; }
+
+      /* ===== 大师解析增强模块 ===== */
+      .zg-enhanced { margin-top: 4px; }
+      .zg-enhanced-header {
+        display: flex; align-items: center; gap: 8px;
+        padding: 12px 0 8px; border-top: 1px dashed var(--border-gold); margin-bottom: 6px;
+      }
+      .zg-enhanced-header .deh-lead { font-size: 0.72rem; letter-spacing: 0.22em; color: var(--gold-dim); }
+      .zg-enhanced-header .deh-lead::before { content: '◆'; margin-right: 8px; color: var(--gold); font-size: 0.6rem; }
+      .enh-mod {
+        opacity: 0; transform: translateY(14px); animation: enhModIn 0.6s ease forwards;
+        animation-delay: var(--delay, 0s); position: relative; padding: 14px 16px; margin-bottom: 14px;
+        background: linear-gradient(180deg, rgba(184,154,92,0.05) 0%, rgba(184,154,92,0.015) 100%);
+        border: 1px solid var(--border-gold); border-radius: 8px; overflow: hidden;
+      }
+      .enh-mod::before {
+        content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 0;
+        background: linear-gradient(180deg, var(--gold), transparent);
+        animation: enhBarIn 0.6s ease forwards; animation-delay: var(--delay, 0s);
+      }
+      @keyframes enhModIn { to { opacity: 1; transform: translateY(0); } }
+      @keyframes enhBarIn { to { height: 100%; } }
+      .enh-mod-title {
+        display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--gold-light);
+        letter-spacing: 0.08em; margin-bottom: 10px; font-family: var(--font-serif);
+      }
+      .enh-mod-title .emt-num { margin-left: auto; font-size: 0.66rem; color: var(--text3); letter-spacing: 0.1em; }
+      .enh-mod-body { font-family: var(--font-serif); font-size: 0.9rem; line-height: 1.85; color: var(--text); }
+      .enh-mod-body .emb-line { display: block; margin-bottom: 4px; }
+      .enh-mod-body .emb-line:last-child { margin-bottom: 0; }
+      .enh-mod-body .tag {
+        display: inline-block; font-size: 0.68rem; padding: 1px 7px;
+        border: 1px solid var(--border-gold); border-radius: 999px;
+        color: var(--gold-dim); margin-right: 8px; letter-spacing: 0.06em; vertical-align: middle;
+        animation: tagGlow 2.6s ease-in-out infinite; animation-delay: var(--delay, 0s);
+      }
+      @keyframes tagGlow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(184,154,92,0); border-color: var(--border-gold); }
+        50% { box-shadow: 0 0 8px 0 rgba(184,154,92,0.35); border-color: var(--gold); }
+      }
+
+      /* ===== Followup ===== */
+      .followup-area { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+      .followup-title { font-size: 0.78rem; color: var(--text2); letter-spacing: 0.04em; margin-bottom: 10px; }
+      .followup-row { display: flex; gap: 8px; }
+      .followup-row input {
+        flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 6px;
+        color: var(--text); padding: 8px 12px; font-size: 0.82rem;
+        font-family: var(--font-serif); outline: none;
+      }
+      .followup-row input:focus { border-color: var(--gold-dim); }
+      .followup-row button {
+        background: var(--gold-dim); color: var(--ink); border: none; border-radius: 6px;
+        padding: 8px 14px; font-size: 0.82rem; cursor: pointer; white-space: nowrap;
+        font-family: var(--font-serif); letter-spacing: 0.05em;
+      }
+      .followup-row button:hover { background: var(--gold); }
+      .followup-result { margin-top: 12px; }
+
+      /* ===== Misc ===== */
+      .error-container { text-align: center; padding: 40px 20px; color: var(--text2); }
+      .error-container .error-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6; }
+      .error-container .error-text { font-size: 0.88rem; line-height: 1.7; }
+      .empty-hint {
+        text-align: center; padding: 22px 16px; color: var(--text2);
+        font-family: var(--font-serif); line-height: 1.9; font-size: 0.9rem;
+        background: var(--gold-subtle); border: 1px dashed var(--border-gold); border-radius: var(--radius-sm);
+      }
+      .disclaimer { text-align: center; font-size: 0.72rem; color: var(--text3); line-height: 1.8; padding: 30px 10px 0; }
+      .disclaimer strong { color: var(--text2); }
+      .footer { text-align: center; font-size: 0.7rem; color: var(--text3); padding: 26px 0 0; letter-spacing: 0.1em; }
+      .spinner {
+        width: 30px; height: 30px; border: 2px solid var(--border-gold); border-top-color: var(--gold);
+        border-radius: 50%; animation: spin 0.8s linear infinite; margin: 24px auto;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .toast {
+        position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%);
+        background: var(--surface); border: 1px solid var(--gold-dim); color: var(--gold-light);
+        font-family: var(--font-serif); padding: 12px 24px; border-radius: 999px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 999;
+        opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; font-size: 0.9rem;
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+      .fade-up { opacity: 0; transform: translateY(18px); animation: fadeUp 0.7s ease forwards; }
+      @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+      .fade-in { animation: fadeIn 0.4s ease both; }
+      @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+      /* ===== Accessibility: reduced motion ===== */
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        .fade-up, .fade-in, .master-result-section, .dream-card, .enh-mod,
+        .enh-mod::before, .enh-mod-body .tag {
+          animation: none !important; opacity: 1 !important; transform: none !important;
+        }
+        .card, .glass-card { transition: none; }
+        .btn:hover, .master-card:hover, .dream-card:hover { transform: none; }
+        .spinner { animation-duration: 2s; }
+        #inkCanvas { display: none; }
+      }
+
+      /* ===== Responsive ===== */
+      @media (max-width: 640px) {
+        .wrap { padding: 24px 14px 40px; }
+        .card, .glass-card { padding: 18px; }
+        .dream-grid { grid-template-columns: 1fr; }
+        .master-result-header { flex-direction: column; text-align: center; gap: 12px; }
+        .master-result-name { justify-content: center; }
+        .master-result-tags { justify-content: center; }
+        .master-section-content { padding-left: 0; }
+        .master-section-icon { width: 28px; height: 28px; font-size: 0.9rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="inkCanvas"></canvas>
+    <div class="watermark">梦</div>
+    <div class="wrap">
+
+      <!-- Hero -->
+      <div class="hero fade-up">
+        <div class="ep-tag">EPISODE 10</div>
+        <h1>周公解梦</h1>
+        <p class="subtitle">梦境元素逐条破解 · 五行归经 · 事域交叉研判 · 周公梦学经典文库</p>
+        <div class="hero-divider">
+          <span></span><div class="diamond"></div><span></span>
+        </div>
+      </div>
+
+      <!-- 01 描述梦境 -->
+      <div class="card fade-up" id="inputCard">
+        <div class="section-title">描述梦境<span class="num">01</span></div>
+        <div class="form-group">
+          <label>梦境内容（必填）</label>
+          <textarea id="zhougong-dream" placeholder="例如：梦见自己在一条大河中游泳，河水很清澈，还看到一条大鱼跃出水面……"></textarea>
+        </div>
+
+        <div class="form-group" style="margin-top:16px;">
+          <label>常见梦境快速查询</label>
+          <div class="quick-tags" id="zhougong-quick-tags">
+            <button class="quick-tag" data-keyword="龙">龙</button>
+            <button class="quick-tag" data-keyword="凤凰">凤凰</button>
+            <button class="quick-tag" data-keyword="鱼">鱼</button>
+            <button class="quick-tag" data-keyword="花">花</button>
+            <button class="quick-tag" data-keyword="树">树</button>
+            <button class="quick-tag" data-keyword="水">水</button>
+            <button class="quick-tag" data-keyword="火">火</button>
+            <button class="quick-tag" data-keyword="飞">飞</button>
+            <button class="quick-tag" data-keyword="彩虹">彩虹</button>
+            <button class="quick-tag" data-keyword="太阳">太阳</button>
+            <button class="quick-tag" data-keyword="月亮">月亮</button>
+            <button class="quick-tag" data-keyword="考试">考试</button>
+            <button class="quick-tag" data-keyword="房子">房子</button>
+            <button class="quick-tag" data-keyword="车">车</button>
+            <button class="quick-tag" data-keyword="飞机">飞机</button>
+            <button class="quick-tag" data-keyword="钱">钱</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:16px;">
+          <label>事域选择（可选，自动填充所问之事）</label>
+          <div class="domain-tags" id="zhougong-domain-tags">
+            <button class="domain-tag" data-domain="事业">💼 事业</button>
+            <button class="domain-tag" data-domain="感情">💕 感情</button>
+            <button class="domain-tag" data-domain="财运">💰 财运</button>
+            <button class="domain-tag" data-domain="健康">🏥 健康</button>
+            <button class="domain-tag" data-domain="学业">📚 学业</button>
+            <button class="domain-tag" data-domain="家庭">🏠 家庭</button>
+            <button class="domain-tag" data-domain="人际">👯 人际</button>
+            <button class="domain-tag" data-domain="出行">✈️ 出行</button>
+          </div>
+          <input type="text" id="zhougong-question" placeholder="或输入你想问的具体问题，如：最近事业运如何？" style="margin-top:10px;" />
+        </div>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;">
+          <button class="btn" id="zhougong-submit" style="flex:1;min-width:200px;">🌙 解梦推演</button>
+          <button class="btn-ghost" id="zhougong-random">🎲 随机梦境</button>
+        </div>
+      </div>
+
+      <!-- 02 梦境解构 -->
+      <div class="card fade-up hidden" id="elementsCard">
+        <div class="section-title">梦境解构<span class="num">02</span></div>
+        <div id="elementsContent"></div>
+      </div>
+
+      <!-- 03 综合解读 -->
+      <div class="card fade-up hidden" id="readingCard">
+        <div class="section-title">综合解读<span class="num">03</span></div>
+        <div id="readingContent"></div>
+      </div>
+
+      <!-- 04 周公点评 -->
+      <div class="glass-card fade-up hidden" id="mastersCard">
+        <div class="section-title">周公点评<span class="num">04</span></div>
+        <div id="mastersContent"></div>
+        <div class="followup-area" id="zhougong-followup-area" style="display:none;">
+          <div class="followup-title">追问 · 请周公继续解梦</div>
+          <div class="followup-row">
+            <input type="text" id="zhougong-followup-input" placeholder="如：此梦与近期所问之事有何关联？" />
+            <button id="zhougong-followup-btn">追问</button>
+          </div>
+          <div id="zhougong-followup-result" class="followup-result"></div>
+        </div>
+      </div>
+
+      <!-- 免责声明 -->
+      <div class="disclaimer">
+        <strong>声明：</strong>周公解梦是中国传统文化的一部分，属于古典术数和文化遗产范畴。<br>
+        本系统仅供文化研究和娱乐参考，不构成任何人生决策建议。请相信科学，理性看待命运。
+      </div>
+      <div class="footer">天机阁 · TIAN JI GE</div>
+    </div>
+
+    <script src="static/js/zhougong-engine.js?v=20261103b"></script>
+    <script src="static/js/masters-engine.js"></script>
+    <script src="static/js/components/masters.js"></script>
+    <script>
+    (function(){
+      'use strict';
+
+      var currentResult = null;
+      var currentQuestion = '';
+
+      // 分类中文名与图标（与引擎 CATEGORIES 同源）
+      var CATEGORIES = {
+        天象:'天象气候', 地理:'山水地理', 人物:'人物鬼神', 身体:'身体器官',
+        动物:'鸟兽虫鱼', 植物:'草木花实', 建筑:'宫室屋宇', 器物:'器用财物',
+        衣饰:'衣冠服饰', 饮食:'饮食酒水', 文书:'文书典籍', 交通:'车船出行',
+        水火:'水火雷电', 佛道:'佛道仙灵', 丧葬:'丧葬殡殓', 其他:'杂事百态'
+      };
+      var CAT_ICONS = {
+        天象:'🌤️', 地理:'⛰️', 人物:'👤', 身体:'🦴', 动物:'🐾', 植物:'🌿',
+        建筑:'🏠', 器物:'🔧', 衣饰:'👗', 饮食:'🍜', 文书:'📜', 交通:'🚗',
+        水火:'💧', 佛道:'🛕', 丧葬:'⚰️', 其他:'🔮'
+      };
+
+      // 五行关键词（与引擎 WUXING_CAT 同源，页面本地统计用）
+      var WX_CLASS = { 金:'jin', 木:'mu', 水:'shui', 火:'huo', 土:'tu' };
+      var WUXING_CAT = {
+        金:['刀','剑','金','银','铁','铜','钟','戒指','金属','钱币','锁','钥匙'],
+        木:['树','花','草','竹','木','植物','森林','林','梅花','荷花','兰花'],
+        水:['水','海','河','雨','雪','冰','泉','鱼','船','游泳','洗澡'],
+        火:['火','灯','光','太阳','炉','烛','烧','热','红','赤','亮'],
+        土:['山','地','土','石','墙','屋','房','墓','坟','塔','城']
+      };
+
+      function escHtml(s){
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      function getWuxing(keyword){
+        for(var wx in WUXING_CAT){
+          var list = WUXING_CAT[wx];
+          for(var i = 0; i < list.length; i++){
+            if(String(keyword).indexOf(list[i]) !== -1) return wx;
+          }
+        }
+        return '土';
+      }
+
+      function countJi(results){
+        var ji = 0, xiong = 0, mid = 0;
+        (results || []).forEach(function(r){
+          if(r.ji === '吉') ji++;
+          else if(r.ji === '凶') xiong++;
+          else mid++;
+        });
+        return { ji: ji, xiong: xiong, mid: mid };
+      }
+
+      function dominantWuxing(results){
+        var counts = {};
+        (results || []).forEach(function(r){
+          var wx = getWuxing(r.keyword);
+          counts[wx] = (counts[wx] || 0) + 1;
+        });
+        var best = '土', bestCount = -1;
+        Object.keys(counts).forEach(function(wx){
+          if(counts[wx] > bestCount){ bestCount = counts[wx]; best = wx; }
+        });
+        return best;
+      }
+
+      function levelClass(ji){
+        return ji === '吉' ? 'level-good' : ji === '凶' ? 'level-bad' : 'level-neutral';
+      }
+
+      // ===== 事域标签 =====
+      var domainBtns = document.querySelectorAll('.domain-tag');
+      domainBtns.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var isActive = btn.classList.contains('active');
+          domainBtns.forEach(function(b){ b.classList.remove('active'); });
+          if(!isActive){
+            btn.classList.add('active');
+            var d = btn.dataset.domain;
+            document.getElementById('zhougong-question').value = '最近' + d + '运如何？';
+          }
+        });
+      });
+
+      // ===== 快捷梦境关键词 =====
+      var quickBtns = document.querySelectorAll('.quick-tag');
+      quickBtns.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          quickBtns.forEach(function(b){ b.classList.remove('active'); });
+          btn.classList.add('active');
+          var dreamInput = document.getElementById('zhougong-dream');
+          dreamInput.value = '梦见' + btn.dataset.keyword;
+          dreamInput.focus();
+        });
+      });
+
+      // ===== 随机梦境 =====
+      document.getElementById('zhougong-random').addEventListener('click', function(){
+        try {
+          var all = ZhougongEngine.getAllDreams();
+          if(!all || all.length === 0){ showToast('梦境文库为空'); return; }
+          var item = all[Math.floor(Math.random() * all.length)];
+          document.getElementById('zhougong-dream').value = '梦见' + item.keyword;
+          document.getElementById('zhougong-submit').click();
+        } catch(e){
+          showToast('随机梦境失败：' + (e.message || '未知错误'));
+        }
+      });
+
+      // ===== 提交解梦 =====
+      var dreamInput = document.getElementById('zhougong-dream');
+      dreamInput.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' && e.ctrlKey) document.getElementById('zhougong-submit').click();
+      });
+
+      document.getElementById('zhougong-submit').addEventListener('click', function(){
+        var text = dreamInput.value.trim();
+        if(!text){ showToast('请先描述你的梦境'); dreamInput.focus(); return; }
+
+        currentQuestion = document.getElementById('zhougong-question').value.trim();
+
+        var elementsCard = document.getElementById('elementsCard');
+        var readingCard = document.getElementById('readingCard');
+        var mastersCard = document.getElementById('mastersCard');
+        elementsCard.classList.add('hidden');
+        readingCard.classList.add('hidden');
+        mastersCard.classList.add('hidden');
+        document.getElementById('elementsContent').innerHTML = '<div class="spinner"></div>';
+        elementsCard.classList.remove('hidden');
+
+        setTimeout(function(){
+          try {
+            var result = ZhougongEngine.divine(text, currentQuestion);
+            currentResult = result;
+            renderElements(result);
+            renderReading(result);
+            initZhougongMasters(result);
+            readingCard.classList.remove('hidden');
+            mastersCard.classList.remove('hidden');
+            var fu = document.getElementById('zhougong-followup-area');
+            if(fu) fu.style.display = '';
+            elementsCard.scrollIntoView({behavior:'smooth',block:'start'});
+          } catch(e){
+            document.getElementById('elementsContent').innerHTML =
+              '<div class="error-container"><div class="error-icon">⚠️</div><div class="error-text">解梦出错：' +
+              escHtml(e.message || '未知错误') + '</div></div>';
+          }
+        }, 400);
+      });
+
+      // ===== 02 梦境解构 =====
+      function renderElements(result){
+        var el = document.getElementById('elementsContent');
+        var counts = countJi(result.results);
+        var catNames = (result.categories || []).map(function(c){ return CATEGORIES[c] || c; });
+        var jiBadgeClass = levelClass(result.ji);
+
+        var html = '<div class="info-panel">';
+        html += '<div class="info-item info-gold"><div class="label">匹配条目</div><div class="value"><span class="highlight">' + (result.count || 0) + '</span> 条</div></div>';
+        html += '<div class="info-item info-blue"><div class="label">涉及分类</div><div class="value">' + (catNames.length ? escHtml(catNames.join('、')) : '—') + '</div></div>';
+        html += '<div class="info-item info-purple"><div class="label">综合吉凶</div><div class="value"><span class="level-badge ' + jiBadgeClass + '">' + escHtml(result.ji || '中') + '</span></div></div>';
+        html += '<div class="info-item info-green"><div class="label">吉 / 中 / 凶</div><div class="value"><span class="highlight">' + counts.ji + '</span> / ' + counts.mid + ' / <span style="color:var(--red-light);">' + counts.xiong + '</span></div></div>';
+        html += '<div class="info-item info-red"><div class="label">所问之事</div><div class="value">' + (result.domain ? escHtml(result.domain.icon + ' ' + result.domain.name) : '—') + '</div></div>';
+        html += '</div>';
+
+        // 吉凶分布条
+        var totalJi = counts.ji + counts.mid + counts.xiong;
+        if(totalJi > 0){
+          html += '<div class="jx-bar">';
+          if(counts.ji > 0) html += '<div class="jx-seg jx-ji" style="flex:' + counts.ji + '"></div>';
+          if(counts.mid > 0) html += '<div class="jx-seg jx-mid" style="flex:' + counts.mid + '"></div>';
+          if(counts.xiong > 0) html += '<div class="jx-seg jx-xiong" style="flex:' + counts.xiong + '"></div>';
+          html += '</div>';
+          html += '<div class="jx-legend">';
+          html += '<span class="lg-ji"><i></i>吉 ' + counts.ji + '</span>';
+          html += '<span class="lg-mid"><i></i>中 ' + counts.mid + '</span>';
+          html += '<span class="lg-xiong"><i></i>凶 ' + counts.xiong + '</span>';
+          html += '</div>';
+        }
+
+        html += '<div class="interp-block" style="margin-top:16px;"><div class="block-label">梦境原述</div><div class="block-content">' + escHtml(result.input || '') + '</div></div>';
+
+        if(result.results && result.results.length > 0){
+          html += '<div style="margin-top:22px;"><div class="section-title" style="font-size:0.9rem;">梦境元素<span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;margin-left:8px;">逐条破解</span></div>';
+          html += '<div class="dream-grid" id="dreamGrid">';
+          result.results.forEach(function(item){
+            html += '<div class="dream-card">';
+            html += '<div class="dream-card-head">';
+            html += '<span class="dc-ico">' + (CAT_ICONS[item.cat] || '🔮') + '</span>';
+            html += '<span class="dc-key">' + escHtml(item.keyword) + '</span>';
+            var wx = getWuxing(item.keyword);
+            html += '<span class="dc-wx wx-' + (WX_CLASS[wx] || 'tu') + '">' + escHtml(wx) + '</span>';
+            html += '<span class="level-badge ' + levelClass(item.ji) + '" style="font-size:0.66rem;padding:1px 9px;">' + escHtml(item.ji) + '</span>';
+            html += '<span class="dc-cat">' + escHtml(CATEGORIES[item.cat] || item.cat) + '</span>';
+            html += '</div>';
+            html += '<div class="dream-card-body">' + escHtml(item.interpretation) + '</div>';
+            html += '</div>';
+          });
+          html += '</div></div>';
+        } else {
+          html += '<div class="empty-hint" style="margin-top:22px;">此次梦境未在经典文库中匹配到精确条目。<br>引擎已按「日有所思，夜有所梦」之理给出通用解读，详见下方综合解读。</div>';
+        }
+
+        el.innerHTML = html;
+
+        var cards = el.querySelectorAll('.dream-card');
+        cards.forEach(function(c, idx){
+          setTimeout(function(){ c.classList.add('in'); }, 70 * idx);
+        });
+      }
+
+      // ===== 03 综合解读 =====
+      function renderReading(result){
+        var el = document.getElementById('readingContent');
+        var interp = result.interpretation || '';
+        var paragraphs = interp.split('\n').filter(function(s){ return s.trim(); });
+
+        var html = '<div class="interp-block"><div class="block-label">经典解梦 · 综合解读</div><div class="block-content">' +
+          paragraphs.map(escHtml).join('\n') + '</div></div>';
+
+        if(result.questionAnalysis){
+          html += '<div class="interp-block block-blue" style="margin-top:14px;">';
+          html += '<div class="block-label">' + escHtml((result.domain ? result.domain.icon + ' ' : '') + '所问之事 · ' + (currentQuestion || '未填写')) + '</div>';
+          html += '<div class="block-content">' + escHtml(result.questionAnalysis) + '</div>';
+          html += '</div>';
+        }
+
+        // 五行归经摘要 + 分布
+        if(result.results && result.results.length > 0){
+          var counts = {};
+          result.results.forEach(function(r){
+            var wx = getWuxing(r.keyword);
+            counts[wx] = (counts[wx] || 0) + 1;
+          });
+          var dominant = dominantWuxing(result.results);
+          var totalWx = result.results.length;
+          html += '<div class="section-title" style="font-size:0.9rem;margin-top:22px;">五行归经<span style="font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;margin-left:8px;">象义取用</span></div>';
+          html += '<div class="wx-summary">';
+          html += '<span class="wx-chip">主导五行<strong>' + escHtml(dominant) + '</strong></span>';
+          html += '<span class="wx-chip">共<strong>' + totalWx + '</strong>象</span>';
+          html += '</div>';
+          var wxOrder = Object.keys(counts).sort(function(a, b){ return counts[b] - counts[a]; });
+          html += '<div class="wx-bars">';
+          wxOrder.forEach(function(wx){
+            var pct = Math.round(counts[wx] / totalWx * 100);
+            html += '<div class="wx-row"><span class="wx-name">' + escHtml(wx) + '</span>';
+            html += '<div class="wx-track"><i class="wx-fill" style="width:' + pct + '%"></i></div>';
+            html += '<span class="wx-num">' + counts[wx] + '</span></div>';
+          });
+          html += '</div>';
+        }
+
+        el.innerHTML = html;
+      }
+
+      // ===== 04 周公五段式分析 =====
+      function buildZhougongAnalysis(result, masterId, analysisType){
+        if(!result) return null;
+        var master = window.MastersEngine ? (window.MastersEngine.MASTERS || {})[masterId] : null;
+        if(!master) return null;
+
+        var results = result.results || [];
+        var counts = countJi(results);
+        var ji = result.ji || '中';
+        var dominant = dominantWuxing(results);
+        var keywords = results.map(function(r){ return r.keyword; });
+        var question = currentQuestion || '';
+        var domainName = result.domain ? result.domain.name : '所问之事';
+
+        var conclusion = '';
+        if(analysisType === 'elements'){
+          conclusion = keywords.length ? '梦中「' + keywords.join('、') + '」诸象并见，' + ji + '之应' : '梦中无经典条目可对，' + ji + '之判';
+        } else if(analysisType === 'ji'){
+          conclusion = '吉象' + counts.ji + '、中象' + counts.mid + '、凶象' + counts.xiong + '，综判为' + ji;
+        } else if(analysisType === 'domain'){
+          conclusion = '就「' + domainName + '」而言，此梦呈' + ji + '之兆';
+        } else {
+          conclusion = keywords.length ? '此梦共应' + results.length + '象，' + ji + '之兆' : '梦象未明，' + ji + '之判';
+        }
+
+        var advice = ji === '吉' ? '乘吉梦之兆，主动把握机缘'
+          : ji === '凶' ? '惕凶梦之警，谨言慎行，先安而后动'
+          : '守中观察，取吉惕凶，不可偏执';
+
+        var openingTpl = (master.openingTemplates || [''])[0] || '';
+        var quoteTpl = (master.quoteTemplates || [''])[0] || '';
+        var closingTpl = (master.closingTemplates || [''])[0] || '';
+
+        function fill(tpl){
+          return String(tpl)
+            .replace(/\{日主\}/g, '梦中主象')
+            .replace(/\{日主五行\}/g, dominant)
+            .replace(/\{旺衰\}/g, ji)
+            .replace(/\{事域\}/g, domainName)
+            .replace(/\{结论\}/g, conclusion)
+            .replace(/\{建议\}/g, advice)
+            .replace(/\{分数\}/g, ji);
+        }
+
+        var opening = fill(openingTpl);
+        var overview = result.interpretation || '';
+
+        var specialty = '';
+        if(analysisType === 'elements'){
+          specialty = '【梦境拆解】' + (keywords.length ? '梦中见于' + (result.categories || []).map(function(c){ return CATEGORIES[c] || c; }).join('、') + '诸类，逐条已列于上。' : '本次梦境未匹配到经典条目。') +
+            '主导五行属' + dominant + '，' + (question ? '就「' + question + '」而言，' : '') + conclusion + '。';
+        } else if(analysisType === 'ji'){
+          specialty = '【吉凶研判】吉象' + counts.ji + '，中象' + counts.mid + '，凶象' + counts.xiong + '。' + conclusion + '。' + advice + '。';
+        } else if(analysisType === 'domain'){
+          specialty = '【事域研判】所问「' + (question || domainName) + '」，梦象归于' + domainName + '。' + conclusion + '。' + advice + '。';
+        } else {
+          specialty = '【全盘解梦】' + conclusion + '。主导五行属' + dominant + '，' + advice + '。';
+        }
+
+        // 增强维度 01：逐条梦境元素拆解
+        var detailLines = results.length ? results.map(function(r){
+          return '【' + r.keyword + '】' + (CATEGORIES[r.cat] || r.cat) + '类 · ' + r.ji + '。' + r.interpretation;
+        }) : ['【无匹配】经典文库中未找到精确条目，当以梦中情绪与近事合参。'];
+
+        // 增强维度 02：五行归经
+        var wxCounts = {};
+        results.forEach(function(r){
+          var wx = getWuxing(r.keyword);
+          wxCounts[wx] = (wxCounts[wx] || 0) + 1;
+        });
+        var wxLine = Object.keys(wxCounts).map(function(wx){ return wx + '（' + wxCounts[wx] + '象）'; }).join('、');
+        var wuxing = '【主导】此梦五行以' + dominant + '为主' + (wxLine ? '，兼见' + wxLine : '') + '。' +
+          '【取象】' + dominant + '气当令，' + (dominant === '金' ? '主决断、收敛，宜断舍离' :
+            dominant === '木' ? '主生发、成长，宜谋新局' :
+            dominant === '水' ? '主流动、智慧，宜顺势而为' :
+            dominant === '火' ? '主热烈、显扬，宜把握时机' : '主承载、稳固，宜守成蓄势') + '。';
+
+        // 增强维度 03：背景关联
+        var background = '周公解梦源自西周，后世辑为《周公解梦》经典文库，以梦象反推人事。' +
+          '本次梦境涉' + (result.categories || []).map(function(c){ return CATEGORIES[c] || c; }).join('、') + '诸类，共' + (result.count || 0) + '象，综判为' + ji + '。' +
+          '本师' + escInline(master.name) + '（' + escInline(master.title || '解梦之祖') + '），其法承「' + escInline(master.style || '梦兆解析') + '」一脉，立言「' + escInline(master.phrase || '梦者，魂之游也') + '」。';
+
+        // 增强维度 04：延伸参考
+        var references = '【延伸阅读】一、《周公解梦》——梦象分类与吉凶断语之纲；二、《梦林玄解》——梦象与五行人事合参之法；三、本师' + escInline(master.name) + '所传「' + escInline(master.style || '梦兆解析') + '」。' +
+          '【进阶方向】梦象与近事对照、五行归经、事域交叉，三者合观可深化对「' + (keywords.join('、') || '此梦') + '」之理解。';
+
+        function escInline(s){
+          return String(s).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        return {
+          opening: opening,
+          overview: overview,
+          specialty: specialty,
+          quote: fill(quoteTpl),
+          closing: fill(closingTpl),
+          enhanced: {
+            detailLines: detailLines,
+            wuxing: wuxing,
+            background: background,
+            references: references
+          }
+        };
+      }
+
+      // ===== 增强模块渲染 =====
+      function renderEnhancedModules(resultCard, masterId, analysisType){
+        if(!resultCard || !window.MastersEngine) return;
+        var a = buildZhougongAnalysis(currentResult, masterId, analysisType);
+        if(!a || !a.enhanced) return;
+        var enh = a.enhanced;
+        var master = window.MastersEngine.MASTERS[masterId];
+
+        var mods = [];
+        mods.push({ cls:'enh-elem', ico:'🔍', label:'细节拆解 · 逐条梦境元素', num:'01', lines: enh.detailLines });
+        mods.push({ cls:'enh-wx', ico:'☯️', label:'五行归经 · 象义取用', num:'02', lines: [enh.wuxing] });
+        mods.push({ cls:'enh-bg', ico:'📜', label:'背景关联 · 梦学渊源', num:'03', lines: [enh.background] });
+        mods.push({ cls:'enh-ref', ico:'📚', label:'延伸参考 · 研读方向', num:'04', lines: [enh.references] });
+
+        var html = '<div class="zg-enhanced">';
+        html += '<div class="zg-enhanced-header"><span class="deh-lead">' + escHtml(master ? master.name : '周公') + ' · 深度解析</span></div>';
+        var base = 5;
+        for(var i = 0; i < mods.length; i++){
+          var m = mods[i];
+          var delay = ((base + i) * 0.10).toFixed(2);
+          html += '<div class="enh-mod ' + m.cls + '" style="--delay:' + delay + 's;">';
+          html += '<div class="enh-mod-title"><span class="emt-ico">' + m.ico + '</span><span>' + escHtml(m.label) + '</span><span class="emt-num">' + m.num + '</span></div>';
+          html += '<div class="enh-mod-body">';
+          for(var j = 0; j < m.lines.length; j++){
+            var line = m.lines[j];
+            var lab = sectionLabel(line), body = sectionBody(line);
+            if(lab){
+              html += '<span class="emb-line"><span class="tag">' + escHtml(lab) + '</span>' + escHtml(body) + '</span>';
+            } else {
+              html += '<span class="emb-line">' + escHtml(line) + '</span>';
+            }
+          }
+          html += '</div></div>';
+        }
+        html += '</div>';
+
+        var oldEnh = resultCard.querySelector('.zg-enhanced');
+        if(oldEnh) oldEnh.remove();
+        resultCard.insertAdjacentHTML('beforeend', html);
+      }
+
+      function sectionLabel(line){
+        var mm = String(line).match(/【([^】]*)】/);
+        return mm ? mm[1] : '';
+      }
+      function sectionBody(line){
+        var s = String(line);
+        var idx = s.indexOf('】');
+        return idx >= 0 ? s.slice(idx + 1) : s;
+      }
+
+      // ===== 初始化周公大师面板 =====
+      function initZhougongMasters(result){
+        var mastersContent = document.getElementById('mastersContent');
+        if(!mastersContent) return;
+        var masters = Object.values(window.MastersEngine.MASTERS || {}).filter(function(m){
+          return m.category === '解梦';
+        });
+        if(masters.length === 0){
+          mastersContent.innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px;">未找到解梦流派大师。</p>';
+          return;
+        }
+        var analysisTypes = [
+          { id:'full', label:'全盘解梦' },
+          { id:'elements', label:'梦境拆解' },
+          { id:'ji', label:'吉凶研判' },
+          { id:'domain', label:'事域研判' }
+        ];
+        if(window.renderMastersPanel){
+          renderMastersPanel(mastersContent, {
+            category: '解梦',
+            masters: masters,
+            analysisTypes: analysisTypes,
+            onAnalyze: function(masterId, analysisType){
+              return buildZhougongAnalysis(result, masterId, analysisType);
+            },
+            resultData: result
+          });
+          var analyzeBtn = mastersContent.querySelector('#master-analyze-btn');
+          if(analyzeBtn){
+            analyzeBtn.addEventListener('click', function(){
+              var mSel = mastersContent.querySelector('.master-card.selected');
+              var tSel = mastersContent.querySelector('#master-type-tabs .tab-btn.active');
+              var mid = mSel && mSel.dataset.masterId ? mSel.dataset.masterId : null;
+              var tid = tSel && tSel.dataset.type ? tSel.dataset.type : 'full';
+              if(!mid) return;
+              setTimeout(function(){
+                var rc = mastersContent.querySelector('#master-result-card');
+                if(rc) renderEnhancedModules(rc, mid, tid);
+              }, 620);
+            }, true);
+          }
+        } else {
+          mastersContent.innerHTML = '<p style="color:var(--text3);text-align:center;padding:20px;">大师面板加载失败。</p>';
+        }
+      }
+
+      // ===== 追问 =====
+      document.getElementById('zhougong-followup-btn').addEventListener('click', function(){
+        var input = document.getElementById('zhougong-followup-input');
+        var q = input.value.trim();
+        var area = document.getElementById('zhougong-followup-result');
+        if(!q){ showToast('请输入追问内容'); return; }
+        if(!currentResult){ showToast('请先完成解梦'); return; }
+        area.innerHTML = '<div class="spinner"></div>';
+        setTimeout(function(){
+          var masters = Object.values(window.MastersEngine.MASTERS || {}).filter(function(m){ return m.category === '解梦'; });
+          var html = '<div style="font-size:0.8rem;color:var(--text2);margin-bottom:12px;">就「' + escHtml(q) + '」周公回应：</div>';
+          masters.forEach(function(m, idx){
+            var a = buildZhougongAnalysis(currentResult, m.id, 'full');
+            if(!a) return;
+            html += '<div class="master-result-section" style="--delay:' + (idx * 0.12) + 's;">';
+            html += '<div style="font-size:0.72rem;color:var(--gold-dim);letter-spacing:0.15em;margin-bottom:8px;">' + m.avatar + ' ' + escHtml(m.name) + '（' + escHtml(m.title) + '）</div>';
+            html += '<div style="font-family:var(--font-serif);font-size:0.9rem;line-height:1.85;color:var(--text);white-space:pre-wrap;">' + escHtml(a.opening + '\n\n' + a.quote + '\n\n' + a.closing) + '</div>';
+            html += '</div>';
+          });
+          area.innerHTML = html;
+        }, 500);
+      });
+
+      // ===== Toast =====
+      var toastEl = null;
+      function showToast(msg){
+        if(!toastEl){
+          toastEl = document.createElement('div');
+          toastEl.className = 'toast';
+          document.body.appendChild(toastEl);
+        }
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        setTimeout(function(){ toastEl.classList.remove('show'); }, 2600);
+      }
+
+      // ===== 水墨粒子 =====
+      (function initInk(){
+        var canvas = document.getElementById('inkCanvas');
+        if(!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var W, H, particles = [];
+        function resize(){
+          W = canvas.width = window.innerWidth;
+          H = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+        for(var i = 0; i < 50; i++){
+          particles.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            r: Math.random() * 1.6 + 0.3,
+            vx: (Math.random() - 0.5) * 0.25,
+            vy: -Math.random() * 0.25 - 0.05,
+            a: Math.random() * 0.5 + 0.1
+          });
+        }
+        function tick(){
+          ctx.clearRect(0, 0, W, H);
+          for(var i = 0; i < particles.length; i++){
+            var p = particles[i];
+            p.x += p.vx; p.y += p.vy;
+            if(p.y < -10){ p.y = H + 10; p.x = Math.random() * W; }
+            if(p.x < -10) p.x = W + 10;
+            if(p.x > W + 10) p.x = -10;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(184,154,92,' + p.a + ')';
+            ctx.fill();
+          }
+          requestAnimationFrame(tick);
+        }
+        tick();
+      })();
+
+    })();
+    </script>
+  </body>
+</html>
