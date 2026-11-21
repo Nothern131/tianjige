@@ -9,3 +9,6 @@ build/
 node_modules/
 .DS_Store
 Thumbs.db
+
+# 本地参赛材料，不公开
+docs/参赛版PRD.md
