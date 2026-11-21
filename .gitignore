@@ -10,5 +10,5 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# 本地参赛材料，不公开
-docs/参赛版PRD.md
+# 本地私有文档，不进公开仓库
+docs/*PRD*.md
