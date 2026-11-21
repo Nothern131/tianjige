@@ -332,6 +332,56 @@
       .mrc-domain { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-gold); }
       .mrc-domain-label { font-size: 0.66rem; color: var(--gold-dim); letter-spacing: 0.12em; margin-bottom: 4px; }
       .mrc-domain-body { font-family: var(--font-serif); font-size: 0.8rem; line-height: 1.75; color: var(--text2); }
+
+      /* ===== 评分依据与盘面详情 ===== */
+      .mrc-basis {
+        margin-top: 8px; font-size: 0.7rem; color: var(--text3); line-height: 1.7;
+        padding: 4px 8px; border-left: 2px solid var(--gold-dim);
+        background: rgba(184,154,92,0.04); border-radius: 0 4px 4px 0;
+      }
+      .mrc-basis b { color: var(--gold-dim); font-weight: 600; }
+      .chart-detail {
+        margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-gold);
+      }
+      .chart-detail > summary {
+        cursor: pointer; font-size: 0.72rem; color: var(--gold-dim);
+        letter-spacing: 0.06em; list-style: none; display: flex; align-items: center; gap: 6px;
+        user-select: none;
+      }
+      .chart-detail > summary::-webkit-details-marker { display: none; }
+      .chart-detail > summary::before { content: '▸'; transition: transform 0.2s; }
+      .chart-detail[open] > summary::before { transform: rotate(90deg); }
+      .chart-detail > summary:hover { color: var(--gold-light); }
+      .chart-body { margin-top: 10px; }
+      .chart-kv {
+        display: flex; flex-wrap: wrap; gap: 4px 14px;
+        font-size: 0.74rem; color: var(--text2); margin-bottom: 8px; line-height: 1.7;
+      }
+      .chart-kv b { color: var(--gold-dim); font-weight: 600; margin-right: 4px; }
+      .chart-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; margin-bottom: 8px; }
+      .chart-table th, .chart-table td {
+        border: 1px solid var(--border); padding: 5px 7px; text-align: left; vertical-align: top;
+      }
+      .chart-table th {
+        color: var(--text3); font-weight: 500; background: rgba(184,154,92,0.05); white-space: nowrap;
+      }
+      .chart-table td { color: var(--text2); }
+      .chart-table .ct-key { color: var(--gold-light); white-space: nowrap; }
+      .chart-grid9 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+      .chart-cell {
+        background: var(--gold-subtle); border: 1px solid var(--border-gold);
+        border-radius: 6px; padding: 7px 8px; font-size: 0.7rem; line-height: 1.65;
+      }
+      .chart-cell-title { color: var(--gold-light); margin-bottom: 2px; font-size: 0.72rem; }
+      .chart-cell-line { color: var(--text2); }
+      .chart-cell-line em { color: var(--text3); font-style: normal; margin-right: 3px; }
+      .chart-sub {
+        font-size: 0.7rem; color: var(--gold-dim); letter-spacing: 0.08em;
+        margin: 10px 0 5px;
+      }
+      .chart-list { margin: 0; padding-left: 16px; font-size: 0.74rem; line-height: 1.8; color: var(--text2); }
+      .chart-poem { font-family: var(--font-serif); font-size: 0.84rem; color: var(--gold-light); line-height: 1.9; }
+      .chart-text { font-size: 0.76rem; color: var(--text2); line-height: 1.85; font-family: var(--font-serif); }
       .bar {
         height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px;
         margin-top: 10px; overflow: hidden;
@@ -1141,6 +1191,333 @@
         document.getElementById('scoreContent').innerHTML = html;
       }
 
+      // ===== 盘面详情：把每门术数的完整盘面摊开，避免只有分数没有依据 =====
+      function chartKv(pairs){
+        var html = '<div class="chart-kv">';
+        pairs.forEach(function(p){
+          if(p[1] === undefined || p[1] === null || p[1] === '') return;
+          html += '<span><b>' + escHtml(p[0]) + '</b>' + escHtml(String(p[1])) + '</span>';
+        });
+        return html + '</div>';
+      }
+
+      function chartTable(headers, rows, keyFirst){
+        var html = '<table class="chart-table"><thead><tr>';
+        headers.forEach(function(h){ html += '<th>' + escHtml(h) + '</th>'; });
+        html += '</tr></thead><tbody>';
+        rows.forEach(function(row){
+          html += '<tr>';
+          row.forEach(function(cell, i){
+            html += '<td' + (i === 0 && keyFirst ? ' class="ct-key"' : '') + '>' +
+              escHtml(cell === undefined || cell === null ? '' : String(cell)) + '</td>';
+          });
+          html += '</tr>';
+        });
+        return html + '</tbody></table>';
+      }
+
+      function chartPara(title, text){
+        if(!text) return '';
+        var t = String(text);
+        if(t.length > 1200) t = t.substring(0, 1200) + '…';
+        return '<div class="chart-sub">' + escHtml(title) + '</div><div class="chart-text">' +
+          escHtml(t).replace(/\n/g, '<br>') + '</div>';
+      }
+
+      function buildChartBody(method, raw){
+        var html = '';
+        if(method === 'bazi'){
+          var bal = null;
+          try {
+            if(window.BaziEngine && BaziEngine.balance) bal = BaziEngine.balance(raw);
+          } catch(e){
+            console.warn('[EP11] 八字五行分析失败', e);
+          }
+          html += chartKv([
+            ['日主', raw['日主']],
+            ['日支', raw['日支']],
+            ['日主五行', raw['日主五行']],
+            ['生肖', raw['生肖']],
+            ['五行平衡分', bal && typeof bal.score === 'number' ? bal.score + ' 分' : '']
+          ]);
+          html += chartTable(['柱', '干支', '纳音'], [
+            ['年柱', raw['年柱'], raw['年柱纳音']],
+            ['月柱', raw['月柱'], raw['月柱纳音']],
+            ['日柱', raw['日柱'], raw['日柱纳音']],
+            ['时柱', raw['时柱'], raw['时柱纳音']]
+          ], true);
+          if(bal && bal.analysis) html += chartPara('五行旺衰与用神', bal.analysis);
+          return html;
+        }
+
+        if(method === 'ziwei'){
+          var gongs = raw['十二宫'] || [];
+          var sihua = raw['四化'] || {};
+          var markMap = { lu: '禄', quan: '权', ke: '科', ji: '忌' };
+          var starMark = {};
+          Object.keys(sihua).forEach(function(k){
+            if(sihua[k]) starMark[sihua[k]] = markMap[k] || k;
+          });
+          html += chartKv([
+            ['命宫', raw['命宫干支'] || raw['命宫']],
+            ['命宫主星', raw['命宫主星'] || '无主星（空宫）'],
+            ['身宫', raw['身宫']],
+            ['命主', raw['命主']],
+            ['身主', raw['身主']],
+            ['五行局', raw['五行局']],
+            ['紫微星落', raw['紫微星落']]
+          ]);
+          html += chartKv([
+            ['生年四化', '禄:' + (sihua.lu || '—') + ' 权:' + (sihua.quan || '—') +
+              ' 科:' + (sihua.ke || '—') + ' 忌:' + (sihua.ji || '—')]
+          ]);
+          html += chartTable(['宫位', '干支', '星曜'], gongs.map(function(g){
+            var stars = (g.stars || []).map(function(s){
+              return starMark[s] ? s + '（' + starMark[s] + '）' : s;
+            }).join('、');
+            var tag = g.name + (g.isMingGong ? '·命' : '') + (g.isShenGong ? '·身' : '');
+            return [tag, g.ganZhi || '', stars || '（空宫）'];
+          }), true);
+          return html;
+        }
+
+        if(method === 'liuyao'){
+          var yao = (raw.original_gua && raw.original_gua.yao) || [];
+          var najia = raw.najia || [];
+          var qin = raw.liu_qin || [];
+          var shou = raw.liu_shou || [];
+          var ws = raw.wang_shuai || [];
+          var dong = raw.dong_yao || [];
+          var shi = raw.shi_yao;
+          var ying = raw.ying_yao;
+          var labels = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'];
+          html += chartKv([
+            ['本卦', raw.gua_name],
+            ['变卦', raw.changed_gua ? raw.changed_gua.name : '无（静卦）'],
+            ['日建', raw.ri_jian],
+            ['月建', raw.yue_jian],
+            ['世爻', labels[shi - 1]],
+            ['应爻', labels[ying - 1]]
+          ]);
+          var rows = [];
+          for(var i = 5; i >= 0; i--){
+            var pos = i + 1;
+            rows.push([
+              labels[i] + (yao[i] ? ' 阳' : ' 阴'),
+              shou[i] || '',
+              qin[i] || '',
+              najia[i] ? najia[i].gan + najia[i].zhi : '',
+              ws[i] || '',
+              pos === shi ? '世' : pos === ying ? '应' : '',
+              dong.indexOf(pos) !== -1 ? '○ 动' : ''
+            ]);
+          }
+          html += chartTable(['爻位', '六兽', '六亲', '纳甲', '旺衰', '世应', '动'], rows, true);
+          if(raw.chong_he && raw.chong_he.desc) html += chartPara('卦体', raw.chong_he.desc);
+          return html;
+        }
+
+        if(method === 'meihua'){
+          var sk = raw.sheng_ke || {};
+          var skd = sk['双面'] || {};
+          html += chartKv([
+            ['本卦', raw.original_gua && raw.original_gua.name],
+            ['互卦', raw.hu_gua && raw.hu_gua.name],
+            ['变卦', raw.changed_gua && (raw.changed_gua.name + '（' + (raw.changed_gua.changedYao || '') + '）')],
+            ['体卦', raw.ti_gua],
+            ['用卦', raw.yong_gua],
+            ['生克', sk['关系']]
+          ]);
+          html += chartTable(['卦', '上卦', '下卦'], [
+            ['本卦', raw.original_gua && raw.original_gua.shang_gua, raw.original_gua && raw.original_gua.xia_gua],
+            ['互卦', raw.hu_gua && raw.hu_gua.shang_gua, raw.hu_gua && raw.hu_gua.xia_gua],
+            ['变卦', raw.changed_gua && raw.changed_gua.shang_gua, raw.changed_gua && raw.changed_gua.xia_gua]
+          ], true);
+          if(sk['说明']) html += chartPara('体用生克', sk['说明']);
+          if(skd.yang) html += chartPara('吉面', skd.yang);
+          if(skd.yin) html += chartPara('凶面', skd.yin);
+          if(skd.transform) html += chartPara('转化关键', skd.transform);
+          if(skd.timing) html += chartPara('时机建议', skd.timing);
+          var lx = raw.wanwu_leixiang || {};
+          var ti = lx['体卦'] || {};
+          var yong = lx['用卦'] || {};
+          html += chartTable(['类象', '体卦（' + (raw.ti_gua || '') + '）', '用卦（' + (raw.yong_gua || '') + '）'], [
+            ['五行', ti['五行'], yong['五行']],
+            ['方位', ti['方位'], yong['方位']],
+            ['人事', ti['人事'], yong['人事']],
+            ['身体', ti['身体'], yong['身体']],
+            ['颜色', ti['颜色'], yong['颜色']],
+            ['季节', ti['季节'], yong['季节']]
+          ], true);
+          return html;
+        }
+
+        if(method === 'qimen'){
+          var cells = raw.cells || {};
+          var palaceNames = { 1: '坎一宫', 2: '坤二宫', 3: '震三宫', 4: '巽四宫', 5: '中五宫', 6: '乾六宫', 7: '兑七宫', 8: '艮八宫', 9: '离九宫' };
+          var order = [4, 9, 2, 3, 5, 7, 8, 1, 6];
+          html += chartKv([
+            ['局', raw.ju],
+            ['节气', raw.jieqi],
+            ['三元', raw.san_yuan],
+            ['日干支', raw.day_gz],
+            ['时干支', raw.time_gz],
+            ['旬首', raw.xun_shou],
+            ['值符', raw.zhi_fu_star + '（' + raw.zhi_fu_gong + '宫）'],
+            ['值使', raw.zhi_shi_door + '（' + raw.zhi_shi_gong + '宫）']
+          ]);
+          html += '<div class="chart-grid9">';
+          order.forEach(function(n){
+            var c = cells[String(n)] || {};
+            html += '<div class="chart-cell">' +
+              '<div class="chart-cell-title">' + palaceNames[n] + '</div>' +
+              '<div class="chart-cell-line"><em>天</em>' + escHtml(c.tian_pan || '—') +
+                ' <em>地</em>' + escHtml(c.di_pan || '—') + '</div>' +
+              '<div class="chart-cell-line"><em>星</em>' + escHtml(c.star || '—') + '</div>' +
+              '<div class="chart-cell-line"><em>门</em>' + escHtml(c.door || '—') +
+                ' <em>神</em>' + escHtml(c.god || '—') + '</div>' +
+              (c.ji_star ? '<div class="chart-cell-line"><em>寄</em>' + escHtml(c.ji_star) + '</div>' : '') +
+              '</div>';
+          });
+          html += '</div>';
+          return html;
+        }
+
+        if(method === 'daliuren'){
+          var siKe = raw.si_ke || {};
+          var chuan = raw.san_chuan || {};
+          html += chartKv([
+            ['月将', raw.yue_jiang_name + '（' + raw.yue_jiang + '）'],
+            ['日干支', raw.ri_gan + raw.ri_zhi],
+            ['课体', raw.ke_name],
+            ['三传', raw.chuan],
+            ['课体吉凶', raw.level]
+          ]);
+          var keRows = ['ke1', 'ke2', 'ke3', 'ke4'].map(function(k, i){
+            var o = siKe[k] || {};
+            return ['第' + (i + 1) + '课', o.xia || '', o.shang || ''];
+          });
+          html += chartTable(['课', '下（地盘）', '上（天盘）'], keRows, true);
+          html += chartTable(['三传', '地支'], [
+            ['初传', chuan.chu],
+            ['中传', chuan.zhong],
+            ['末传', chuan.mo]
+          ], true);
+          var zhis = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+          var tp = raw.tian_pan || {};
+          var tj = raw.tian_jiang || {};
+          html += chartTable(['地盘', '天盘', '天将'], zhis.map(function(z){
+            var t = tp[z] || '';
+            return [z, t, tj[t] || ''];
+          }), true);
+          return html;
+        }
+
+        if(method === 'zhuge'){
+          html += chartKv([
+            ['签号', '第' + raw.number + '签'],
+            ['签级', raw.level],
+            ['所问', raw.question || '未填']
+          ]);
+          if(raw.poem) html += '<div class="chart-sub">签诗</div><div class="chart-poem">' + escHtml(raw.poem) + '</div>';
+          if(raw.interpretation) html += chartPara('解签', raw.interpretation);
+          if(raw.verdict) html += chartPara('断语', raw.verdict);
+          return html;
+        }
+
+        if(method === 'zhougong'){
+          var zList = raw.results || [];
+          html += chartKv([
+            ['梦境', raw.input],
+            ['匹配条目', zList.length + ' 条'],
+            ['综合梦兆', raw.ji],
+            ['涉及类别', (raw.categories || []).join('、')]
+          ]);
+          if(zList.length){
+            html += chartTable(['梦象', '类别', '吉凶', '解义'], zList.map(function(it){
+              return [it.keyword, it.cat, it.ji, it.interpretation];
+            }), true);
+          } else {
+            html += '<div class="chart-text">梦中意象未收录在梦典中，未按具体梦象断吉凶。</div>';
+          }
+          return html;
+        }
+
+        if(method === 'taiyi'){
+          var god = raw.taiyi_god || {};
+          var ss = raw.sishen || {};
+          var gods = raw.gods || [];
+          html += chartKv([
+            ['太乙积年', raw.ji_nian],
+            ['纪年', raw.epoch],
+            ['局数', raw.ju_shu],
+            ['太乙落宫', raw.taiyi_gong + '（' + raw.taiyi_dir + '）'],
+            ['入宫年', typeof raw.taiyi_year_in === 'number' ? '第' + raw.taiyi_year_in + '年' : ''],
+            ['值神', (god.name || '—') + '（' + (god.auspicious || '—') + '）'],
+            ['五福', raw.wufu],
+            ['三基', raw.sanji]
+          ]);
+          html += chartKv([
+            ['天乙', ss.tianyi && ss.tianyi.position],
+            ['地乙', ss.diyi && ss.diyi.position],
+            ['直符', ss.zhifu && ss.zhifu.position],
+            ['四神', ss.sishen && ss.sishen.position]
+          ]);
+          if(gods.length){
+            html += '<div class="chart-sub">十六神方位</div>';
+            html += chartTable(['神', '方位', '五行', '吉凶', '含义'], gods.map(function(g){
+              return [g.name, g.position, g.wuxing, g.auspicious, g.meaning];
+            }), true);
+          }
+          return html;
+        }
+
+        if(method === 'fengshui'){
+          var palaces = raw.palaces || [];
+          var fsOrder = [3, 8, 1, 2, 4, 6, 5, 0, 7];
+          html += chartKv([
+            ['坐向', '坐' + raw.sitting + '向' + raw.facing],
+            ['元运', raw.periodNum + ' 运'],
+            ['总评', raw.overallScore + ' 分（' + raw.overallLevel + '）']
+          ]);
+          html += '<div class="chart-grid9">';
+          fsOrder.forEach(function(idx){
+            var p = palaces[idx] || {};
+            html += '<div class="chart-cell">' +
+              '<div class="chart-cell-title">' + escHtml(p.name || '') + ' · ' + escHtml(p.level || '') + ' ' +
+                (p.score === undefined ? '' : p.score) + '</div>' +
+              '<div class="chart-cell-line"><em>运</em>' + (p.periodStar || '—') +
+                ' <em>山</em>' + (p.mountainStar || '—') +
+                ' <em>向</em>' + (p.facingStar || '—') +
+                ' <em>年</em>' + (p.annualStar || '—') + '</div>' +
+              '</div>';
+          });
+          html += '</div>';
+          html += chartKv([
+            ['最佳方位', raw.bestPalace && raw.bestPalace.name],
+            ['需留意方位', raw.worstPalace && raw.worstPalace.name]
+          ]);
+          if(raw.chengMenJue && raw.chengMenJue.desc) html += chartPara('城门诀', raw.chengMenJue.desc);
+          return html;
+        }
+
+        return html;
+      }
+
+      function renderChartDetail(r){
+        if(!r || !r.raw) return '';
+        var body = '';
+        try {
+          body = buildChartBody(r.method, r.raw);
+        } catch(e){
+          console.warn('[EP11] 盘面详情渲染失败', r.method, e);
+          return '';
+        }
+        if(!body) return '';
+        return '<details class="chart-detail"><summary>展开完整盘面</summary>' +
+          '<div class="chart-body">' + body + '</div></details>';
+      }
+
       function renderMethods(results, missing, question, uiParams){
         var el = document.getElementById('methodsContent');
         if(results.length === 0){
@@ -1159,7 +1536,7 @@
             '<span class="lst-horizon">' + L.horizon + ' · ' + L.desc + '</span></div>';
           html += '<div class="method-result-grid">';
           rs.forEach(function(r){
-            var sc = r.score || 60;
+            var sc = typeof r.score === 'number' ? r.score : 60;
             var trendIcon = r.trend === 'up' ? '↑' : r.trend === 'down' ? '↓' : '→';
             var mm = METHOD_META[r.method] || { nature: 'realtime' };
             html += '<div class="method-result-card">';
@@ -1173,6 +1550,9 @@
             html += '<div class="mrc-moment">' + escHtml(methodMoment(mm, uiParams)) + '</div>';
             html += '<div class="mrc-summary" style="margin-top:8px;">' + escHtml(r.summary || '') + '</div>';
             html += '<div class="mrc-verdict">断语：<strong>' + escHtml(r.verdict || '待判') + '</strong></div>';
+            var basis = r.scoreBasis || '';
+            if(r.scoreEstimated) basis = (basis ? basis + ' · ' : '') + '引擎无独立评分字段，按断语映射为参考分';
+            if(basis) html += '<div class="mrc-basis"><b>评分依据</b>' + escHtml(basis) + '</div>';
             if(r.keyInsights && r.keyInsights.length){
               html += '<div class="mrc-insights">';
               r.keyInsights.forEach(function(k){ html += '<span class="mrc-insight">✦ ' + escHtml(k) + '</span>'; });
@@ -1183,6 +1563,7 @@
               html += '<div class="mrc-domain"><div class="mrc-domain-label">事域关联 · ' + escHtml(di.label) +
                 '</div><div class="mrc-domain-body">' + escHtml(di.text) + '</div></div>';
             }
+            html += renderChartDetail(r);
             html += '<div class="bar"><div class="bar-fill" style="width:' + sc + '%"></div></div>';
             html += '</div>';
           });

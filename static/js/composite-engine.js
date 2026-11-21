@@ -151,7 +151,8 @@
     var summary = '',
       detail = '',
       keyInsights = [],
-      verdict = '';
+      verdict = '',
+      scoreBasis = '';
 
     try {
       switch (key) {
@@ -181,6 +182,10 @@
           else if (score >= 60) verdict = '较为均衡';
           else if (score >= 45) verdict = '略偏弱';
           else verdict = '偏枯';
+          scoreBasis =
+            '五行平衡分 ' +
+            (balanceInfo && typeof balanceInfo.score === 'number' ? balanceInfo.score : score) +
+            '（按日主旺衰与五行分布计算）';
           break;
         }
         case 'liuyao': {
@@ -198,6 +203,7 @@
           if (score >= 70) verdict = '偏吉';
           else if (score <= 45) verdict = '偏凶';
           else verdict = '中平';
+          scoreBasis = '引擎卦象评分（综合世应、动爻、六亲生克）';
           break;
         }
         case 'meihua': {
@@ -212,6 +218,7 @@
             typeof skLevel === 'number' ? ['大凶', '凶', '小吉', '中吉', '大吉'][skLevel] || '未判' : '未判';
           keyInsights = ['体用关系：' + relation, '生克等级：' + skLevelText, '本互变三卦有序'];
           verdict = relation;
+          scoreBasis = '体用生克「' + relation + '」等级映射';
           break;
         }
         case 'qimen': {
@@ -234,6 +241,7 @@
             '值符' + (raw.zhi_fu_star || '?'),
           ];
           verdict = qimenVerdict;
+          scoreBasis = '三吉门 ' + qimenGood + '/' + qimenTotal + ' 宫映射';
           break;
         }
         case 'taiyi': {
@@ -265,6 +273,7 @@
           verdict = taiyiGod.name
             ? '太乙值' + taiyiGod.name + '神（' + (taiyiGod.auspicious || '—') + '）'
             : '太乙值神未定';
+          scoreBasis = '值神「' + (taiyiGod.name || '未判') + '」吉凶映射';
           break;
         }
         case 'zhuge': {
@@ -279,6 +288,7 @@
           else if (lvl.indexOf('中下') !== -1 || lvl.indexOf('下') !== -1) verdict = '下签';
           else if (lvl.indexOf('中') !== -1) verdict = '中签';
           else verdict = '待判';
+          scoreBasis = '签级「' + lvl + '」映射';
           break;
         }
         case 'zhougong': {
@@ -294,6 +304,7 @@
           }
           detail = raw.interpretation || raw.questionAnalysis || '';
           verdict = cnt === 0 ? '参考' : jiStr;
+          scoreBasis = cnt === 0 ? '未命中梦典，参考分' : '梦兆「' + jiStr + '」映射';
           break;
         }
         case 'daliuren': {
@@ -303,6 +314,7 @@
           detail = raw.interpretation || '';
           keyInsights = ['月将得时', '四课有象', '三传显变化之机'];
           verdict = raw.level || '吉凶参半';
+          scoreBasis = '课体吉凶「' + (raw.level || '未判') + '」映射';
           break;
         }
         case 'ziwei': {
@@ -316,6 +328,7 @@
           detail = raw.interpretation || raw.总体运势 || '';
           keyInsights = ['命宫主星定格局', '三方四正有照应', '四化飞星显吉凶'];
           verdict = raw.总体运势 || '中平';
+          scoreBasis = '总体运势「' + (raw.总体运势 || '未判') + '」映射';
           break;
         }
         case 'fengshui': {
@@ -333,6 +346,7 @@
             (raw.chengMenJue ? raw.chengMenJue.desc : '');
           keyInsights = ['坐向与元运定飞星格局', '最佳方位：' + bestName, '需留意方位：' + worstName];
           verdict = '环境' + fsLevel;
+          scoreBasis = '九宫综合分（风水引擎 overallScore）';
           break;
         }
         default:
@@ -340,6 +354,7 @@
           detail = raw.interpretation || (typeof raw === 'string' ? raw : JSON.stringify(raw).substring(0, 100));
           keyInsights = ['推演完成'];
           verdict = '待判';
+          scoreBasis = '按引擎断语映射';
       }
     } catch (e) {
       if (typeof console !== 'undefined' && console.warn) {
@@ -349,6 +364,7 @@
       detail = '数据解析异常：' + e.message;
       keyInsights = ['推演完成'];
       verdict = '待判';
+      scoreBasis = '解析异常，按默认分参考';
     }
 
     return {
@@ -357,6 +373,7 @@
       icon: cfg.icon,
       score: score,
       scoreEstimated: scoreEstimated,
+      scoreBasis: scoreBasis,
       trend: trend,
       verdict: verdict,
       summary: summary,

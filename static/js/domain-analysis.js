@@ -6,6 +6,9 @@
 (function (global) {
   'use strict';
 
+  // 紫微十二宫标准顺序（命宫起，逆时针）
+  var GONG_NAMES = ['命宫', '兄弟', '夫妻', '子女', '财帛', '疾厄', '迁移', '交友', '官禄', '田宅', '福德', '父母'];
+
   /* ========== 一、事域体系 ========== */
   var DOMAINS = {
     career: {
@@ -1977,6 +1980,7 @@
 
   function buildQimenDomainAnalysis(juShu, isYang, palaces, goodAdvice, badAdvice, domainKey) {
     var out = [];
+    var dm = DOMAINS[domainKey] || DOMAINS['career'];
     out.push('奇门遁甲以时家转盘为框架，' + juShu + '局' + (isYang ? '阳遁' : '阴遁') + '决定了时空的基本格局。');
 
     var domainFocus = {
@@ -2136,6 +2140,7 @@
   }
 
   function buildTaiyiDomainAnalysis(jiNian, epoch, gods, outcome, domainKey) {
+    var dm = DOMAINS[domainKey] || DOMAINS['career'];
     var out = [];
     out.push('太乙神数以天文推算为基础，积年' + jiNian + '是当前宇宙周期的定位点。');
 
@@ -2209,6 +2214,7 @@
   }
 
   function buildTaiyiCausalChain(jiNian, epoch, gods, outcome, domainKey) {
+    var dm = DOMAINS[domainKey] || DOMAINS['career'];
     var out = [];
     out.push('以下是从太乙神数到结论的完整因果链条：');
     out.push('');
@@ -2909,7 +2915,7 @@
       lines.push('【十二宫星曜分布】');
       for (var gi = 0; gi < Math.min(gongs.length, 12); gi++) {
         var g = gongs[gi] || {};
-        var gName = GONG_NAMES[gi] || '宫' + (gi + 1);
+        var gName = g.name || GONG_NAMES[gi] || '宫' + (gi + 1);
         var stars = g.stars && g.stars.length > 0 ? g.stars.join('、') : '无主星';
         lines.push(gName + '（' + (g.zhi || '?') + '）：' + stars);
       }
@@ -3020,7 +3026,7 @@
 
     if (gongIdx !== undefined && gongs[gongIdx]) {
       var g = gongs[gongIdx];
-      var gongName = GONG_NAMES[gongIdx];
+      var gongName = g.name || GONG_NAMES[gongIdx] || '第' + (gongIdx + 1) + '宫';
       var stars = g.stars && g.stars.length > 0 ? g.stars.join('、') : '无主星';
       out.push(
         gongName + '（' + (g.zhi || '?') + '）星曜：' + stars + '——这是' + DOMAINS[domainKey].name + '的命理根基。'
