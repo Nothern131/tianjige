@@ -10,7 +10,7 @@
   var path = require('path');
 
   var engineFiles = [
-    'constants.js', 'bazi-engine.js', 'liuyao-engine.js', 'meihua-engine.js',
+    'constants.js', 'calendar-engine.js', 'bazi-engine.js', 'liuyao-engine.js', 'meihua-engine.js',
     'qimen-engine.js', 'taiyi-engine.js', 'zhuge-engine.js', 'zhougong-engine.js',
     'daliuren-engine.js', 'ziwei-engine.js', 'fengshui-engine.js', 'engine-registry.js'
   ];

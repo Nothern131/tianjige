@@ -17,6 +17,83 @@ function _getRiGanZhi(date){ var base=new Date(2000,0,1); var d=Math.floor((date
 function _getYueZhi(year,month,day){ if(month===1) return '丑'; if(month===2&&day<4) return '丑'; if(month>=8&&day>=7) return ZHI[month%12]; if(month>=2&&month<=7) return ZHI[(month+1)%12]; return ZHI[month%12]; }
 function _getYueGan(yearGan, monthZhi) { var s=WUHUDUN[yearGan]||'丙'; var m=(ZHI.indexOf(monthZhi)-ZHI.indexOf('寅')+12)%12; return GAN[(GAN.indexOf(s)+m)%10]; }
 
+// 日柱所在旬的空亡地支；日辰无效时返回空数组（由调用方显示“未提供”）
+function _xunKongOfRiJian(riJian) {
+  var idx = JIAZI_INDEX[riJian];
+  if (typeof idx !== 'number') return [];
+  var xunStart = idx - (idx % 10);
+  return [ZHI[(xunStart + 10) % 12], ZHI[(xunStart + 11) % 12]];
+}
+
+// 六爻起卦信息：只取引擎真实输出，缺失项显示“未提供/未定”
+function _liuyaoCastInfo(result, question) {
+  var now = new Date();
+  var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+  var castTime = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) +
+    ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+
+  var riJian = result.ri_jian || '';
+  var yueJian = result.yue_jian || '';
+  var kong = _xunKongOfRiJian(riJian);
+
+  var domainKey = 'general';
+  if (question && typeof DomainAnalysis !== 'undefined' && DomainAnalysis.detectDomain) {
+    domainKey = DomainAnalysis.detectDomain(question) || 'general';
+  }
+  var yongQin = '';
+  var yongNote = '';
+  if (domainKey === 'career') yongQin = '官鬼';
+  else if (domainKey === 'love') { yongQin = '妻财'; yongNote = '（男占口径）'; }
+  else if (domainKey === 'wealth') yongQin = '妻财';
+  else if (domainKey === 'health') yongQin = '官鬼';
+  else if (domainKey === 'study') yongQin = '父母';
+
+  var yongShen;
+  if (!question) {
+    yongShen = '未定（未填写所问之事）';
+  } else if (!yongQin) {
+    yongShen = '未定（综合事域，需明确所问）';
+  } else {
+    var positions = [];
+    (result.liu_qin || []).forEach(function (q, i) {
+      if (q === yongQin) positions.push(i + 1);
+    });
+    yongShen = yongQin + yongNote + (positions.length ? '（第' + positions.join('、') + '爻）' : '（卦中未现）');
+  }
+
+  var dong = result.dong_yao || [];
+  var najia = result.najia || [];
+  var yingQi;
+  if (dong.length) {
+    var d = dong[0];
+    var zhi = najia[d - 1] ? najia[d - 1].zhi : '';
+    var chongMap = { 子:'午', 午:'子', 丑:'未', 未:'丑', 寅:'申', 申:'寅', 卯:'酉', 酉:'卯', 辰:'戌', 戌:'辰', 巳:'亥', 亥:'巳' };
+    var heMap = { 子:'丑', 丑:'子', 寅:'亥', 亥:'寅', 卯:'戌', 戌:'卯', 辰:'酉', 酉:'辰', 巳:'申', 申:'巳', 午:'未', 未:'午' };
+    var chong = chongMap[zhi] || '';
+    var he = heMap[zhi] || '';
+    if (!zhi) {
+      yingQi = '第' + d + '爻动，动爻地支未提供，应期需结合日辰另断。';
+    } else {
+      yingQi = '第' + d + '爻动（' + zhi + '），' +
+        (chong ? '逢冲「' + chong + '」' : '') +
+        (chong && he ? '或' : '') +
+        (he ? '逢合「' + he + '」' : '') +
+        '之日/月为应期。';
+    }
+  } else {
+    yingQi = '静卦无动爻，以世应旺衰与日辰冲合待时。';
+  }
+
+  return {
+    castTime: castTime,
+    yueJian: yueJian || '未提供',
+    riJian: riJian || '未提供',
+    kongWang: kong.length === 2 ? kong.join('、') : '未提供',
+    yongShen: yongShen,
+    yingQi: yingQi,
+  };
+}
+
 // ===== 64卦卦德映射（移植自 EP3 体验页，供 generateLiuyaoAnalysis 使用） =====
 var GUA_DE = {
   '乾为天':{德:'健',释:'刚健不息，自强不息——此卦主进取，宜主动有为，不可坐等。'},
@@ -144,9 +221,7 @@ function generateLiuyaoAnalysis(master, liuyao, question) {
 
   // ── 旬空计算：日柱所属旬的空亡地支 ──
   function getXunKong(riJian) {
-    var idx = JIAZI_INDEX[riJian] || 0;
-    var xunStart = idx - (idx % 10);
-    return [ZHI[(xunStart + 10) % 12], ZHI[(xunStart + 11) % 12]];
+    return _xunKongOfRiJian(riJian);
   }
   // 各爻是否旬空
   var kongWang = getXunKong(riJian);
@@ -1553,6 +1628,7 @@ async function handleLiuyaoSubmit(container, lines) {
 
     // 问事分析
     var question = container.querySelector('#liuyao-question-text').value.trim();
+    var castInfo = _liuyaoCastInfo(result, question);
     var questionAnalysisHtml = '';
     if (question && typeof DomainAnalysis !== 'undefined') {
       var qaResult = DomainAnalysis.analyze('liuyao', result, question);
@@ -1624,6 +1700,34 @@ async function handleLiuyaoSubmit(container, lines) {
           }
         </div>
 
+        <div style="margin-top:14px;font-size:0.78rem;letter-spacing:0.08em;color:var(--gold);">🕰 起卦信息</div>
+        <div class="hexagram-detail" style="margin-top:8px;padding-top:12px;border-top:1px solid var(--border-subtle);">
+          <div class="detail-item">
+            <div class="detail-label">起卦时间</div>
+            <div class="detail-value">${escapeHtml(castInfo.castTime)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">月建</div>
+            <div class="detail-value">${escapeHtml(castInfo.yueJian)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">日辰</div>
+            <div class="detail-value">${escapeHtml(castInfo.riJian)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">旬空</div>
+            <div class="detail-value">${escapeHtml(castInfo.kongWang)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">用神</div>
+            <div class="detail-value">${escapeHtml(castInfo.yongShen)}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">应期</div>
+            <div class="detail-value" style="line-height:1.6;">${escapeHtml(castInfo.yingQi)}</div>
+          </div>
+        </div>
+
         ${
           result.interpretation
             ? `
@@ -1644,6 +1748,22 @@ async function handleLiuyaoSubmit(container, lines) {
 
     // 大师点评面板（基于六爻深度解读，主站/体验页共用）
     initLiuyaoMastersPanel(container, result, question);
+
+    // 自动记入命簿：六爻引擎无真实评分，不写伪造 score
+    if (typeof UserProfileAPI !== 'undefined') {
+      try {
+        UserProfileAPI.addRecord({
+          type: 'liuyao',
+          question: question || '六爻起卦',
+          result: {
+            gua: result.gua_name || '',
+            changed: result.changed_gua ? result.changed_gua.name : ''
+          }
+        });
+      } catch (e) {
+        console.warn('[命簿] 六爻记录写入失败', e);
+      }
+    }
   } catch (error) {
     resultCard.innerHTML = `
       <div class="error-container">

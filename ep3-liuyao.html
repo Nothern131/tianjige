@@ -948,6 +948,19 @@
         to { transform: rotate(360deg); }
       }
 
+      /* ===== Disclaimer ===== */
+      .disclaimer {
+        background: rgba(184, 154, 92, 0.04);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 14px 20px;
+        margin-top: 32px;
+        font-size: 0.75rem;
+        color: var(--text3);
+        text-align: center;
+        line-height: 1.8;
+      }
+
       /* ===== Footer ===== */
       .footer {
         text-align: center;
@@ -1309,6 +1322,12 @@
         <div id="mastersArea"></div>
       </div>
 
+      <!-- 免责声明 -->
+      <div class="disclaimer">
+        <strong>声明：</strong>六爻占卜是中国传统文化的一部分，属于古典哲学和文化遗产范畴。<br />
+        本系统仅供文化研究和娱乐参考，不构成任何人生决策建议。请相信科学，理性看待命运。
+      </div>
+
       <div class="footer">
         <div class="footer-line"></div>
         <p>天机阁 · 窥探命运之秘</p>
@@ -1319,8 +1338,9 @@
     <!-- 脚本加载 -->
     <script src="static/js/constants.js"></script>
     <script src="static/js/logger.js"></script>
-    <script src="static/js/bazi-engine.js"></script>
-    <script src="static/js/liuyao-engine.js?v=20261103"></script>
+    <script src="static/js/calendar-engine.js?v=20261104"></script>
+    <script src="static/js/bazi-engine.js?v=20261104"></script>
+    <script src="static/js/liuyao-engine.js?v=20261104"></script>
     <script src="static/js/masters-engine.js"></script>
     <script src="static/js/domain-analysis.js"></script>
     <script src="static/js/duality-analyzer.js"></script>

@@ -14,6 +14,14 @@
     TEXT: 'text', // 文本类：需要文本描述
   };
 
+  /** 本地日期 YYYY-MM-DD（toISOString 在清晨会落到前一天） */
+  function todayLocalStr() {
+    var d = new Date();
+    var m = d.getMonth() + 1;
+    var day = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+  }
+
   /* ========== 引擎注册表 ========== */
   var REGISTRY = {};
 
@@ -251,7 +259,7 @@
       },
     ],
     buildParams: function (ui) {
-      var dateStr = ui.date || new Date().toISOString().slice(0, 10);
+      var dateStr = ui.date || todayLocalStr();
       return [dateStr, ui.hour || '子时', 'auto'];
     },
   });
@@ -274,7 +282,7 @@
       },
     ],
     buildParams: function (ui) {
-      var dateStr = ui.date || new Date().toISOString().slice(0, 10);
+      var dateStr = ui.date || todayLocalStr();
       return [dateStr, ui.hour || '子时'];
     },
   });
@@ -328,7 +336,7 @@
       },
     ],
     buildParams: function (ui) {
-      var dateStr = ui.date || new Date().toISOString().slice(0, 10);
+      var dateStr = ui.date || todayLocalStr();
       var hourMap = {
         子时: 0,
         丑时: 1,

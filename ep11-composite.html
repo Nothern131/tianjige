@@ -510,7 +510,7 @@
               <option value="寅时">寅时 (03:00-05:00)</option>
               <option value="卯时">卯时 (05:00-07:00)</option>
               <option value="辰时">辰时 (07:00-09:00)</option>
-              <option value="巳时" selected>巳时 (09:00-11:00)</option>
+              <option value="巳时">巳时 (09:00-11:00)</option>
               <option value="午时">午时 (11:00-13:00)</option>
               <option value="未时">未时 (13:00-15:00)</option>
               <option value="申时">申时 (15:00-17:00)</option>
@@ -642,14 +642,15 @@
 
     <script src="static/js/constants.js"></script>
     <script src="static/js/logger.js"></script>
-    <script src="static/js/bazi-engine.js"></script>
-    <script src="static/js/liuyao-engine.js"></script>
+    <script src="static/js/calendar-engine.js?v=20261104"></script>
+    <script src="static/js/bazi-engine.js?v=20261104"></script>
+    <script src="static/js/liuyao-engine.js?v=20261104"></script>
     <script src="static/js/meihua-engine.js"></script>
-    <script src="static/js/qimen-engine.js"></script>
+    <script src="static/js/qimen-engine.js?v=20261104"></script>
     <script src="static/js/taiyi-engine.js"></script>
     <script src="static/js/zhuge-engine.js"></script>
     <script src="static/js/zhougong-engine.js?v=20261103b"></script>
-    <script src="static/js/daliuren-engine.js"></script>
+    <script src="static/js/daliuren-engine.js?v=20261104"></script>
     <script src="static/js/ziwei-engine.js"></script>
     <script src="static/js/fengshui-engine.js?v=20260729"></script>
     <script src="static/js/domain-analysis.js?v=20261102"></script>
@@ -725,10 +726,13 @@
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       }
 
-      // ===== 默认日期 =====
-      var today = new Date().toISOString().slice(0, 10);
+      // ===== 默认日期（本地时间，避免清晨落到前一天） =====
+      var _now = new Date();
+      var today = _now.getFullYear() + '-' + String(_now.getMonth() + 1).padStart(2, '0') + '-' + String(_now.getDate()).padStart(2, '0');
       document.getElementById('comp-birth-date').value = '2000-01-01';
       document.getElementById('comp-date').value = today;
+      var HOUR_NAMES = ['子时','丑时','寅时','卯时','辰时','巳时','午时','未时','申时','酉时','戌时','亥时'];
+      document.getElementById('comp-hour').value = HOUR_NAMES[Math.floor((_now.getHours() + 1) / 2) % 12];
 
       // ===== 术数选择 =====
       var methodsEl = document.getElementById('comp-methods');
@@ -1040,7 +1044,7 @@
       function firstLines(text, n, maxLen){
         var lines = String(text || '').split('\n').map(function(s){ return s.trim(); })
           .filter(function(s){ return s && s.indexOf('━━') === -1; });
-        return lines.slice(0, n).join(' ').substring(0, maxLen || 260);
+        return lines.slice(0, n).join(' ').substring(0, maxLen || 420);
       }
 
       // 将每门术数的原始结果再交给 DomainAnalysis，得到针对「所问之事」的解读
@@ -1052,7 +1056,7 @@
             if(raw && raw.questionAnalysis){
               return {
                 label: raw.domain ? raw.domain.name : '所问之事',
-                text: firstLines(raw.questionAnalysis, 4, 260)
+                text: firstLines(raw.questionAnalysis, 7, 420)
               };
             }
             return null;
@@ -1062,11 +1066,12 @@
             if(da && da.analysis){
               return {
                 label: da.domain ? da.domain.name : '所问之事',
-                text: firstLines(da.analysis, 4, 260)
+                text: firstLines(da.analysis, 7, 420)
               };
             }
           }
         } catch(e){
+          console.warn('[EP11] 事域关联解析失败', e);
           return null;
         }
         return null;
@@ -1325,16 +1330,17 @@
         if(natal.length && event.length){
           var mutual = '';
           var action = '';
-          if(nScore >= 65 && eScore >= 65){
+          // 阈值与 layerVerdict 口径对齐：60 分以上算支持，50 分以下算承压
+          if(nScore >= 60 && eScore >= 60){
             mutual = '命局底色与当下事机同向，命事互证为吉：长期方向可支撑，当下也有推进窗口。';
             action = '可按既定计划推进；具体行动窗口仍以事占层的应期为准。';
-          } else if(nScore >= 65 && eScore < 55){
+          } else if(nScore >= 60 && eScore < 50){
             mutual = '命局支持，但当下事机不利，属「底色够、时机未到」。';
             action = '宜蓄势、练内功、修复条件，等待事占层转好再动，不宜强行推进。';
-          } else if(nScore < 55 && eScore >= 65){
+          } else if(nScore < 50 && eScore >= 60){
             mutual = '命局底色承压，但当下有短期机会，属「借势可为、不宜长押」。';
             action = '可抓住短期窗口速决，但不宜把短期机会当作长期方向。';
-          } else if(nScore < 55 && eScore < 55){
+          } else if(nScore < 50 && eScore < 50){
             mutual = '命事皆弱，长期底色与当下事机都不支持强推。';
             action = '宜收缩防守、先修复基本面，暂缓重大决策。';
           } else {

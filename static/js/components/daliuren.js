@@ -77,9 +77,16 @@ function renderDaliurenComponent() {
     </div>\
   ';
 
-  // 设置默认日期
+  // 设置默认日期与当前时辰（本地时间；toISOString 会把清晨算成前一天）
   var dateInput = container.querySelector('#daliuren-date');
-  dateInput.value = new Date().toISOString().slice(0, 10);
+  var now = new Date();
+  var m = now.getMonth() + 1;
+  var d = now.getDate();
+  dateInput.value = now.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+  var hourSelect = container.querySelector('#daliuren-hour');
+  var HOUR_NAMES = ['\u5B50\u65F6', '\u4E11\u65F6', '\u5BC5\u65F6', '\u536F\u65F6', '\u8FB0\u65F6', '\u5DF3\u65F6',
+    '\u5348\u65F6', '\u672A\u65F6', '\u7533\u65F6', '\u9149\u65F6', '\u620C\u65F6', '\u4EA5\u65F6'];
+  hourSelect.value = HOUR_NAMES[Math.floor((now.getHours() + 1) / 2) % 12];
 
   // 事域快捷按钮
   var domainTags = container.querySelectorAll('#daliuren-domain-tags button');
@@ -128,6 +135,22 @@ function renderDaliurenComponent() {
     }
 
     renderDaliurenResult(container, result, question);
+
+    // 自动记入命簿：吉/偏凶/中平 为引擎真实课体判定，按统一口径换算分数
+    if (typeof UserProfileAPI !== 'undefined') {
+      try {
+        var dlLevel = result.level || '';
+        var dlScore = dlLevel === '吉' ? 80 : dlLevel === '偏凶' ? 40 : 60;
+        UserProfileAPI.addRecord({
+          type: 'daliuren',
+          question: question || '六壬起课',
+          score: dlScore,
+          result: { keName: result.ke_name || '', level: dlLevel }
+        });
+      } catch (e) {
+        console.warn('[命簿] 六壬记录写入失败', e);
+      }
+    }
   });
 
   return container;

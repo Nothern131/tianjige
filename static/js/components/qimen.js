@@ -273,6 +273,22 @@ async function handleQimenSubmit(container, params) {
 
     // 大师点评面板（基于奇门九宫格深度解读，主站/体验页共用）
     initQimenMastersPanel(container, result, question);
+
+    // 自动记入命簿：奇门引擎无真实评分，不写伪造 score
+    if (typeof UserProfileAPI !== 'undefined') {
+      try {
+        UserProfileAPI.addRecord({
+          type: 'qimen',
+          question: question || '奇门起局',
+          result: {
+            ju: typeof params.ju !== 'undefined' ? params.ju : '',
+            date: params.date || ''
+          }
+        });
+      } catch (e) {
+        console.warn('[命簿] 奇门记录写入失败', e);
+      }
+    }
   } catch (error) {
     resultCard.innerHTML = `
       <div class="error-container">

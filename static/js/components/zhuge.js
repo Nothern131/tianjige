@@ -191,6 +191,23 @@ async function handleZhugeSubmit(container, params) {
 
     // 大师点评面板（基于签文意象 + 签等生成深度解读，主站/体验页共用）
     initZhugeMastersPanel(container, result, question);
+
+    // 自动记入命簿：签等为定性文字，不换算成伪造分数
+    if (typeof UserProfileAPI !== 'undefined') {
+      try {
+        UserProfileAPI.addRecord({
+          type: 'zhuge',
+          question: question || '诸葛神数',
+          result: {
+            number: result.number || result.签号 || '',
+            level: result.level || '',
+            poem: result.poem || result.签名 || ''
+          }
+        });
+      } catch (e) {
+        console.warn('[命簿] 诸葛记录写入失败', e);
+      }
+    }
   } catch (error) {
     resultCard.innerHTML = `
       <div class="error-container">

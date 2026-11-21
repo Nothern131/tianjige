@@ -54,11 +54,22 @@
   // 五鼠遁（日上起时，用于确定时辰天干）
   var WUSHUDUN = { 甲: '甲', 己: '甲', 乙: '丙', 庚: '丙', 丙: '戊', 辛: '戊', 丁: '庚', 壬: '庚', 戊: '壬', 癸: '壬' };
 
-  /* ========== 二、月将（每月中气后的月将） ========== */
-  // 月将对应地支：正月亥将登明，二月戌将河魁...
-  var MONTH_JIANG = [null, '亥', '戌', '酉', '申', '未', '午', '巳', '辰', '卯', '寅', '丑', '子'];
-  // 中气对应日期（近似）
-  var ZHONG_QI_DAY = [null, 20, 19, 21, 20, 21, 21, 23, 23, 23, 23, 22, 22];
+  /* ========== 二、月将（中气后换将） ========== */
+  // 月将以太阳所在宫位定，过中气换将；必须用精确节气表，不能用公历月日近似
+  var ZHONG_QI_JIANG = {
+    雨水: '亥',
+    春分: '戌',
+    谷雨: '酉',
+    小满: '申',
+    夏至: '未',
+    大暑: '午',
+    处暑: '巳',
+    秋分: '辰',
+    霜降: '卯',
+    小雪: '寅',
+    冬至: '丑',
+    大寒: '子',
+  };
 
   var JIANG_NAMES = {
     亥: '登明',
@@ -75,16 +86,39 @@
     子: '神后',
   };
 
-  /** 根据公历月日获取月将 */
-  function getYueJiang(month, day) {
-    var jiang = MONTH_JIANG[month];
-    if (!jiang) return '子';
-    // 中气前用上月将
-    if (day < ZHONG_QI_DAY[month]) {
-      var prevMonth = month === 1 ? 12 : month - 1;
-      return MONTH_JIANG[prevMonth] || '亥';
+  /** 取指定日期之前（含当天）最近的一个中气 */
+  function getLatestZhongQi(year, month, day) {
+    var cal = global.CalendarEngine;
+    if (!cal) throw new Error('CalendarEngine 未加载：大六壬月将需要精确节气数据');
+    var target = { year: year, month: month, day: day };
+    var best = null;
+    var startYear = Math.max(year - 1, cal.START_YEAR);
+    for (var y = startYear; y <= year; y++) {
+      var terms = cal.getTermsOfYear(y);
+      for (var i = 0; i < terms.length; i++) {
+        var t = terms[i];
+        if (!ZHONG_QI_JIANG[t.name]) continue;
+        if (cal.compareYmd(t, target) <= 0 && (!best || cal.compareYmd(t, best) > 0)) {
+          best = t;
+        }
+      }
     }
-    return jiang;
+    return best;
+  }
+
+  /** 根据公历年月日获取月将 */
+  function getYueJiang(year, month, day) {
+    var term = getLatestZhongQi(year, month, day);
+    if (!term) throw new Error('月将定位失败：' + year + '-' + month + '-' + day + ' 之前无可用中气');
+    return ZHONG_QI_JIANG[term.name];
+  }
+
+  /** 本地日期 YYYY-MM-DD（不能用 toISOString，清晨会落到前一天） */
+  function todayLocalStr() {
+    var d = new Date();
+    var m = d.getMonth() + 1;
+    var day = d.getDate();
+    return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
   }
 
   /* ========== 三、天盘 ========== */
@@ -675,7 +709,7 @@
    * @returns {object} 六壬结果
    */
   function divine(dateStr, hourNum) {
-    dateStr = dateStr || new Date().toISOString().slice(0, 10);
+    dateStr = dateStr || todayLocalStr();
     hourNum = typeof hourNum === 'number' && hourNum >= 0 && hourNum <= 11 ? hourNum : 0;
 
     var parts = dateStr.split('-');
@@ -696,7 +730,7 @@
     var zhanShi = ZHI[hourNum];
 
     // 3. 月将
-    var yueJiang = getYueJiang(month, day);
+    var yueJiang = getYueJiang(year, month, day);
 
     // 4. 天盘
     var tianPan = buildTianPan(yueJiang, zhanShi);

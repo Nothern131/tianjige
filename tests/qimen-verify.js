@@ -7,10 +7,11 @@ var path = require('path');
 var vm = require('vm');
 
 // 加载引擎（IIFE以this为全局对象挂载，vm沙箱中this指向sandbox）
-var enginePath = path.join(__dirname, '..', 'static', 'js', 'qimen-engine.js');
-var code = fs.readFileSync(enginePath, 'utf8');
 var sandbox = {};
-vm.runInNewContext(code, sandbox, { filename: 'qimen-engine.js' });
+['calendar-engine.js', 'qimen-engine.js'].forEach(function (name) {
+  var code = fs.readFileSync(path.join(__dirname, '..', 'static', 'js', name), 'utf8');
+  vm.runInNewContext(code, sandbox, { filename: name });
+});
 var Q = sandbox.QimenEngine;
 
 var pass = 0, fail = 0;

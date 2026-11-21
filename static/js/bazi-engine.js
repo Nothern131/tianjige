@@ -5,6 +5,14 @@
 (function (global) {
   'use strict';
 
+  /** 历法是节气计算的唯一来源；缺失时显式报错，不退回近似日期 */
+  function requireCalendar() {
+    if (!global.CalendarEngine) {
+      throw new Error('CalendarEngine 未加载：请先引入 static/js/calendar-engine.js');
+    }
+    return global.CalendarEngine;
+  }
+
   /* ========== 一、基础常量 ========== */
   var GAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
   var ZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
@@ -351,12 +359,26 @@
     return SIXTY_JIAZI[(((baseIdx + offset) % 60) + 60) % 60];
   }
 
-  /** 月支（按公历月份近似，立春约2月4日为界） */
-  function calcMonthZhi(month, day) {
-    if (month === 2 && day < 4) return '丑';
-    if (month === 1) return '丑';
-    var map = { 2: '寅', 3: '卯', 4: '辰', 5: '巳', 6: '午', 7: '未', 8: '申', 9: '酉', 10: '戌', 11: '亥', 12: '子' };
-    return map[month] || '寅';
+  /** 十二“节” → 月支（立春起寅月，节气日当天即换月） */
+  var JIE_TO_MONTH_ZHI = {
+    小寒: '丑',
+    立春: '寅',
+    惊蛰: '卯',
+    清明: '辰',
+    立夏: '巳',
+    芒种: '午',
+    小暑: '未',
+    立秋: '申',
+    白露: '酉',
+    寒露: '戌',
+    立冬: '亥',
+    大雪: '子',
+  };
+
+  /** 月支（按精确节气定界，不再用固定公历日期近似） */
+  function calcMonthZhi(year, month, day) {
+    var jie = requireCalendar().getLatestJie(year, month, day);
+    return JIE_TO_MONTH_ZHI[jie.name];
   }
 
   /** 月干支（五虎遁） */
@@ -367,22 +389,10 @@
     return GAN[(GAN.indexOf(startGan) + monthIdx) % 10] + monthZhi;
   }
 
-  /** 日干支（以1900年1月1日甲戌日为基准） */
+  /** 日干支（以1900年1月1日甲戌日为基准；用 UTC 天数差，支持 1900 年以前） */
   function calcDayGZ(year, month, day) {
-    var baseYear = 1900,
-      baseMonth = 1,
-      baseDay = 1;
     var baseIdx = JIAZI_INDEX['甲戌'] || 0;
-    var days = 0;
-    for (var y = baseYear; y < year; y++) {
-      days += (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 366 : 365;
-    }
-    var monthDays = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    if ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) monthDays[2] = 29;
-    for (var m = 1; m < month; m++) {
-      days += monthDays[m];
-    }
-    days += day - 1;
+    var days = Math.floor((Date.UTC(year, month - 1, day) - Date.UTC(1900, 0, 1)) / 86400000);
     return SIXTY_JIAZI[(((baseIdx + days) % 60) + 60) % 60];
   }
 
@@ -397,11 +407,12 @@
 
   /** 完整排盘 */
   function paipan(year, month, day, hour) {
-    // 年柱以立春为界：1月及2月4日前仍属上一年
+    // 年柱以立春为界：立春当日及之后才算新年，之前仍属上一年
+    var lichun = requireCalendar().getTerm(year, '立春');
     var effectiveYear = year;
-    if (month === 1 || (month === 2 && day < 4)) effectiveYear = year - 1;
+    if (month < lichun.month || (month === lichun.month && day < lichun.day)) effectiveYear = year - 1;
     var yearGZ = calcYearGZ(effectiveYear);
-    var monthZhi = calcMonthZhi(month, day);
+    var monthZhi = calcMonthZhi(year, month, day);
     var monthGZ = calcMonthGZ(yearGZ[0], monthZhi);
     var dayGZ = calcDayGZ(year, month, day);
     var hourGZ = calcHourGZ(dayGZ[0], hour);
@@ -491,8 +502,6 @@
       total += wuxingCount[k];
     }
     var ratio = (selfCount + shengCount * 0.7) / (total || 1);
-    // 月令加分
-    var monthZhi = calcMonthZhi(new Date().getMonth() + 1, new Date().getDate()); // 这里应该用出生月
     return Math.round(Math.min(95, Math.max(15, ratio * 100)));
   }
 
@@ -1051,71 +1060,20 @@
     };
   }
 
-  // ===== 节气数据（近似日期，用于计算起运年龄） =====
-  // 每月两个节气：节（月初）和气（月中），起运用"节"
-  var JIEQI_DATES = [
-    { name: '立春', month: 2, day: 4 },
-    { name: '惊蛰', month: 3, day: 6 },
-    { name: '清明', month: 4, day: 5 },
-    { name: '立夏', month: 5, day: 6 },
-    { name: '芒种', month: 6, day: 6 },
-    { name: '小暑', month: 7, day: 7 },
-    { name: '立秋', month: 8, day: 8 },
-    { name: '白露', month: 9, day: 8 },
-    { name: '寒露', month: 10, day: 8 },
-    { name: '立冬', month: 11, day: 8 },
-    { name: '大雪', month: 12, day: 7 },
-    { name: '小寒', month: 1, day: 6 },
-  ];
-
-  /** 获取出生月对应的"节"（顺排用下一个节，逆排用上一个节） */
-  function getJieQi(month, day, direction) {
-    // 找到出生月对应的节气
-    var monthIndex = -1;
-    for (var i = 0; i < JIEQI_DATES.length; i++) {
-      if (JIEQI_DATES[i].month === month) {
-        monthIndex = i;
-        break;
-      }
-    }
-    if (monthIndex === -1) return { name: '立春', month: 2, day: 4 };
-
-    if (direction === '顺排') {
-      // 出生在节之后 → 用下一个月对应的节；在节之前 → 用当月的节
-      if (day >= JIEQI_DATES[monthIndex].day) {
-        var nextIdx = (monthIndex + 1) % 12;
-        return JIEQI_DATES[nextIdx];
-      }
-      return JIEQI_DATES[monthIndex];
-    } else {
-      // 逆排：出生在节之后 → 用当月的节；在节之前 → 用上一个月的节
-      if (day >= JIEQI_DATES[monthIndex].day) {
-        return JIEQI_DATES[monthIndex];
-      }
-      var prevIdx = (monthIndex - 1 + 12) % 12;
-      return JIEQI_DATES[prevIdx];
-    }
+  // ===== 起运节气（精确日期，来自 CalendarEngine） =====
+  /** 顺排取出生日之后的下一个“节”，逆排取出生日之前（含当天）的最近一个“节” */
+  function getQiyunJie(year, month, day, direction) {
+    var cal = requireCalendar();
+    return direction === '顺排' ? cal.getNextJie(year, month, day) : cal.getLatestJie(year, month, day);
   }
 
-  /** 计算两个日期之间的天数（近似，用于起运年龄） */
-  function daysBetween(y1, m1, d1, y2, m2, d2) {
-    var days1 = y1 * 365 + Math.floor(y1 / 4) + m1 * 30 + d1;
-    var days2 = y2 * 365 + Math.floor(y2 / 4) + m2 * 30 + d2;
-    return Math.abs(days2 - days1);
-  }
-
-  /** 计算起运年龄：出生日到目标节气的天数 ÷ 3 */
+  /** 计算起运年龄：出生日到目标节气的实际天数 ÷ 3（三日折一年） */
   function calcQiyunAge(birthYear, birthMonth, birthDay, targetJie) {
-    var targetYear = birthYear;
-    var targetMonth = targetJie.month;
-    var targetDay = targetJie.day;
-    // 如果目标节气在出生日期之前，说明是下一年的节气
-    if (targetMonth < birthMonth || (targetMonth === birthMonth && targetDay < birthDay)) {
-      targetYear = birthYear + 1;
-    }
-    var days = daysBetween(birthYear, birthMonth, birthDay, targetYear, targetMonth, targetDay);
-    var age = Math.round(days / 3);
-    return Math.max(1, Math.min(12, age));
+    var days = requireCalendar().daysBetween(
+      { year: birthYear, month: birthMonth, day: birthDay },
+      { year: targetJie.year, month: targetJie.month, day: targetJie.day }
+    );
+    return Math.max(1, Math.min(12, Math.round(Math.abs(days) / 3)));
   }
 
   /** 生成大运干支列表：从月柱开始，顺排/逆排，每十年一柱 */
@@ -1248,7 +1206,7 @@
     // 起运年龄计算
     if (!birthMonth) birthMonth = 1;
     if (!birthDay) birthDay = 1;
-    var targetJie = getJieQi(birthMonth, birthDay, direction);
+    var targetJie = getQiyunJie(birthYear, birthMonth, birthDay, direction);
     var qiyunAge = calcQiyunAge(birthYear, birthMonth, birthDay, targetJie);
 
     // 生成大运列表
@@ -1276,6 +1234,8 @@
       '参考节气：' +
         targetJie.name +
         '（' +
+        targetJie.year +
+        '年' +
         targetJie.month +
         '月' +
         targetJie.day +

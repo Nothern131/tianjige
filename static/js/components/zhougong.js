@@ -142,6 +142,21 @@ function handleZhougongSubmit(container) {
     // 纯前端本地算法，零API调用
     var result = ZhougongEngine.divine(text, question);
     renderZhougongResult(resultCard, result);
+
+    // 自动记入命簿：吉/凶/中 为引擎真实判定，按统一口径换算分数
+    if (typeof UserProfileAPI !== 'undefined') {
+      try {
+        var zgScore = result.ji === '吉' ? 80 : result.ji === '凶' ? 38 : 58;
+        UserProfileAPI.addRecord({
+          type: 'zhougong',
+          question: question || text,
+          score: zgScore,
+          result: { ji: result.ji || '' }
+        });
+      } catch (e) {
+        console.warn('[命簿] 解梦记录写入失败', e);
+      }
+    }
   } catch (error) {
     resultCard.innerHTML = `
       <div class="error-container">

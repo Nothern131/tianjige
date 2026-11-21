@@ -131,9 +131,33 @@ function renderZiweiComponent() {
     }
 
     renderZiweiResult(container, result, question);
+
+    // 自动记入命簿：紫微引擎无真实评分，不写伪造 score
+    if (typeof UserProfileAPI !== 'undefined') {
+      try {
+        UserProfileAPI.addRecord({
+          type: 'ziwei',
+          question: question || '紫微排盘',
+          result: {
+            mingGong: result['\u547D\u5BAB'] || '',
+            shenGong: result['\u8EAB\u5BAB'] || '',
+            wuxingJu: result['\u4E94\u884C\u5C40'] || ''
+          }
+        });
+      } catch (e) {
+        console.warn('[命簿] 紫微记录写入失败', e);
+      }
+    }
   });
 
   return container;
+}
+
+// 四化对象转文案（缺失字段如实显示“未提供”）
+function formatZiweiSiHua(s) {
+  if (!s) return '未提供';
+  return (s.lu || '未提供') + '化禄 · ' + (s.quan || '未提供') + '化权 · ' +
+    (s.ke || '未提供') + '化科 · ' + (s.ji || '未提供') + '化忌';
 }
 
 function renderZiweiResult(container, result, question) {
@@ -196,6 +220,64 @@ function renderZiweiResult(container, result, question) {
     ';
   }
 
+  // ===== 大限 / 流年运程（只渲染引擎真实数据）=====
+  var yunXianHtml = '';
+  if (typeof ZiWeiEngine !== 'undefined' && ZiWeiEngine.calcDaXian && ZiWeiEngine.calcLiuNian) {
+    try {
+      var now = new Date();
+      var lunarNow = null;
+      if (typeof ZiWeiEngine.solarToLunar === 'function') {
+        lunarNow = ZiWeiEngine.solarToLunar(now.getFullYear(), now.getMonth() + 1, now.getDate());
+      }
+      var birthLunarYear = parseInt(result['\u519C\u5386\u5E74'], 10);
+      var currentAge = lunarNow && birthLunarYear ? lunarNow.year - birthLunarYear + 1 : 0;
+      if (!currentAge || currentAge < 1) currentAge = 1;
+
+      var dx = ZiWeiEngine.calcDaXian(result, currentAge);
+      var ln = ZiWeiEngine.calcLiuNian(result, now.getFullYear());
+      var cur = dx.currentLimit >= 0 ? dx.list[dx.currentLimit] : null;
+
+      var chips = '';
+      dx.list.forEach(function (item, idx) {
+        var active = idx === dx.currentLimit;
+        chips +=
+          '<div style="padding:8px 12px;border-radius:10px;border:1px solid ' +
+          (active ? 'rgba(184,154,92,0.65)' : 'rgba(255,255,255,0.08)') +
+          ';background:' + (active ? 'rgba(184,154,92,0.14)' : 'rgba(0,0,0,0.22)') +
+          ';font-size:0.76rem;line-height:1.5;min-width:96px;text-align:center;">' +
+          '<div style="color:' + (active ? 'var(--gold)' : 'var(--text-secondary)') + ';">' + item.startAge + '–' + item.endAge + '岁</div>' +
+          '<div style="color:var(--text-primary);">' + item.ganZhi + '</div>' +
+          '<div style="color:var(--text-muted);">' + (item.gongName || '未知') + '</div>' +
+          '</div>';
+      });
+
+      var curHtml = cur
+        ? '当前虚岁 <b style="color:var(--gold);">' + currentAge + '</b> 岁 · 行 <b>' + cur.startAge + '–' + cur.endAge + '</b> 岁大限：' +
+          cur.ganZhi + ' 临 <b>' + cur.gongName + '</b> 宫，主星 ' +
+          (cur.stars.length ? cur.stars.slice(0, 4).join('、') : '无主星') +
+          '；大限四化：' + formatZiweiSiHua(cur.siHua) + '。'
+        : '当前虚岁 <b style="color:var(--gold);">' + currentAge + '</b> 岁，已超出引擎 1–60 岁大限范围。';
+
+      var lnHtml = '流年 <b>' + ln.year + '</b>（' + ln.ganZhi + '）流年命宫临 <b>' + ln.gongName +
+        '</b> 宫，星曜 ' + (ln.stars.length ? ln.stars.slice(0, 4).join('、') : '无主星') +
+        '；流年四化：' + formatZiweiSiHua(ln.siHua) + '。';
+
+      yunXianHtml =
+        '<h4 style="color:var(--gold);margin:20px 0 8px;">\u{1F9ED} \u5927\u9650 \u00B7 \u6D41\u5E74\u8FD0\u7A0B</h4>' +
+        '<div style="background:rgba(184,154,92,0.05);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:14px;">' +
+        '<div style="font-size:0.86rem;line-height:1.8;color:var(--text-secondary);">' + curHtml + '</div>' +
+        '<div style="font-size:0.86rem;line-height:1.8;color:var(--text-secondary);margin-top:4px;">' + lnHtml + '</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">' + chips + '</div>' +
+        '<div style="font-size:0.72rem;color:var(--text-muted);margin-top:10px;">大限按虚岁排（1–10 岁起于命宫）；流年按公历年/太岁。仅展示引擎计算结果，未作吉凶推断。</div>' +
+        '</div>';
+    } catch (e) {
+      console.warn('[紫微] 运限数据计算失败', e);
+      yunXianHtml = '';
+    }
+  } else {
+    console.warn('[紫微] 运限数据不可用');
+  }
+
   var html =
     '\
     <div class="section-header">\
@@ -250,7 +332,9 @@ function renderZiweiResult(container, result, question) {
     gongCards +
     '\
       </div>\
-\
+      ' +
+    yunXianHtml +
+    '\
       <h4 style="color:var(--gold);margin:20px 0 8px;">\u{1F4DD} \u547D\u76D8\u89E3\u8BFB</h4>\
       <div style="background:rgba(184,154,92,0.05);padding:16px;border-radius:8px;border-left:3px solid var(--gold);white-space:pre-wrap;line-height:1.8;font-size:0.9rem;">' +
     (result.interpretation || '') +

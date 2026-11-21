@@ -43,7 +43,7 @@
   }
 
   /* ========== 二、农历转换（精确版，1900-2100） ========== */
-  // 权威数据表（solarlunar v3.1.0 同源，已修复 1933/1996/2060/2097 四处数据错误；1933 为闰五月大小月互换）
+  // 权威数据表（与 6tail lunar-javascript 1.7.7 / lunar_python 交叉校验；已修复 1933/1996/2060/2097 四处数据错误；1933 为闰五月大小月互换）
   var LUNAR_INFO = [
     0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
     0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,
@@ -102,7 +102,7 @@
     return sum + lLeapDays(year);
   }
 
-  /** 精确公历 → 农历（基于 Date.UTC 偏移 + 数据表逐月扣除，与 solarlunar 库同源算法） */
+  /** 精确公历 → 农历（基于 Date.UTC 偏移 + 数据表逐月扣除，与 6tail / lunar_python 数据一致） */
   function solarToLunarExact(year, month, day) {
     // 以 1900-01-31（农历 1900 正月初一）为基准累计偏移天数
     var offset = Math.floor(
@@ -1024,9 +1024,8 @@
 
     var mingPos = ZHI_NUM[mingGongZhi];
 
-    // 大限起宫：命宫起1-10岁，第2宫11-20岁，...
+    // 大限起宫：虚岁 1-10 岁起于命宫；顺/逆只决定后续宫位推进方向
     var startAge = 1;
-    if (!isShun) startAge = 10; // 简化：逆行时第10-1岁
 
     var daXian = [];
     var maxLimit = 60;
@@ -1053,9 +1052,8 @@
       // 大限四化
       var dxSiHua = SI_HUA[gan] || SI_HUA['甲'];
 
-      // 大限命宫位置（相对本宫命宫）
-      var relPos = pos;
-      var gong = result.十二宫[relPos] || {};
+      // 十二宫数组按命宫起排，不能用地支序号直接取，必须按地支查宫
+      var gong = findGong(result.十二宫, zhi) || {};
 
       daXian.push({
         startAge: age,
@@ -1063,7 +1061,7 @@
         ganZhi: ganZhi,
         siHua: dxSiHua,
         gongZhi: zhi,
-        gongName: GONG_NAMES[relPos] || '未知',
+        gongName: gong.name || '未知',
         stars: gong.stars || [],
       });
     }
@@ -1091,9 +1089,8 @@
     var ganZhi = yearGan + yearZhi;
     var siHua = SI_HUA[yearGan] || SI_HUA['甲'];
 
-    // 流年命宫：以流年地支所在宫
-    var liuNianMingGong = ZHI_NUM[yearZhi];
-    var gong = result.十二宫[liuNianMingGong] || {};
+    // 流年命宫：流年地支所在宫（按地支查宫，不能用地支序号当数组下标）
+    var gong = findGong(result.十二宫, yearZhi) || {};
 
     return {
       year: targetYear,
@@ -1101,8 +1098,8 @@
       gan: yearGan,
       zhi: yearZhi,
       siHua: siHua,
-      mingGongZhi: ZHI[liuNianMingGong],
-      gongName: GONG_NAMES[liuNianMingGong] || '未知',
+      mingGongZhi: yearZhi,
+      gongName: gong.name || '未知',
       stars: gong.stars || [],
       公历年: targetYear,
       标注: '流年（按公历年/太岁）',
@@ -1126,8 +1123,7 @@
     var ganZhi = monthGan + monthZhi;
     var siHua = SI_HUA[monthGan] || SI_HUA['甲'];
 
-    var liuYueMingGong = ZHI_NUM[monthZhi];
-    var gong = result.十二宫[liuYueMingGong] || {};
+    var gong = findGong(result.十二宫, monthZhi) || {};
 
     return {
       year: targetYear,
@@ -1136,8 +1132,8 @@
       gan: monthGan,
       zhi: monthZhi,
       siHua: siHua,
-      mingGongZhi: ZHI[liuYueMingGong],
-      gongName: GONG_NAMES[liuYueMingGong] || '未知',
+      mingGongZhi: monthZhi,
+      gongName: gong.name || '未知',
       stars: gong.stars || [],
       农历月: targetMonth,
       标注: '流月（按农历月）',
@@ -1157,8 +1153,7 @@
     var dayZhi = ZHI[dayGzIdx % 12];
     var ganZhi = dayGan + dayZhi;
     var siHua = SI_HUA[dayGan] || SI_HUA['甲'];
-    var liuRiMingGong = ZHI_NUM[dayZhi];
-    var gong = result['十二宫'][liuRiMingGong] || {};
+    var gong = findGong(result['十二宫'], dayZhi) || {};
     return {
       year: targetYear,
       month: targetMonth,
@@ -1167,8 +1162,8 @@
       gan: dayGan,
       zhi: dayZhi,
       siHua: siHua,
-      mingGongZhi: ZHI[liuRiMingGong],
-      gongName: GONG_NAMES[liuRiMingGong] || '未知',
+      mingGongZhi: dayZhi,
+      gongName: gong.name || '未知',
       stars: gong.stars || [],
       标注: '流日（按公历日）',
     };
@@ -1530,6 +1525,7 @@
   global.ZiWeiEngine = {
     paipan: paipan,
     getLeapMonth: lLeapMonth,
+    solarToLunar: solarToLunarExact,
     GONG_NAMES: GONG_NAMES,
     calcDaXian: calcDaXian,
     calcLiuNian: calcLiuNian,

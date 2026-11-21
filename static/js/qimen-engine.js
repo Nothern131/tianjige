@@ -12,34 +12,21 @@
 (function (global) {
   'use strict';
 
+  /** 历法是节气计算的唯一来源；缺失时显式报错，不退回近似日期 */
+  function requireCalendar() {
+    if (!global.CalendarEngine) {
+      throw new Error('CalendarEngine 未加载：请先引入 static/js/calendar-engine.js');
+    }
+    return global.CalendarEngine;
+  }
+
   /* ========== 一、基础常量 ========== */
 
-  /** 二十四节气（按公历时间顺序排列，冬至作为年末节点；日期为近似值，误差约±1天） */
+  /** 二十四节气名称（按公历时间顺序排列，冬至作为年末节点；具体日期由 CalendarEngine 按年精确计算） */
   var SOLAR_TERMS = [
-    { name: '小寒', month: 1, day: 6 },
-    { name: '大寒', month: 1, day: 20 },
-    { name: '立春', month: 2, day: 4 },
-    { name: '雨水', month: 2, day: 19 },
-    { name: '惊蛰', month: 3, day: 6 },
-    { name: '春分', month: 3, day: 21 },
-    { name: '清明', month: 4, day: 5 },
-    { name: '谷雨', month: 4, day: 20 },
-    { name: '立夏', month: 5, day: 6 },
-    { name: '小满', month: 5, day: 21 },
-    { name: '芒种', month: 6, day: 6 },
-    { name: '夏至', month: 6, day: 21 },
-    { name: '小暑', month: 7, day: 7 },
-    { name: '大暑', month: 7, day: 23 },
-    { name: '立秋', month: 8, day: 7 },
-    { name: '处暑', month: 8, day: 23 },
-    { name: '白露', month: 9, day: 8 },
-    { name: '秋分', month: 9, day: 23 },
-    { name: '寒露', month: 10, day: 8 },
-    { name: '霜降', month: 10, day: 23 },
-    { name: '立冬', month: 11, day: 7 },
-    { name: '小雪', month: 11, day: 22 },
-    { name: '大雪', month: 12, day: 7 },
-    { name: '冬至', month: 12, day: 22 },
+    '小寒', '大寒', '立春', '雨水', '惊蛰', '春分', '清明', '谷雨',
+    '立夏', '小满', '芒种', '夏至', '小暑', '大暑', '立秋', '处暑',
+    '白露', '秋分', '寒露', '霜降', '立冬', '小雪', '大雪', '冬至',
   ];
 
   /** 二十四节气三元局数表（拆补法）：[上元, 中元, 下元] */
@@ -165,18 +152,11 @@
   /* ========== 二、日期计算工具 ========== */
 
   /**
-   * 根据公历日期确定节气
-   * 正序遍历：找到第一个 startDate > (month, day) 的节气，返回其前一个
-   * 若所有节气 startDate 都 <= (month, day)，返回最后一个（冬至）
+   * 根据公历日期确定当前节气
+   * 取“已到”的最近一个节气（节气日当天即算该节气；1 月初可能仍属上一年冬至）
    */
-  function getCurrentJieqi(month, day) {
-    for (var i = 0; i < SOLAR_TERMS.length; i++) {
-      var t = SOLAR_TERMS[i];
-      if (month < t.month || (month === t.month && day < t.day)) {
-        return i > 0 ? SOLAR_TERMS[i - 1].name : SOLAR_TERMS[SOLAR_TERMS.length - 1].name;
-      }
-    }
-    return SOLAR_TERMS[SOLAR_TERMS.length - 1].name;
+  function getCurrentJieqi(year, month, day) {
+    return requireCalendar().getLatestTerm(year, month, day).name;
   }
 
   /** 节气 → 阴阳遁（冬至到芒种为阳遁，夏至到大雪为阴遁） */
@@ -741,7 +721,7 @@
     }
 
     // 节气、阴阳遁、三元定局
-    var jieqi = getCurrentJieqi(month, day);
+    var jieqi = getCurrentJieqi(year, month, day);
     var period = getPeriod(jieqi);
     var dayGZ = calcDayGZ(year, month, day);
     var sanYuan = getSanYuan(dayGZ);

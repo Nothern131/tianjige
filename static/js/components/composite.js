@@ -119,7 +119,7 @@ function renderCompositeComponent() {
       '<div class="form-group"><label class="form-label">占时（实时盘）</label><select class="form-select" id="comp-div-hour">' +
       '<option value="子时">子时 (23-01)</option><option value="丑时">丑时 (01-03)</option>' +
       '<option value="寅时">寅时 (03-05)</option><option value="卯时">卯时 (05-07)</option>' +
-      '<option value="辰时">辰时 (07-09)</option><option value="巳时" selected>巳时 (09-11)</option>' +
+      '<option value="辰时">辰时 (07-09)</option><option value="巳时">巳时 (09-11)</option>' +
       '<option value="午时">午时 (11-13)</option><option value="未时">未时 (13-15)</option>' +
       '<option value="申时">申时 (15-17)</option><option value="酉时">酉时 (17-19)</option>' +
       '<option value="戌时">戌时 (19-21)</option><option value="亥时">亥时 (21-23)</option>' +
@@ -199,17 +199,20 @@ function renderCompositeComponent() {
     }
     updateMethodCount();
 
-    // 实时盘默认取今天，便于直接起盘
+    // 实时盘默认取今天与当前时辰，避免固定巳时造成盘面失真
+    var now = new Date();
     var divDateInput = container.querySelector('#comp-div-date');
     if (divDateInput) {
-      var now = new Date();
       divDateInput.value =
         now.getFullYear() + '-' +
         String(now.getMonth() + 1).padStart(2, '0') + '-' +
         String(now.getDate()).padStart(2, '0');
     }
     var divHourInput = container.querySelector('#comp-div-hour');
-    if (divHourInput && !divHourInput.value) divHourInput.value = '巳时';
+    if (divHourInput) {
+      var HOUR_NAMES = ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'];
+      divHourInput.value = HOUR_NAMES[Math.floor((now.getHours() + 1) / 2) % 12];
+    }
 
     // 所问之事实时事域提示
     var questionInput = container.querySelector('#comp-question');
@@ -281,6 +284,11 @@ function handleCompositeSubmit(container) {
       if (typeof showToast === 'function') showToast('最多选择 3 门术数');
       return;
     }
+    // 八字/紫微以出生信息定盘，缺出生日期不得静默按今日起盘
+    if ((methods.indexOf('bazi') !== -1 || methods.indexOf('ziwei') !== -1) && !birthDate) {
+      if (typeof showToast === 'function') showToast('八字/紫微需要出生日期，请先填写出生信息');
+      return;
+    }
 
     var masterChecks = container.querySelectorAll('input[name="compMaster"]:checked');
     var masterIds = [];
@@ -310,15 +318,18 @@ function handleCompositeSubmit(container) {
       now.getFullYear() + '-' +
       String(now.getMonth() + 1).padStart(2, '0') + '-' +
       String(now.getDate()).padStart(2, '0');
+    var currentHourName = ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'][
+      Math.floor((now.getHours() + 1) / 2) % 12
+    ];
 
     var engineParams = {
-      birthDate: birthDate || todayStr,
+      birthDate: birthDate,
       birthTime: birthTime,
       gender: gender,
       question: question,
       // 实时盘用独立占测时间，不能拿出生日期时间代替
       date: divDate || todayStr,
-      hour: divHour || '巳时',
+      hour: divHour || currentHourName,
       // 风水只作空间层环境参考，由引擎按 weight 0 排除出合参打分
       fengshuiSitting: fsSitting,
       fengshuiFacing: fsFacing,
@@ -383,6 +394,24 @@ function handleCompositeSubmit(container) {
 
         setTimeout(function () {
           renderCompositeResult(resultContainer, data, question, methods, masterIds, engineParams);
+
+          // 自动记入命簿：score 取合参引擎真实总分
+          if (typeof UserProfileAPI !== 'undefined') {
+            try {
+              UserProfileAPI.addRecord({
+                type: 'composite',
+                question: question || '多法合参',
+                score: typeof data.score === 'number' ? data.score : undefined,
+                result: {
+                  methods: methods || [],
+                  trend: data.trend || ''
+                }
+              });
+            } catch (e) {
+              console.warn('[命簿] 合参记录写入失败', e);
+            }
+          }
+
           if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = '🔮 重新推演';

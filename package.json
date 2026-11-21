@@ -10,6 +10,7 @@
     "format": "prettier --write 'static/js/**/*.js' 'static/css/**/*.css' '*.html'",
     "test": "node tests/run_tests.js",
     "test:calendar": "node tests/test_calendar.js",
+    "test:jieqi": "node tests/test_jieqi.js",
     "test:watch": "node tests/run_tests.js --watch"
   },
   "devDependencies": {
@@ -17,8 +18,5 @@
     "prettier": "^3.3.0",
     "terser": "^5.51.2",
     "vite": "^5.4.0"
-  },
-  "dependencies": {
-    "solarlunar": "^3.1.0"
   }
 }

@@ -320,7 +320,9 @@
       return renderTaiyiComponent();
     },
     masters: function () {
-      return renderMastersComponent({ userInfo: {} });
+      // 从命簿带入已保存的出生信息，避免大师页要求重复输入
+      var profile = (typeof UserProfileAPI !== 'undefined' && UserProfileAPI.getProfile) ? UserProfileAPI.getProfile() : {};
+      return renderMastersComponent({ userInfo: profile || {} });
     },
     composite: function () {
       return renderCompositeComponent();

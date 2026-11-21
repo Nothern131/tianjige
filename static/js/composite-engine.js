@@ -179,7 +179,7 @@
               : ['日主' + dayMaster, '五行属' + dayWx];
           if (score >= 75) verdict = '五行均衡';
           else if (score >= 60) verdict = '较为均衡';
-          else if (score >= 45) verdict = '略偏';
+          else if (score >= 45) verdict = '略偏弱';
           else verdict = '偏枯';
           break;
         }
@@ -207,7 +207,10 @@
           var skLevel = shengKe['等级'];
           summary = '本卦为「' + origName + '」，体用关系为「' + relation + '」。';
           detail = raw.interpretation || '';
-          keyInsights = ['体用关系：' + relation, '生克等级：' + (typeof skLevel === 'number' ? skLevel : '未判'), '本互变三卦有序'];
+          // 生克等级是内部数值（0-4），直接展示会让用户看不懂，转成吉凶文字
+          var skLevelText =
+            typeof skLevel === 'number' ? ['大凶', '凶', '小吉', '中吉', '大吉'][skLevel] || '未判' : '未判';
+          keyInsights = ['体用关系：' + relation, '生克等级：' + skLevelText, '本互变三卦有序'];
           verdict = relation;
           break;
         }
@@ -281,10 +284,16 @@
         case 'zhougong': {
           var cnt = raw.results && raw.results.length ? raw.results.length : 0;
           var jiStr = raw.ji || '中';
-          summary = '匹配到' + cnt + '个梦境条目，梦兆' + jiStr + '。';
+          // 0 条命中时不能装作有梦象依据，明确告知只按通用梦象参考
+          if (cnt === 0) {
+            summary = '未在梦典中匹配到具体梦象，以下按通用梦象与当下时辰参考。';
+            keyInsights = ['未命中梦典条目', '结论仅作参考', '可补充更具体的梦境细节'];
+          } else {
+            summary = '匹配到' + cnt + '个梦境条目，梦兆' + jiStr + '。';
+            keyInsights = ['梦境映射潜意识', '象煞提示吉凶转化', '可结合现实对照'];
+          }
           detail = raw.interpretation || raw.questionAnalysis || '';
-          keyInsights = ['梦境映射潜意识', '象煞提示吉凶转化', '可结合现实对照'];
-          verdict = jiStr;
+          verdict = cnt === 0 ? '参考' : jiStr;
           break;
         }
         case 'daliuren': {
@@ -298,7 +307,12 @@
         }
         case 'ziwei': {
           var mingGong = raw.命宫主星 || '?';
-          summary = '命宫主星' + mingGong + '，十二宫各有归位。';
+          // 空宫是正常盘型，不能写成“命宫主星无主星”这种病句
+          if (!raw.命宫主星 || raw.命宫主星 === '无主星') {
+            summary = '命宫无主星（空宫），需借对宫与三方四正论格局。';
+          } else {
+            summary = '命宫主星' + mingGong + '，十二宫各有归位。';
+          }
           detail = raw.interpretation || raw.总体运势 || '';
           keyInsights = ['命宫主星定格局', '三方四正有照应', '四化飞星显吉凶'];
           verdict = raw.总体运势 || '中平';

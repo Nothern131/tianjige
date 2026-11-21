@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>天机阁 EP2 · 八字排盘</title>
+    <meta name="description" content="天机阁EP2——八字排盘。以子平术为骨，四柱十神、大运流年，排盘论命。节气按寿星天文历精算，古籍为经，算法为纬，纯前端实现。">
     <style>
       /* ===== Reset & Base ===== */
       *,
@@ -651,6 +652,18 @@
         overflow-x: auto;
       }
 
+      /* ===== Disclaimer ===== */
+      .disclaimer {
+        background: rgba(184, 154, 92, 0.04);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 14px 20px;
+        margin-top: 32px;
+        font-size: 0.75rem;
+        color: var(--text3);
+        text-align: center;
+        line-height: 1.8;
+      }
       /* ===== Footer ===== */
       .footer {
         text-align: center;
@@ -1791,6 +1804,12 @@
         </div>
       </div>
 
+      <!-- 免责声明 -->
+      <div class="disclaimer">
+        <strong>声明：</strong>八字命理是中国传统文化的一部分，属于古典哲学和文化遗产范畴。<br />
+        本系统仅供文化研究和娱乐参考，不构成任何人生决策建议。请相信科学，理性看待命运。
+      </div>
+
       <div class="footer">
         <div class="footer-line"></div>
         <p>天机阁 · 窥探命运之秘</p>
@@ -1906,7 +1925,8 @@
       // 暴露全局变量供大师组件使用
       var SHICHEN_NAMES = Tianjige.Const.SHICHEN_NAMES;
     </script>
-    <script src="static/js/bazi-engine.js?v=20261103"></script>
+    <script src="static/js/calendar-engine.js?v=20261104"></script>
+    <script src="static/js/bazi-engine.js?v=20261104"></script>
     <script>
       // 暴露 ZHI_CANGGAN 全局变量（BaziEngine 内部变量，需在此处暴露）
       var ZHI_CANGGAN = {

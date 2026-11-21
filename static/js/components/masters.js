@@ -309,6 +309,23 @@ function renderMastersComponent(userInfo) {
   html += '</div>';
   html += '</div>';
 
+  // 真实盘面参数（大师点评必须基于引擎排盘，不再用通用模板虚构）
+  html += '<div class="glass-card" style="margin-bottom:20px;" id="master-chart-card">';
+  html += '<h3 style="font-family:var(--font-serif);color:var(--gold);margin-bottom:6px;font-size:0.95rem;">🗂 盘面参数</h3>';
+  html += '<p style="font-size:0.76rem;color:var(--text2);margin-bottom:12px;" id="master-chart-hint">八字 / 紫微 / 综合类需出生信息，其余流派按占测时间起盘。</p>';
+  html += '<div class="form-row">';
+  html += '<div class="form-group"><label class="form-label">出生日期</label><input type="date" class="form-input" id="master-birth-date" min="1900-01-01" max="' + todayStr() + '"></div>';
+  html += '<div class="form-group"><label class="form-label">出生时辰</label><select class="form-select" id="master-birth-time"><option value="">请选择</option>' + masterShichenOptions() + '</select></div>';
+  html += '<div class="form-group"><label class="form-label">性别</label><select class="form-select" id="master-gender"><option value="male">男</option><option value="female">女</option></select></div>';
+  html += '</div>';
+  html += '<div class="form-row">';
+  html += '<div class="form-group"><label class="form-label">占测日期</label><input type="date" class="form-input" id="master-div-date" max="' + todayStr() + '"></div>';
+  html += '<div class="form-group"><label class="form-label">占测时辰</label><select class="form-select" id="master-div-time">' + masterShichenOptions() + '</select></div>';
+  html += '<div class="form-group"><label class="form-label">风水坐山</label><select class="form-select" id="master-fs-sitting">' + masterZhiOptions() + '</select></div>';
+  html += '</div>';
+  html += '<div id="master-chart-error" style="min-height:18px;color:var(--red);font-size:0.78rem;"></div>';
+  html += '</div>';
+
   // Question + analyze
   html += '<div class="glass-card" style="margin-bottom:20px;">';
   html += '<h3 style="font-family:var(--font-serif);color:var(--gold);margin-bottom:12px;font-size:0.95rem;">📝 输入所问之事</h3>';
@@ -326,6 +343,20 @@ function renderMastersComponent(userInfo) {
 
   html += '</div>';
   el.innerHTML = html;
+
+  // 默认占测日期/时辰：取当前本地时间，避免用户误以为空值也会按今日起盘
+  var divDateEl = el.querySelector('#master-div-date');
+  if (divDateEl) divDateEl.value = todayStr();
+  var divTimeEl = el.querySelector('#master-div-time');
+  if (divTimeEl) divTimeEl.value = currentShichenName();
+  var fsSittingEl = el.querySelector('#master-fs-sitting');
+  if (fsSittingEl) fsSittingEl.value = '子';
+  // 命簿已有出生信息时预填，减少重复输入
+  var ui = (userInfo && userInfo.userInfo) ? userInfo.userInfo : (userInfo || {});
+  var birthEl = el.querySelector('#master-birth-date');
+  if (birthEl && ui.birthDate) birthEl.value = ui.birthDate;
+  var genderSel = el.querySelector('#master-gender');
+  if (genderSel && ui.gender) genderSel.value = ui.gender === 'female' ? 'female' : 'male';
 
   // Tab filtering
   var tabs = el.querySelectorAll('#master-cat-tabs .tab-btn');
@@ -368,6 +399,17 @@ function renderMastersComponent(userInfo) {
     if (info && selectedMaster) {
       info.textContent = '已选择：' + selectedMaster.name + ' · ' + (selectedMaster.category || '综合') + ' · ' + (selectedMaster.era || '');
     }
+    var hint = el.querySelector('#master-chart-hint');
+    var errEl = el.querySelector('#master-chart-error');
+    if (errEl) errEl.textContent = '';
+    if (hint && selectedMaster) {
+      var needBirth = ['八字', '紫微', '综合'].indexOf(selectedMaster.category) !== -1;
+      hint.textContent = needBirth
+        ? '「' + selectedMaster.category + '」需出生日期与出生时辰，缺失将无法排盘。'
+        : selectedMaster.category === '解梦'
+          ? '「解梦」请把梦境写在下方问题框，按梦境起盘。'
+          : '「' + selectedMaster.category + '」将按占测日期与时辰起盘。';
+    }
     var btn = el.querySelector('#master-page-analyze-btn');
     if (btn) {
       btn.disabled = false;
@@ -383,7 +425,19 @@ function renderMastersComponent(userInfo) {
       var question = (el.querySelector('#master-question-input') || {}).value || '';
       var resultArea = el.querySelector('#master-page-result-area');
       var resultCard = el.querySelector('#master-page-result-card');
+      var errEl = el.querySelector('#master-chart-error');
       if (!resultArea || !resultCard) return;
+      if (errEl) errEl.textContent = '';
+
+      // 先排真实盘面；缺参数或引擎失败时明确报错，不退回通用模板
+      var chart;
+      try {
+        chart = buildMasterChart(selectedMaster.category, question, el);
+      } catch (e) {
+        if (errEl) errEl.textContent = e.message || '排盘参数不完整';
+        if (resultArea) resultArea.classList.add('hidden');
+        return;
+      }
 
       resultArea.classList.remove('hidden');
       resultCard.innerHTML = '<div class="spinner" style="margin:40px auto;"></div>';
@@ -392,45 +446,258 @@ function renderMastersComponent(userInfo) {
 
       setTimeout(function() {
         try {
-          var analysis = generateMasterAnalysis(selectedMaster, question, userInfo || {});
-          renderMasterResult(resultCard, analysis, selectedMaster, {});
+          var analysis = analyzeMasterChart(selectedMaster, chart, question);
+          if (!analysis) {
+            resultCard.innerHTML = '<div style="padding:20px;color:var(--red);text-align:center;">该流派暂无可用解析，请换一位大师或前往对应板块查看点评。</div>';
+          } else {
+            renderMasterResult(resultCard, analysis, selectedMaster, {});
+          }
         } catch(e) {
-          resultCard.innerHTML = '<div style="padding:20px;color:var(--red);text-align:center;">分析出错：' + (e.message || '未知错误') + '</div>';
+          resultCard.innerHTML = '<div style="padding:20px;color:var(--red);text-align:center;">分析出错：' + masterEsc(e.message || '未知错误') + '</div>';
         }
         analyzeBtn.disabled = false;
         analyzeBtn.textContent = '请 ' + selectedMaster.name + ' 点评';
         resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 800);
+      }, 300);
     });
   }
 
   return el;
 }
 
-/** 生成大师分析文本（独立页面用） */
-function generateMasterAnalysis(master, question, userInfo) {
-  var opening = '';
-  var overview = '';
-  var specialty = '';
-  var quote = '';
-  var closing = '';
+/* ===== 独立大师页：真实盘面构建与解析 ===== */
 
-  var name = master.name || '';
-  var pronoun = master.pronouns || '吾';
-  var phrase = master.phrase || '';
-  var catColor = '#b89a5c';
+var MASTER_SHICHEN = ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'];
+var MASTER_ZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
 
-  opening = pronoun + '以' + (master.category || '') + '之术观之：' + (question ? '「' + question + '」' : '今日之事') + '，' + phrase + '。';
+function masterEsc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
-  overview = '此' + (master.category || '术数') + '之术，' + name + '观之，当以' + (master.style ? master.style.split('，')[0] : '阴阳之理') + '为纲。';
+function todayStr() {
+  var d = new Date();
+  var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
 
-  specialty = '【推演】' + pronoun + '以' + (master.category || '') + '之法细推之：' + (question || '所问之事') + '，' + (master.era || '') + '之时，' + name + '观之，事有转机。宜守正待时，不可冒进。';
+function masterShichenOptions() {
+  var html = '';
+  for (var i = 0; i < MASTER_SHICHEN.length; i++) {
+    html += '<option value="' + MASTER_SHICHEN[i] + '">' + MASTER_SHICHEN[i] + '</option>';
+  }
+  return html;
+}
 
-  var quoteTpls = master.quoteTemplates || [];
-  quote = quoteTpls.length > 0 ? quoteTpls[0].replace(/\{[^}]+\}/g, '天理') : name + '尝曰："观天之道，执天之行，尽矣。"';
+function masterZhiOptions() {
+  var html = '';
+  for (var i = 0; i < MASTER_ZHI.length; i++) {
+    html += '<option value="' + MASTER_ZHI[i] + '">' + MASTER_ZHI[i] + '山</option>';
+  }
+  return html;
+}
 
-  closing = pronoun + '断曰：' + (master.category || '') + '之术，贵在顺势。' + (question || '此事') + '，' + (master.era || '') + '之法，可察其机。善自为之。';
+// 当前本地时辰（子时 23:00-01:00）
+function currentShichenName() {
+  var h = new Date().getHours();
+  return MASTER_SHICHEN[Math.floor(((h + 1) % 24) / 2)];
+}
 
-  return { opening: opening, overview: overview, specialty: specialty, quote: quote, closing: closing };
+function masterHourOf(name) {
+  var map = { 子时: 0, 丑时: 2, 寅时: 4, 卯时: 6, 辰时: 8, 巳时: 10, 午时: 12, 未时: 14, 申时: 16, 酉时: 18, 戌时: 20, 亥时: 22 };
+  return typeof map[name] === 'number' ? map[name] : 0;
+}
+
+// 六壬用 0-11 的时辰序号
+function masterShichenIndex(name) {
+  var idx = MASTER_SHICHEN.indexOf(name);
+  return idx < 0 ? 0 : idx;
+}
+
+/**
+ * 按流派构建真实盘面。
+ * 缺参数时抛出明确错误，由调用方展示，不静默改用今日或默认值。
+ */
+function buildMasterChart(category, question, el) {
+  var birthDate = (el.querySelector('#master-birth-date') || {}).value || '';
+  var birthTime = (el.querySelector('#master-birth-time') || {}).value || '';
+  var gender = (el.querySelector('#master-gender') || {}).value === 'female' ? 'female' : 'male';
+  var divDate = (el.querySelector('#master-div-date') || {}).value || todayStr();
+  var divTime = (el.querySelector('#master-div-time') || {}).value || currentShichenName();
+  var sitting = (el.querySelector('#master-fs-sitting') || {}).value || '子';
+
+  var needBirth = category === '八字' || category === '紫微' || category === '综合';
+  var y, m, d;
+  if (needBirth) {
+    if (!birthDate) throw new Error('请先填写出生日期');
+    if (!birthTime) throw new Error('请先选择出生时辰');
+    if (birthDate > todayStr()) throw new Error('出生日期不能晚于今天');
+    var parts = birthDate.split('-');
+    y = parseInt(parts[0], 10);
+    m = parseInt(parts[1], 10);
+    d = parseInt(parts[2], 10);
+    if (!y || !m || !d) throw new Error('出生日期格式不正确');
+  }
+
+  if (category === '八字' || category === '综合') {
+    if (typeof BaziEngine === 'undefined' || !BaziEngine.paipan) throw new Error('八字引擎未加载');
+    var bazi = BaziEngine.paipan(y, m, d, masterHourOf(birthTime));
+    var pillars = (bazi['年柱'] || '') + ' ' + (bazi['月柱'] || '') + ' ' + (bazi['日柱'] || '') + ' ' + (bazi['时柱'] || '');
+    return { method: 'bazi', result: bazi, bazi: bazi, gender: gender, question: question, summary: '四柱：' + pillars + '，日主' + (bazi['日主'] || '') };
+  }
+
+  if (category === '紫微') {
+    if (typeof ZiWeiEngine === 'undefined' || !ZiWeiEngine.paipan) throw new Error('紫微引擎未加载');
+    var ziwei = ZiWeiEngine.paipan({ year: y, month: m, day: d, hour: birthTime, gender: gender, isLunar: false });
+    var summary = '命宫' + (ziwei['命宫'] || '—') + '，身宫' + (ziwei['身宫'] || '—') + (ziwei['五行局'] ? '，' + ziwei['五行局'] : '');
+    return { method: 'ziwei', result: ziwei, gender: gender, question: question, summary: summary };
+  }
+
+  if (category === '六爻') {
+    if (typeof LiuyaoEngine === 'undefined' || !LiuyaoEngine.divine) throw new Error('六爻引擎未加载');
+    var lineMap = {
+      6: { type: 'yin', changing: true },
+      7: { type: 'yang', changing: false },
+      8: { type: 'yin', changing: false },
+      9: { type: 'yang', changing: true }
+    };
+    var lines = [];
+    for (var i = 0; i < 6; i++) {
+      var total = [2, 3][Math.random() > 0.5 ? 1 : 0] + [2, 3][Math.random() > 0.5 ? 1 : 0] + [2, 3][Math.random() > 0.5 ? 1 : 0];
+      lines.push(lineMap[total]);
+    }
+    var lr = LiuyaoEngine.divine(lines);
+    return {
+      method: 'liuyao', result: lr, question: question,
+      summary: '本卦「' + (lr.gua_name || '—') + '」' + (lr.changed_gua && lr.changed_gua.name ? '，变卦「' + lr.changed_gua.name + '」' : '')
+    };
+  }
+
+  if (category === '梅花') {
+    if (typeof MeihuaEngine === 'undefined' || !MeihuaEngine.divine) throw new Error('梅花引擎未加载');
+    var mh = MeihuaEngine.divine({ method: 'datetime' });
+    return {
+      method: 'meihua', result: mh, question: question,
+      summary: '本卦「' + (mh.original_gua ? mh.original_gua.name : '—') + '」，变卦「' + (mh.changed_gua ? mh.changed_gua.name : '—') + '」'
+    };
+  }
+
+  if (category === '奇门') {
+    if (typeof QimenEngine === 'undefined' || !QimenEngine.divine) throw new Error('奇门引擎未加载');
+    var qm = QimenEngine.divine(divDate, divTime, 'auto');
+    return { method: 'qimen', result: qm, question: question, summary: '奇门起局：' + divDate + ' ' + divTime };
+  }
+
+  if (category === '太乙') {
+    if (typeof TaiyiEngine === 'undefined' || !TaiyiEngine.divine) throw new Error('太乙引擎未加载');
+    var ty = TaiyiEngine.divine(divDate, divTime);
+    var god = ty.taiyi_god && ty.taiyi_god.name ? ty.taiyi_god.name : '—';
+    return { method: 'taiyi', result: ty, question: question, summary: '太乙落' + (ty.taiyi_gong || '—') + '宫，值' + god + '神' };
+  }
+
+  if (category === '诸葛') {
+    if (typeof ZhugeEngine === 'undefined' || !ZhugeEngine.divine) throw new Error('诸葛引擎未加载');
+    var nums = [Math.floor(Math.random() * 999) + 1, Math.floor(Math.random() * 999) + 1, Math.floor(Math.random() * 999) + 1];
+    var zg = ZhugeEngine.divine({ method: 'random', numbers: nums });
+    return {
+      method: 'zhuge', result: zg, question: question,
+      summary: '第' + (zg.number || zg['签号'] || '—') + '签，签等「' + (zg.level || '—') + '」'
+    };
+  }
+
+  if (category === '大六壬') {
+    if (typeof DaLiuRenEngine === 'undefined' || !DaLiuRenEngine.divine) throw new Error('六壬引擎未加载');
+    var dl = DaLiuRenEngine.divine(divDate, masterShichenIndex(divTime));
+    return { method: 'daliuren', result: dl, question: question, summary: '课体「' + (dl.ke_name || '—') + '」，断为「' + (dl.level || '—') + '」' };
+  }
+
+  if (category === '解梦') {
+    if (!question) throw new Error('解梦类大师请在问题框描述梦境');
+    if (typeof ZhougongEngine === 'undefined' || !ZhougongEngine.divine) throw new Error('解梦引擎未加载');
+    var zm = ZhougongEngine.divine(question, question);
+    return { method: 'zhougong', result: zm, question: question, summary: '梦境判为「' + (zm.ji || '—') + '」' };
+  }
+
+  if (category === '风水') {
+    if (typeof FengshuiEngine === 'undefined' || !FengshuiEngine.divine) throw new Error('风水引擎未加载');
+    var facing = MASTER_ZHI[(MASTER_ZHI.indexOf(sitting) + 6) % 12];
+    var cy = new Date().getFullYear();
+    var fs = FengshuiEngine.divine({ sitting: sitting, facing: facing, buildYear: cy, currentYear: cy });
+    return {
+      method: 'fengshui', result: fs, question: question,
+      summary: '坐' + sitting + '向' + facing + '，综合 ' + (typeof fs.overallScore === 'number' ? fs.overallScore + ' 分' : '未评分') + '（' + (fs.overallLevel || '—') + '）'
+    };
+  }
+
+  throw new Error('该流派暂不支持独立排盘');
+}
+
+/** 大师口吻的五段式内容：仅使用真实盘面与既有解析器 */
+function analyzeMasterChart(master, chart, question) {
+  var cat = master.category;
+  var q = question || '';
+
+  var specific = null;
+  if (cat === '八字' || cat === '综合') {
+    if (typeof MastersEngine !== 'undefined' && MastersEngine.analyze) {
+      specific = MastersEngine.analyze(master.id, 'full', convertBaziFormat(chart.bazi, chart.gender), chart.gender);
+    }
+  } else if (cat === '六爻' && typeof generateLiuyaoAnalysis === 'function') {
+    specific = generateLiuyaoAnalysis(master, chart.result, q);
+  } else if (cat === '梅花' && typeof generateMeihuaAnalysis === 'function') {
+    specific = generateMeihuaAnalysis(master, chart.result, q);
+  } else if (cat === '奇门' && typeof generateQimenAnalysis === 'function') {
+    specific = generateQimenAnalysis(master, chart.result, q);
+  } else if (cat === '太乙' && typeof generateTaiyiAnalysis === 'function') {
+    specific = generateTaiyiAnalysis(master, chart.result, q);
+  } else if (cat === '诸葛' && typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyzeZhugeMaster) {
+    specific = DomainAnalysis.analyzeZhugeMaster(master, chart.result, q);
+  } else if (cat === '紫微') {
+    specific = buildZiweiMasterNarrative(master, chart, q);
+  }
+  // 专属解析器缺失或返回空时，退回真实盘面的通用叙述；绝不虚构盘面
+  return specific || buildGenericMasterNarrative(master, chart, q);
+}
+
+function pickMasterQuote(master) {
+  var quotes = master.quoteTemplates || [];
+  if (quotes.length > 0 && quotes[0].indexOf('{') === -1) return quotes[0];
+  return (master.name || '大师') + '尝曰："' + (master.phrase || '观天之道，执天之行') + '。"';
+}
+
+function buildZiweiMasterNarrative(master, chart, question) {
+  var r = chart.result;
+  var gongs = r['十二宫'] || [];
+  var mingGong = null;
+  for (var i = 0; i < gongs.length; i++) {
+    if (gongs[i] && gongs[i].name === '命宫') { mingGong = gongs[i]; break; }
+  }
+  var stars = mingGong && mingGong.stars && mingGong.stars.length ? mingGong.stars.join('、') : '无主星';
+  var da = (typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze) ? DomainAnalysis.analyze('ziwei', r, question || '请解读此紫微命盘') : null;
+  var opening = (master.pronouns || '吾') + '以紫微斗数观此命盘：命宫在' + masterEsc(r['命宫'] || '—') + '，身宫在' + masterEsc(r['身宫'] || '—') + '，' + masterEsc(r['五行局'] || '') + '。';
+  if (question) opening += '所问「' + masterEsc(question) + '」。';
+  return {
+    opening: opening,
+    overview: '命宫星曜：' + masterEsc(stars) + '。十二宫以命宫为枢，吉凶须合大限流年而断。',
+    specialty: da && da.analysis ? da.analysis : '未填写所问之事，仅列盘面要点，不作具体吉凶推断。',
+    quote: pickMasterQuote(master),
+    closing: '以上皆据紫微盘面直述；具体吉凶须结合大限流年，本页不代为虚断。'
+  };
+}
+
+function buildGenericMasterNarrative(master, chart, question) {
+  var analysisText = '';
+  if (question && typeof DomainAnalysis !== 'undefined' && DomainAnalysis.analyze) {
+    var a = DomainAnalysis.analyze(chart.method, chart.result, question);
+    if (a && a.analysis) analysisText = a.analysis;
+  }
+  var opening = (master.pronouns || '吾') + '以' + (master.category || '术数') + '之术观此盘：' + chart.summary + '。';
+  if (question) opening += '所问「' + masterEsc(question) + '」，' + (master.phrase ? masterEsc(master.phrase) + '。' : '');
+  return {
+    opening: opening,
+    overview: '盘面实况：' + chart.summary + '。',
+    specialty: analysisText || '未填写所问之事，仅列盘面实况，不作具体吉凶推断。',
+    quote: pickMasterQuote(master),
+    closing: '以上皆据引擎盘面直述；盘面所示吉凶须结合所问之事与具体情境，不作绝对断言。'
+  };
 }
 

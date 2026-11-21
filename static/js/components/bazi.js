@@ -12,6 +12,8 @@ function convertBaziFormat(bazi, gender) {
     month_pillar: bazi.月柱,
     day_pillar: bazi.日柱,
     hour_pillar: bazi.时柱,
+    // 大师引擎的「八字全貌」直接读 bazi_str，缺省会导致句中留空
+    bazi_str: [bazi.年柱, bazi.月柱, bazi.日柱, bazi.时柱].filter(Boolean).join(' '),
     gender: gender || 'male',
   };
 }
@@ -252,20 +254,26 @@ async function handleBaziSubmit(container, state) {
     // 大师点评面板（EP2 体验页已打磨的五段式大师解读，主站/体验页共用）
     initBaziMastersPanel(container, result, gender);
 
-    // 自动保存咨询记录到用户档案
+    // 自动保存咨询记录到用户档案：引擎无真实评分，不写伪造 score
     try {
       if (typeof UserProfileAPI !== 'undefined') {
         UserProfileAPI.addRecord({
           type: 'bazi',
           question: '八字排盘',
-          score: 60,
           result: {
-            pillars: result.pillars || {},
+            // 引擎返回的是扁平四柱字段，不能引用不存在的 result.pillars（否则记录为空对象）
+            year: result['年柱'] || '',
+            month: result['月柱'] || '',
+            day: result['日柱'] || '',
+            hour: result['时柱'] || '',
+            dayMaster: result['日主'] || '',
             name: state.userInfo && state.userInfo.name ? state.userInfo.name : ''
           }
         });
       }
-    } catch(e) {}
+    } catch(e) {
+      console.warn('[命簿] 八字记录写入失败', e);
+    }
   } catch (error) {
     pillarsContent.innerHTML =
       '<div class="error-container">' +

@@ -295,6 +295,26 @@ async function handleMeihuaSubmit(container, params) {
 
     // 大师点评面板（基于梅花体用生克深度解读，主站/体验页共用）
     initMeihuaMastersPanel(container, result, question);
+
+    // 自动记入命簿：评分由体用生克等级换算（1-5 级 → 20-100）
+    if (typeof UserProfileAPI !== 'undefined') {
+      try {
+        var mhLevel = result.sheng_ke && typeof result.sheng_ke.等级 === 'number'
+          ? result.sheng_ke.等级 : 0;
+        UserProfileAPI.addRecord({
+          type: 'meihua',
+          question: question || '梅花起卦',
+          score: mhLevel ? mhLevel * 20 : undefined,
+          result: {
+            original: result.original_gua ? result.original_gua.name || '' : '',
+            changed: result.changed_gua ? result.changed_gua.name || '' : '',
+            relation: result.sheng_ke ? result.sheng_ke.关系 || '' : ''
+          }
+        });
+      } catch (e) {
+        console.warn('[命簿] 梅花记录写入失败', e);
+      }
+    }
   } catch (error) {
     resultCard.innerHTML = `
       <div class="error-container">

@@ -5,6 +5,14 @@
 (function (global) {
   'use strict';
 
+  /** 历法是节气计算的唯一来源；缺失时显式报错，不退回近似日期 */
+  function requireCalendar() {
+    if (!global.CalendarEngine) {
+      throw new Error('CalendarEngine 未加载：请先引入 static/js/calendar-engine.js');
+    }
+    return global.CalendarEngine;
+  }
+
   /* ========== 一、基础常量 ========== */
   var GAN = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
   var ZHI = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
@@ -1025,9 +1033,15 @@
     var riGanZhi = _getRiGanZhi(useDate);
     var riGan = riGanZhi.gan;
     var riZhi = riGanZhi.zhi;
-    var yearGZ = calcYearGZ(useDate.getFullYear());
+    var useYear = useDate.getFullYear();
+    var useMonth = useDate.getMonth() + 1;
+    var useDay = useDate.getDate();
+    // 年柱以立春为界：立春前仍属上一年
+    var lichun = requireCalendar().getTerm(useYear, '立春');
+    var gzYear = useMonth < lichun.month || (useMonth === lichun.month && useDay < lichun.day) ? useYear - 1 : useYear;
+    var yearGZ = calcYearGZ(gzYear);
     var yearGan = yearGZ[0];
-    var yueZhi = _getYueZhi(useDate.getFullYear(), useDate.getMonth() + 1, useDate.getDate());
+    var yueZhi = _getYueZhi(useYear, useMonth, useDay);
     var liuShou = getLiuShou(riGan);
 
     var interpretation = generateInterpretation(gua, dongYao, shiYao, yingYao, liuQin, liuShou, changedGua);
@@ -1150,18 +1164,28 @@
     return SIXTY_JIAZI[(((baseIdx + offset) % 60) + 60) % 60];
   }
 
+  /** 十二“节” → 月支（立春起寅月，节气日当天即换月） */
+  var JIE_TO_MONTH_ZHI = {
+    小寒: '丑',
+    立春: '寅',
+    惊蛰: '卯',
+    清明: '辰',
+    立夏: '巳',
+    芒种: '午',
+    小暑: '未',
+    立秋: '申',
+    白露: '酉',
+    寒露: '戌',
+    立冬: '亥',
+    大雪: '子',
+  };
+
   /**
-   * 计算月支（按节气：立春约2月4日为寅月起点，立秋约8月7-8日为申月起点）
+   * 计算月支（按精确节气定界，不再用固定公历日期近似）
    */
   function _getYueZhi(year, month, day) {
-    // 立春：约2月4日，之后为寅月；其余按公历月-1映射（1月→丑月）
-    var afterLichun = month > 2 || (month === 2 && day >= 4);
-    var beforeLiqiu = month < 8 || (month === 8 && day < 7);
-    if (month === 1) return '丑';
-    if (month === 2 && day < 4) return '丑';
-    if (month >= 8 && day >= 7) return ZHI[month % 12];       // 申(8),酉(9),戌(10),亥(11),子(0)
-    if (month >= 2 && month <= 7) return ZHI[(month + 1) % 12]; // 寅(1)..未(6)
-    return ZHI[month % 12]; // month >= 9
+    var jie = requireCalendar().getLatestJie(year, month, day);
+    return JIE_TO_MONTH_ZHI[jie.name];
   }
 
   /**

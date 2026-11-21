@@ -243,7 +243,7 @@
     var mountains = (global.FengshuiEngine && global.FengshuiEngine.MOUNTAINS_24) || [];
 
     container.querySelector('#fs-calc-btn').addEventListener('click', function () {
-      doCalc(container);
+      doCalc(container, true);
     });
     container.querySelector('#fs-random-btn').addEventListener('click', function () {
       var sitSelect = container.querySelector('#fs-sitting');
@@ -251,7 +251,7 @@
       var mi = Math.floor(Math.random() * mountains.length);
       sitSelect.value = mountains[mi];
       faceSelect.value = mountains[(mi + 12) % mountains.length];
-      doCalc(container);
+      doCalc(container, true);
     });
 
     // Tab 切换
@@ -428,11 +428,12 @@
       compassCtx.lineWidth = 1;
       compassCtx.stroke();
 
-      // 24山刻度
+      // 24山刻度：子山居正北（画布正上方），二十四山序列从壬山（345°）起
       var mountains = (global.FengshuiEngine && global.FengshuiEngine.MOUNTAINS_24) || [];
       for (var i = 0; i < 24; i++) {
-        var angle = compassAngle + ((i * 15 - 90) * Math.PI) / 180;
-        var isCardinal = i % 3 === 0;
+        var angle = compassAngle + ((i * 15 + 255) * Math.PI) / 180;
+        // 四正四隅（子午卯酉、乾坤艮巽）为 index % 3 === 1
+        var isCardinal = i % 3 === 1;
         var x1 = cx + Math.cos(angle) * (rInner - 2);
         var y1 = cy + Math.sin(angle) * (rInner - 2);
         var x2 = cx + Math.cos(angle) * (rOuter - 6);
@@ -476,8 +477,8 @@
       compassCtx.stroke();
       compassCtx.setLineDash([]);
 
-      // 朝向指示箭头
-      var faceAngle = compassAngle - Math.PI / 2;
+      // 朝向指示箭头：默认坐北朝南（compassAngle=0 时指向正南）
+      var faceAngle = compassAngle + Math.PI / 2;
       var arrowBase = rInner - 8;
       var arrowLen = rOuter - rInner + 20;
       var ax = cx + Math.cos(faceAngle) * arrowBase;
@@ -530,12 +531,11 @@
       compassCtx.fillText('坐', sitX, sitY);
     }
 
-    // 根据罗盘角度计算坐向
+    // 根据罗盘角度计算坐向：0° 为默认朝向正南（午山，二十四山 index 13）
     function updateCompassInfo() {
       var mountains = (global.FengshuiEngine && global.FengshuiEngine.MOUNTAINS_24) || [];
       var faceAngleDeg = ((((compassAngle * 180) / Math.PI) % 360) + 360) % 360;
-      var mountainIdx = Math.round(faceAngleDeg / 15) % 24;
-      if (mountainIdx < 0) mountainIdx += 24;
+      var mountainIdx = (13 + Math.round(faceAngleDeg / 15)) % 24;
       currentFacing = mountains[mountainIdx] || '午';
       currentSitting = mountains[(mountainIdx + 12) % 24] || '子';
       infoSitting.textContent = currentSitting + '（' + getMountainName(currentSitting) + '）';
@@ -738,6 +738,25 @@
     container.querySelector('#fs-build-calc-btn').addEventListener('click', function () {
       updateCompassInfo();
       doCalcWithCompass();
+
+      // 建造器主动排盘时记入命簿
+      if (currentResult && typeof UserProfileAPI !== 'undefined') {
+        try {
+          UserProfileAPI.addRecord({
+            type: 'fengshui',
+            question: '风水户型排盘：坐' + currentResult.sitting + '向' + currentResult.facing,
+            score: typeof currentResult.overallScore === 'number' ? currentResult.overallScore : undefined,
+            result: {
+              sitting: currentResult.sitting,
+              facing: currentResult.facing,
+              level: currentResult.overallLevel || '',
+              source: 'builder'
+            }
+          });
+        } catch (e) {
+          console.warn('[命簿] 风水户型记录写入失败', e);
+        }
+      }
     });
 
     // 清空房间
@@ -1038,7 +1057,7 @@
   }
 
   /* ========== 排盘 ========== */
-  function doCalc(container) {
+  function doCalc(container, shouldRecord) {
     var engine = global.FengshuiEngine;
     if (!engine) {
       var resultArea = container.querySelector('#fs-result-area');
@@ -1059,6 +1078,26 @@
     });
 
     displayResult(container, result);
+
+    // 仅用户主动点击排盘/随机时记入命簿，自动计算与滑动调整不记录
+    if (shouldRecord && typeof UserProfileAPI !== 'undefined') {
+      try {
+        UserProfileAPI.addRecord({
+          type: 'fengshui',
+          question: '风水排盘：坐' + sitting + '向' + facing,
+          score: typeof result.overallScore === 'number' ? result.overallScore : undefined,
+          result: {
+            sitting: sitting,
+            facing: facing,
+            buildYear: buildYear,
+            currentYear: currentYear,
+            level: result.overallLevel || ''
+          }
+        });
+      } catch (e) {
+        console.warn('[命簿] 风水记录写入失败', e);
+      }
+    }
 
     // 通知上传模块更新
     if (container._setFloorPlanResult) {

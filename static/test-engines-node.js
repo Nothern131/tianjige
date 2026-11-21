@@ -15,6 +15,7 @@ const path = require('path');
 const engineDir = path.join(__dirname, 'js');
 
 const engines = [
+  'calendar-engine.js',
   'bazi-engine.js',
   'liuyao-engine.js',
   'meihua-engine.js',

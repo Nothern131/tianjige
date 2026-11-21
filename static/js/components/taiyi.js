@@ -231,6 +231,19 @@ async function handleTaiyiSubmit(container, params) {
 
     // 大师点评面板（基于太乙十六神深度解读，主站/体验页共用）
     initTaiyiMastersPanel(container, result, question);
+
+    // 自动记入命簿：太乙引擎无真实评分，不写伪造 score
+    if (typeof UserProfileAPI !== 'undefined') {
+      try {
+        UserProfileAPI.addRecord({
+          type: 'taiyi',
+          question: question || '太乙起算',
+          result: { date: params.date || '' }
+        });
+      } catch (e) {
+        console.warn('[命簿] 太乙记录写入失败', e);
+      }
+    }
   } catch (error) {
     resultCard.innerHTML = `
       <div class="error-container">

@@ -1,6 +1,6 @@
 var fs = require('fs');
 var path = require('path');
-var engineFiles = ['constants.js', 'bazi-engine.js', 'liuyao-engine.js', 'meihua-engine.js', 'qimen-engine.js', 'taiyi-engine.js', 'zhuge-engine.js', 'zhougong-engine.js', 'daliuren-engine.js', 'ziwei-engine.js', 'fengshui-engine.js', 'engine-registry.js'];
+var engineFiles = ['constants.js', 'calendar-engine.js', 'bazi-engine.js', 'liuyao-engine.js', 'meihua-engine.js', 'qimen-engine.js', 'taiyi-engine.js', 'zhuge-engine.js', 'zhougong-engine.js', 'daliuren-engine.js', 'ziwei-engine.js', 'fengshui-engine.js', 'engine-registry.js'];
 var combined = 'var global=typeof global!=="undefined"?global:this;\n';
 engineFiles.forEach(function(f) {
   combined += '/* ' + f + ' */\n' + fs.readFileSync(path.join('static/js', f), 'utf8') + '\n';

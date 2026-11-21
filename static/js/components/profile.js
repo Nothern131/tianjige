@@ -42,12 +42,36 @@
     return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes());
   }
 
+  // 本地时区当天 YYYY-MM-DD（用作出生日期上限）
+  function todayYmd() {
+    var d = new Date();
+    var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+  }
+
+  // 出生日期校验：允许为空；非空必须是真实日期、1900-2100、且不晚于今天
+  function validateBirthDate(str) {
+    if (!str) return null;
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
+    if (!m) return '出生日期格式应为 YYYY-MM-DD';
+    var y = parseInt(m[1], 10);
+    var mo = parseInt(m[2], 10);
+    var day = parseInt(m[3], 10);
+    if (y < 1900 || y > 2100) return '出生年份需在 1900–2100 之间';
+    var dt = new Date(y, mo - 1, day);
+    if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== day) {
+      return '出生日期不存在，请核对年月日';
+    }
+    if (str > todayYmd()) return '出生日期不能晚于今天';
+    return null;
+  }
+
   function typeIcon(type) {
-    return { liuyao:'🪙', meihua:'🌸', bazi:'📅', qimen:'🚪', taiyi:'⭐', zhuge:'🎋', zhougong:'🌙', daliuren:'🌊', ziwei:'🔮', fengshui:'🏔️', other:'🔮' }[type] || '🔮';
+    return { liuyao:'🪙', meihua:'🌸', bazi:'📅', qimen:'🚪', taiyi:'⭐', zhuge:'🎋', zhougong:'🌙', daliuren:'🌊', ziwei:'🔮', fengshui:'🏔️', composite:'🧿', other:'🔮' }[type] || '🔮';
   }
 
   function typeLabel(type) {
-    return { liuyao:'六爻', meihua:'梅花', bazi:'八字', qimen:'奇门', taiyi:'太乙', zhuge:'诸葛', zhougong:'解梦', daliuren:'六壬', ziwei:'紫微', fengshui:'风水', other:'其他' }[type] || type;
+    return { liuyao:'六爻', meihua:'梅花', bazi:'八字', qimen:'奇门', taiyi:'太乙', zhuge:'诸葛', zhougong:'解梦', daliuren:'六壬', ziwei:'紫微', fengshui:'风水', composite:'合参', other:'其他' }[type] || type;
   }
 
   function scoreToLabel(score) {
@@ -84,6 +108,21 @@
     html += '<button class="btn-edit-profile" onclick="window._editProfile()">✏️ 立命</button>';
     html += '</div>';
 
+    // 内联立命表单（默认隐藏，替代连续 prompt）
+    html += '<div class="profile-edit-panel hidden" id="profileEditPanel">';
+    html += '<div class="section-title">✏️ 立命录</div>';
+    html += '<div class="form-row profile-edit-row">';
+    html += '<div class="form-group"><label class="form-label">姓名</label><input type="text" class="form-input" id="profile-edit-name" maxlength="20" placeholder="请输入姓名"></div>';
+    html += '<div class="form-group"><label class="form-label">出生日期</label><input type="date" class="form-input" id="profile-edit-birth" min="1900-01-01" max="' + todayYmd() + '"></div>';
+    html += '<div class="form-group"><label class="form-label">性别</label><select class="form-select" id="profile-edit-gender"><option value="male">男</option><option value="female">女</option></select></div>';
+    html += '</div>';
+    html += '<div class="profile-edit-error" id="profile-edit-error"></div>';
+    html += '<div class="profile-edit-actions">';
+    html += '<button class="btn-profile-cancel" onclick="window._cancelEditProfile()">取消</button>';
+    html += '<button class="btn-gold" onclick="window._saveProfile()">保存命簿</button>';
+    html += '</div>';
+    html += '</div>';
+
     // 统计卡片
     html += '<div class="profile-stats">';
     html += '<div class="stat-item"><div class="stat-num">' + consultations.length + '</div><div class="stat-label">总咨询</div></div>';
@@ -91,6 +130,8 @@
     html += '<div class="stat-item"><div class="stat-num">' + (byType.meihua||0) + '</div><div class="stat-label">梅花</div></div>';
     html += '<div class="stat-item"><div class="stat-num">' + (byType.bazi||0) + '</div><div class="stat-label">八字</div></div>';
     html += '</div>';
+    // 口径说明：总咨询涵盖所有板块，下方三项只是常用分类计数
+    html += '<div class="profile-stats-note">总咨询含全部板块；六爻 / 梅花 / 八字为常用分类计数。</div>';
 
     // 记录列表
     html += '<div class="profile-section">';
@@ -135,23 +176,81 @@
   }
 
   // ===== 全局操作函数 =====
-  global._editProfile = function() {
+  function setEditError(msg) {
+    var el = document.getElementById('profile-edit-error');
+    if (el) el.textContent = msg || '';
+  }
+
+  function showProfileEditForm() {
     var profile = loadProfile();
-    var name = prompt('请输入您的姓名：', profile.name || '');
-    if (name === null) return;
-    profile.name = name.trim();
+    var panel = document.getElementById('profileEditPanel');
+    if (!panel) return;
+    var nameEl = document.getElementById('profile-edit-name');
+    var birthEl = document.getElementById('profile-edit-birth');
+    var genderEl = document.getElementById('profile-edit-gender');
+    if (nameEl) nameEl.value = profile.name || '';
+    if (birthEl) birthEl.value = profile.birthDate || '';
+    if (genderEl) genderEl.value = profile.gender === 'female' ? 'female' : 'male';
+    setEditError('');
+    panel.classList.remove('hidden');
+    if (nameEl) nameEl.focus();
+  }
 
-    var birthDate = prompt('请输入出生年月日（格式：2000-01-01）：', profile.birthDate || '');
-    if (birthDate !== null) profile.birthDate = birthDate.trim();
+  function cancelProfileEditForm() {
+    var panel = document.getElementById('profileEditPanel');
+    if (panel) panel.classList.add('hidden');
+    setEditError('');
+  }
 
-    var gender = prompt('请选择性别（男/女）：', profile.gender || 'male');
-    if (gender !== null) {
-      profile.gender = (gender === '女' || gender === 'female') ? 'female' : 'male';
+  function saveProfileForm() {
+    var nameEl = document.getElementById('profile-edit-name');
+    var birthEl = document.getElementById('profile-edit-birth');
+    var genderEl = document.getElementById('profile-edit-gender');
+    if (!nameEl || !birthEl || !genderEl) return;
+
+    var name = nameEl.value.trim();
+    if (!name) {
+      setEditError('姓名不能为空');
+      nameEl.focus();
+      return;
+    }
+    if (name.length > 20) {
+      setEditError('姓名不能超过 20 个字符');
+      nameEl.focus();
+      return;
     }
 
-    saveProfile(profile);
+    var birthDate = birthEl.value.trim();
+    var dateErr = validateBirthDate(birthDate);
+    if (dateErr) {
+      setEditError(dateErr);
+      birthEl.focus();
+      return;
+    }
+
+    var gender = genderEl.value;
+    if (gender !== 'male' && gender !== 'female') {
+      setEditError('性别只能为男或女');
+      genderEl.focus();
+      return;
+    }
+
+    var profile = loadProfile();
+    profile.name = name;
+    profile.birthDate = birthDate;
+    profile.gender = gender;
+    if (!saveProfile(profile)) {
+      setEditError('保存失败，请检查浏览器存储权限');
+      return;
+    }
+    cancelProfileEditForm();
     global._refreshProfile();
-  };
+    if (window.showToast) window.showToast('命簿已更新');
+  }
+
+  global._editProfile = showProfileEditForm;
+  global._saveProfile = saveProfileForm;
+  global._cancelEditProfile = cancelProfileEditForm;
 
   global._clearHistory = function() {
     if (!confirm('确定要清空所有咨询记录吗？此操作不可恢复。')) return;
@@ -237,9 +336,27 @@
         font-family: 'Noto Sans SC', sans-serif; transition: all 0.3s;
       }
       .btn-edit-profile:hover { background: rgba(184,154,92,0.2); }
+      .profile-edit-panel {
+        padding: 20px; background: rgba(24,20,14,0.82);
+        border: 1px solid rgba(184,154,92,0.18); border-radius: 14px;
+        margin-bottom: 20px;
+      }
+      .profile-edit-row { grid-template-columns: repeat(3, 1fr); }
+      .profile-edit-error { min-height: 18px; margin-top: 10px; color: #ef4444; font-size: 0.78rem; }
+      .profile-edit-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+      .btn-profile-cancel {
+        padding: 10px 24px; background: transparent; border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 24px; color: #8a8576; font-size: 0.88rem; cursor: pointer;
+        font-family: 'Noto Sans SC', sans-serif; transition: all 0.3s;
+      }
+      .btn-profile-cancel:hover { color: #e0dcd0; border-color: rgba(255,255,255,0.25); }
       .profile-stats {
         display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
-        margin-bottom: 24px;
+        margin-bottom: 8px;
+      }
+      .profile-stats-note {
+        font-size: 0.72rem; color: #8a8576; text-align: center;
+        margin-bottom: 20px;
       }
       .stat-item {
         text-align: center; padding: 16px 8px; background: rgba(24,20,14,0.82);
@@ -294,6 +411,7 @@
       @media(max-width:600px){
         .profile-stats { grid-template-columns: repeat(2,1fr); }
         .profile-header-card { flex-wrap: wrap; }
+        .profile-edit-row { grid-template-columns: 1fr; }
       }
     `;
     document.head.appendChild(style);
